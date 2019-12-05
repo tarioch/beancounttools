@@ -5,7 +5,7 @@ jobs:
   build-and-publish:
     name: Build and publish Python 🐍 distributions 📦 to PyPI and TestPyPI
     runs-on: ubuntu-latest
-  steps:
+    steps:
     - uses: actions/checkout@master
     - uses: actions/setup-python@v1
       with:
