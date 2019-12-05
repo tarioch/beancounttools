@@ -23,4 +23,5 @@ jobs:
         --source
         --binary
         --out-dir dist/
+        .
 
