@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-from pkg_resources import get_distribution, DistributionNotFound
-
 """Importers, plugins and price fetchers for beancount."""
+
+from pkg_resources import get_distribution, DistributionNotFound
 
 try:
     dist_name = __name__ 
