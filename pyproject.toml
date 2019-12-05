@@ -3,6 +3,6 @@ requires = ["flit_core >=2,<3"]
 build-backend = "flit_core.buildapi"
 
 [tool.flit.metadata]
-module = "tarioch.beancounttools"
+module = "tariochbctools"
 author = "Patrick Ruckstuhl"
 home-page = "https://github.com/tarioch/beancounttools"
