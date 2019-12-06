@@ -1,4 +1,4 @@
-from importers.general import mt940importer
+from tariochbctools.importers.general import mt940importer
 import re
 
 class ZkbImporter(mt940importer.Importer):
