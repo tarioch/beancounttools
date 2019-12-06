@@ -24,13 +24,9 @@ jobs:
         --binary
         --out-dir dist/
         .
-    - name: check what was produced
-      run: >-
-        ls -lsha dist/*
     - name: Publish distribution 📦 to Test PyPI
-      uses: pypa/gh-action-pypi-publish@master
+      uses: pypa/gh-action-pypi-publish@v1.0.0a0
       with:
         user: __token__
         password: ${{ secrets.test_pypi_password }}
         repository_url: https://test.pypi.org/legacy/
-        packages-dir: dist/
