@@ -1,1 +1,1 @@
-exclude .github
+prune .github
