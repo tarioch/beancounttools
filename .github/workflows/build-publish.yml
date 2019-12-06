@@ -24,6 +24,8 @@ jobs:
         --binary
         --out-dir dist/
         .
+    - name: check what was produced
+      run: >-
         ls -lsha
     - name: Publish distribution 📦 to Test PyPI
       uses: pypa/gh-action-pypi-publish@master
