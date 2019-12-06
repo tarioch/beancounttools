@@ -1,8 +1,2 @@
 [build-system]
-requires = ["flit_core >=2,<3"]
-build-backend = "flit_core.buildapi"
-
-[tool.flit.metadata]
-module = "tariochbctools"
-author = "Patrick Ruckstuhl"
-home-page = "https://github.com/tarioch/beancounttools"
+requires = ["setuptools", "wheel"]
