@@ -25,7 +25,7 @@ jobs:
         --out-dir dist/
         .
     - name: Publish distribution 📦 to Test PyPI
-      uses: pypa/gh-action-pypi-publish@v1.0.0a0
+      uses: pypa/gh-action-pypi-publish@ae9c4b332a55c3ae8ba9d47fda1702d4cc7768b2
       with:
         user: __token__
         password: ${{ secrets.test_pypi_password }}
