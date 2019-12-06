@@ -1,6 +1,6 @@
-tarioch.beancounttools
-======================
+==============
+beancounttools
+==============
 
-Some importers, plugins and price fetchers for the double-entry bookkeeping software `beancount
-<http://furius.ca/beancount/>`__.
 
+Some importers, plugins and price fetchers for the double-entry bookkeeping software `beancount <http://furius.ca/beancount/>`__.
