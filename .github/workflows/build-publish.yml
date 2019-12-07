@@ -32,3 +32,12 @@ jobs:
         TWINE_REPOSITORY_URL: https://test.pypi.org/legacy/
       run: >-
         pip install twine && twine upload dist/*
+    - name: Publish distribution 📦 to PyPI
+      if: startsWith(github.event.ref, 'refs/tags')
+      env:
+        TWINE_USERNAME: __token__
+        TWINE_PASSWORD: ${{ secrets.pypi_password }}
+        TWINE_REPOSITORY_URL: https://upload.pypi.org/legacy/
+      run: >-
+        twine upload dist/*
+ 
