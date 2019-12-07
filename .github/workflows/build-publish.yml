@@ -41,5 +41,5 @@ jobs:
         TWINE_PASSWORD: ${{ secrets.pypi_password }}
         TWINE_REPOSITORY_URL: https://upload.pypi.org/legacy/
       run: >-
-        twine upload dist/*
+        pip install twine && twine upload dist/*
  
