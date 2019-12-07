@@ -18,6 +18,8 @@ except VersionConflict:
     print("Error: version of setuptools is too old (<38.3)!")
     sys.exit(1)
 
+def local_scheme(version):
+    return ''
 
 if __name__ == "__main__":
-    setup(use_pyscaffold=True)
+    setup(use_scm_version={"local_scheme": local_scheme}, use_pyscaffold=False)
