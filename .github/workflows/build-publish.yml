@@ -25,6 +25,7 @@ jobs:
         --out-dir dist/
         .
     - name: Publish distribution 📦 to Test PyPI
+      if: startsWith(github.event.ref, 'refs/heads/master')
       uses: pypa/gh-action-pypi-publish@master
       with:
         user: __token__
