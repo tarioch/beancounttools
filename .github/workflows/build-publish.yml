@@ -26,8 +26,9 @@ jobs:
         .
     - name: Publish distribution 📦 to Test PyPI
       if: startsWith(github.event.ref, 'refs/heads/master')
-      uses: pypa/gh-action-pypi-publish@master
-      with:
-        user: __token__
-        password: ${{ secrets.test_pypi_password }}
-        repository_url: https://test.pypi.org/legacy/
+      env:
+        TWINE_USERNAME: __token__
+        TWINE_PASSWORD: ${{ secrets.test_pypi_password }}
+        TWINE_REPOSITORY_url: https://test.pypi.org/legacy/
+      run: >-
+        twine upload dist/*
