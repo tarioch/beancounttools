@@ -3,7 +3,7 @@ import re
 
 class ZkbImporter(mt940importer.Importer):
     def prepare_payee(self, trxdata):
-        return '' 
+        return ''
 
     def prepare_narration(self, trxdata):
         extra = trxdata['extra_details']

@@ -27,7 +27,7 @@ class Importer(importer.ImporterProtocol):
     def extract(self, file, existing_entries):
         self.priceMap = prices.build_price_map(existing_entries)
 
-        config = yaml.safe_load(file.contents()) 
+        config = yaml.safe_load(file.contents())
         self.config = config
         self.client = bitstamp.client.Trading(
             username = config['username'],
@@ -38,7 +38,7 @@ class Importer(importer.ImporterProtocol):
         self.otherExpensesAccount = config['otherExpensesAccount']
         self.capGainAccount = config['capGainAccount']
 
-        dateCutoff = date.today() + relativedelta(months=-config['monthCutoff']) 
+        dateCutoff = date.today() + relativedelta(months=-config['monthCutoff'])
 
         trxs = self.client.user_transactions()
         trxs.reverse()
@@ -76,7 +76,7 @@ class Importer(importer.ImporterProtocol):
         if type == 0:
             narration = 'Deposit'
             cost =  data.Cost(
-                self.fetchPrice(posCcy, date), 
+                self.fetchPrice(posCcy, date),
                 'CHF',
                 None,
                 None
@@ -122,7 +122,7 @@ class Importer(importer.ImporterProtocol):
                     )
                 posCcyPrice = None
                 negCcyCost = None
-                negCcyPrice = amount.Amount(rateFiatCcy, 'CHF') 
+                negCcyPrice = amount.Amount(rateFiatCcy, 'CHF')
 
 
             narration = 'Trade'

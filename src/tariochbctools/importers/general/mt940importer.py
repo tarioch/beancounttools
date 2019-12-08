@@ -24,7 +24,7 @@ class Importer(identifier.IdentifyMixin, importer.ImporterProtocol):
         return super().identify(file)
 
     def file_account(self, file):
-        return self.account 
+        return self.account
 
     def extract(self, file, existing_entries):
         entries = []
@@ -58,7 +58,7 @@ class Importer(identifier.IdentifyMixin, importer.ImporterProtocol):
         return entries
 
     def prepare_payee(self, trxdata):
-        return '' 
+        return ''
 
     def prepare_narration(self, trxdata):
         return trxdata['transaction_details'] + ' ' + trxdata['extra_details']

@@ -22,7 +22,7 @@ class Importer(identifier.IdentifyMixin, importer.ImporterProtocol):
         return super().name() + self.account
 
     def file_account(self, file):
-        return self.account 
+        return self.account
 
     def extract(self, file, existing_entries):
         entries = []

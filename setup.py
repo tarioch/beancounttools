@@ -22,4 +22,4 @@ def local_scheme(version):
     return ''
 
 if __name__ == "__main__":
-    setup(use_scm_version={"local_scheme": local_scheme}, use_pyscaffold=False)
+    setup(use_pyscaffold={"local_scheme": local_scheme})
