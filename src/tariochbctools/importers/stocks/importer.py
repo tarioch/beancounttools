@@ -19,9 +19,9 @@ class DividendImporter(importer.ImporterProtocol):
         return ''
 
     def extract(self, file, existing_entries):
-        config = yaml.safe_load(file.contents()) 
+        config = yaml.safe_load(file.contents())
         self.config = config
-        
+
         asset = input('Enter the asset:')
         date = input('Enter the date:')
         totalPayout = D(input('Enter the payout amount:'))
@@ -82,14 +82,14 @@ class DividendImporter(importer.ImporterProtocol):
             data.EMPTY_SET,
             postings
         )
-    
+
     def getLiquidityAccount(self, assetAccount, asset):
         return assetAccount.replace(':Investment:', ':Liquidity:').replace(':' + asset, ':CHF')
 
     def getReceivableAccount(self, assetAccount, asset):
         parts = assetAccount.split(':')
         return 'Assets:' + parts[1] + ':Receivable:Verrechnungssteuer'
-    
+
     def getIncomeAccount(self, assetAccount, asset):
         parts = assetAccount.split(':')
         return 'Income:' + parts[1] + ':Interest'

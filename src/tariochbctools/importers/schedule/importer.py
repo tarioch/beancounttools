@@ -24,10 +24,10 @@ class Importer(importer.ImporterProtocol):
 
     def extract(self, file, existing_entries):
         with open(file.name, 'r') as f:
-            config = yaml.safe_load(f) 
+            config = yaml.safe_load(f)
         self.transactions = config['transactions']
 
-        lastDayOfMonth = datetime.date.today() + relativedelta(day=31) 
+        lastDayOfMonth = datetime.date.today() + relativedelta(day=31)
         result = []
         for trx in config['transactions']:
             for i in reversed(range(1,6)):

@@ -18,7 +18,7 @@ class Source(source.Source):
         resp = requests.get(url='https://www.alphavantage.co/query', params=params)
         data = resp.json()
         if 'Note' in data:
-            sleep(60) 
+            sleep(60)
             resp = requests.get(url='https://www.alphavantage.co/query', params=params)
             data = resp.json()
 

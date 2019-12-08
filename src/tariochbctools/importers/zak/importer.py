@@ -22,7 +22,7 @@ class Importer(identifier.IdentifyMixin, importer.ImporterProtocol):
         self.currency = currency
 
     def file_account(self, file):
-        return self.account 
+        return self.account
 
     def createEntry(self, file, date, amt, text):
         meta = data.new_metadata(file.name, 0)
@@ -49,7 +49,7 @@ class Importer(identifier.IdentifyMixin, importer.ImporterProtocol):
             None,
             None,
         )
-    
+
     def cleanNumber(self, number):
         if isinstance(number, str):
             return D(number.replace('\'', ''))
@@ -105,4 +105,4 @@ class Importer(identifier.IdentifyMixin, importer.ImporterProtocol):
         date = m.group()
         entries.append(self.createBalanceEntry(file, date, saldo))
 
-        return entries        
+        return entries

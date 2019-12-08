@@ -53,6 +53,21 @@ importers
 
 Import transactions from `Bitstamp <https://www.bitstamp.com/>`_
 
+Create a file called bitstamp.yaml in your import location (e.g. downloads folder).
+
+.. code:: yaml
+
+  username: "12345"
+  key: "MyKey"
+  secret: "MySecret"
+  account: 'Assets:Bitstamp'
+  otherExpensesAccount: 'Expenses:Fee'
+  capGainAccount: 'Income:Capitalgain'
+  monthCutoff: 3
+  currencies:
+    - eur
+    - btc
+
 .. code:: python
 
   from tariochbctools.importers.bitst import importer as bitstimp
