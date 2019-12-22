@@ -104,6 +104,20 @@ Import mt940 from `Zürcher Kantonalbank <https://www.zkb.ch/>`_
   from tariochbctools.importers.zkb import importer as zkbimp
   CONFIG = [zkbimp.ZkbImporter('/\d+\.mt940', 'Assets:ZKB')]
 
+**ibkr**
+
+Import transactions from `Interactive Brokers <https://www.interactivebrokers.com/>`_
+
+Create a file called ibkr.yaml in your import location (e.g. downloads folder).
+
+::
+
+token: <flex web query token>
+queryId: <flex query id>
+
+::
+
+
 **zak**
 
 **Currently not working reliably**. Import PDF from `Bank Cler ZAK <https://www.cler.ch/de/info/zak/>`_
