@@ -9,6 +9,7 @@ from beancount.core.number import D
 from beancount.query import query
 from beancount.parser import options
 
+
 class DividendImporter(importer.ImporterProtocol):
     """An importer for Dividend payments."""
 

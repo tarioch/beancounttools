@@ -1,5 +1,4 @@
 from dateutil.parser import parse
-from io import StringIO
 
 from beancount.ingest import importer
 from beancount.core import data
@@ -10,6 +9,7 @@ from beancount.ingest.importers.mixins import identifier
 import tabula
 import pandas as pd
 import re
+
 
 class Importer(identifier.IdentifyMixin, importer.ImporterProtocol):
     """An importer for Bank Cler ZAK PDF files files."""
@@ -59,13 +59,12 @@ class Importer(identifier.IdentifyMixin, importer.ImporterProtocol):
     def extract(self, file, existing_entries):
         entries = []
 
-        dfFirst = tabula.read_pdf(file.name, pages=1, area=[340,70,700,565], guess=False)
-        dfRest = tabula.read_pdf(file.name, pages=2, area=[185,70,610,565], guess=False)
+        dfFirst = tabula.read_pdf(file.name, pages=1, area=[340, 70, 700, 565], guess=False)
+        dfRest = tabula.read_pdf(file.name, pages=2, area=[185, 70, 610, 565], guess=False)
         df = pd.concat([dfFirst, dfRest])
 
         date = None
         text = ''
-        valuta = None
         amount = None
         saldo = None
 
@@ -75,7 +74,6 @@ class Importer(identifier.IdentifyMixin, importer.ImporterProtocol):
                     entries.append(self.createEntry(file, date, amount, text))
 
                 date = None
-                valuta = None
                 amount = None
                 text = ''
 
@@ -85,13 +83,10 @@ class Importer(identifier.IdentifyMixin, importer.ImporterProtocol):
             if row.Text == row.Text:
                 text += ' ' + row.Text
 
-            if row.Valuta == row.Valuta:
-                valuta = row.Valuta
-
             if row.Belastung == row.Belastung:
                 amount = -self.cleanNumber(row.Belastung)
 
-            if row.Gutschrift == row.Gutschrift :
+            if row.Gutschrift == row.Gutschrift:
                 amount = self.cleanNumber(row.Gutschrift)
 
             if row.Saldo == row.Saldo:
@@ -100,7 +95,7 @@ class Importer(identifier.IdentifyMixin, importer.ImporterProtocol):
         if date and amount:
             entries.append(self.createEntry(file, date, amount, text))
 
-        p = re.compile('\d\d.\d\d.\d\d\d\d')
+        p = re.compile(r'\d\d.\d\d.\d\d\d\d')
         m = p.search(text)
         date = m.group()
         entries.append(self.createBalanceEntry(file, date, saldo))

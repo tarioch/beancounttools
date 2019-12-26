@@ -4,6 +4,7 @@ from dateutil import tz
 from beancount.core.number import D
 import requests
 
+
 class Source(source.Source):
     def get_latest_price(self, ticker):
         print(ticker)

@@ -1,9 +1,9 @@
 from beancount.prices import source
-import datetime
 from dateutil import tz
 from dateutil.parser import parse
 from beancount.core.number import D
 import requests
+
 
 class Source(source.Source):
     def get_latest_price(self, ticker):

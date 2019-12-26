@@ -9,6 +9,7 @@ from beancount.ingest.importers.mixins import identifier
 
 import csv
 
+
 class Importer(identifier.IdentifyMixin, importer.ImporterProtocol):
     """An importer for Transferwise CSV files."""
 
@@ -48,4 +49,3 @@ class Importer(identifier.IdentifyMixin, importer.ImporterProtocol):
                 )
                 entries.append(entry)
         return entries
-

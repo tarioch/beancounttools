@@ -15,6 +15,7 @@ from beancount.core import data
 from beancount.core import amount
 from beancount.core.number import D
 
+
 class Importer(importer.ImporterProtocol):
     """An importer for Bitstamp."""
 
@@ -30,9 +31,9 @@ class Importer(importer.ImporterProtocol):
         config = yaml.safe_load(file.contents())
         self.config = config
         self.client = bitstamp.client.Trading(
-            username = config['username'],
-            key = config['key'],
-            secret = config['secret'])
+            username=config['username'],
+            key=config['key'],
+            secret=config['secret'])
         self.currencies = config['currencies']
         self.account = config['account']
         self.otherExpensesAccount = config['otherExpensesAccount']
@@ -75,7 +76,7 @@ class Importer(importer.ImporterProtocol):
 
         if type == 0:
             narration = 'Deposit'
-            cost =  data.Cost(
+            cost = data.Cost(
                 self.fetchPrice(posCcy, date),
                 'CHF',
                 None,
@@ -109,7 +110,7 @@ class Importer(importer.ImporterProtocol):
                     None,
                     None,
                     False
-                    )
+                )
                 negCcyPrice = None
             else:
                 posCcyCost = data.CostSpec(
@@ -119,11 +120,10 @@ class Importer(importer.ImporterProtocol):
                     None,
                     None,
                     False
-                    )
+                )
                 posCcyPrice = None
                 negCcyCost = None
                 negCcyPrice = amount.Amount(rateFiatCcy, 'CHF')
-
 
             narration = 'Trade'
 
@@ -153,4 +153,3 @@ class Importer(importer.ImporterProtocol):
             data.EMPTY_SET,
             postings
         )
-
