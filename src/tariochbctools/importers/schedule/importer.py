@@ -1,10 +1,6 @@
 import yaml
 from os import path
 
-from beancount import loader
-from beancount.core import prices
-from beancount.core.number import MISSING
-
 from beancount.ingest import importer
 from beancount.core import data
 from beancount.core import amount
@@ -12,6 +8,7 @@ from beancount.core.number import D
 
 import datetime
 from dateutil.relativedelta import relativedelta
+
 
 class Importer(importer.ImporterProtocol):
     """An importer for Scheduled/Recurring Transactions."""
@@ -30,7 +27,7 @@ class Importer(importer.ImporterProtocol):
         lastDayOfMonth = datetime.date.today() + relativedelta(day=31)
         result = []
         for trx in config['transactions']:
-            for i in reversed(range(1,6)):
+            for i in reversed(range(1, 6)):
                 date = lastDayOfMonth + relativedelta(months=-i)
                 result.append(self.createForDate(trx, date))
 
@@ -55,4 +52,3 @@ class Importer(importer.ImporterProtocol):
             data.EMPTY_SET,
             postings
         )
-

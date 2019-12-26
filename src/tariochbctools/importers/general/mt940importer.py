@@ -1,5 +1,3 @@
-from dateutil.parser import parse
-
 from beancount.ingest import importer
 from beancount.core import data
 from beancount.core import amount
@@ -7,6 +5,7 @@ from beancount.core.number import D
 from beancount.ingest.importers.mixins import identifier
 
 import mt940
+
 
 class Importer(identifier.IdentifyMixin, importer.ImporterProtocol):
     """An importer for MT940 files."""
@@ -62,4 +61,3 @@ class Importer(identifier.IdentifyMixin, importer.ImporterProtocol):
 
     def prepare_narration(self, trxdata):
         return trxdata['transaction_details'] + ' ' + trxdata['extra_details']
-

@@ -1,6 +1,7 @@
 from tariochbctools.importers.general import mt940importer
 import re
 
+
 class ZkbImporter(mt940importer.Importer):
     def prepare_payee(self, trxdata):
         return ''
@@ -32,5 +33,4 @@ class ZkbImporter(mt940importer.Importer):
         else:
             narration = details
 
-        return narration 
-
+        return narration

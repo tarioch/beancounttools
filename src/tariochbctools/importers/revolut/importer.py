@@ -9,6 +9,7 @@ from beancount.ingest.importers.mixins import identifier
 
 import csv
 
+
 class Importer(identifier.IdentifyMixin, importer.ImporterProtocol):
     """An importer for Revolut CSV files."""
 
@@ -29,7 +30,7 @@ class Importer(identifier.IdentifyMixin, importer.ImporterProtocol):
         entries = []
 
         with StringIO(file.contents()) as csvfile:
-            reader = csv.DictReader(csvfile, ['Date', 'Reference','PaidOut', 'PaidIn', 'ExchangeOut', 'ExchangeIn', 'Balance', 'Category', 'Notes'], delimiter=';', skipinitialspace=True)
+            reader = csv.DictReader(csvfile, ['Date', 'Reference', 'PaidOut', 'PaidIn', 'ExchangeOut', 'ExchangeIn', 'Balance', 'Category', 'Notes'], delimiter=';', skipinitialspace=True)
             next(reader)
             for row in reader:
                 metakv = {
@@ -60,4 +61,3 @@ class Importer(identifier.IdentifyMixin, importer.ImporterProtocol):
                 )
                 entries.append(entry)
         return entries
-
