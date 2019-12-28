@@ -7,13 +7,13 @@ from os import path
 
 import bitstamp.client
 
-from beancount.core import prices
 from beancount.core.number import MISSING
 
 from beancount.ingest import importer
 from beancount.core import data
 from beancount.core import amount
 from beancount.core.number import D
+from tariochbctools.importers.general.priceLookup import PriceLookup
 
 
 class Importer(importer.ImporterProtocol):
@@ -26,7 +26,7 @@ class Importer(importer.ImporterProtocol):
         return ''
 
     def extract(self, file, existing_entries):
-        self.priceMap = prices.build_price_map(existing_entries)
+        self.priceLookup = PriceLookup(existing_entries, 'CHF')
 
         config = yaml.safe_load(file.contents())
         self.config = config
@@ -51,10 +51,6 @@ class Importer(importer.ImporterProtocol):
 
         return result
 
-    def fetchPrice(self, instrument, date):
-        price = prices.get_price(self.priceMap, tuple([instrument, 'CHF']), date)
-        return price[1]
-
     def fetchSingle(self, trx):
         id = int(trx['id'])
         type = int(trx['type'])
@@ -77,7 +73,7 @@ class Importer(importer.ImporterProtocol):
         if type == 0:
             narration = 'Deposit'
             cost = data.Cost(
-                self.fetchPrice(posCcy, date),
+                self.priceLookup.fetchPriceAmount(posCcy, date),
                 'CHF',
                 None,
                 None
@@ -99,7 +95,7 @@ class Importer(importer.ImporterProtocol):
                 feeCcy = posCcy
                 posAmt -= fee
 
-            rateFiatCcy = self.fetchPrice(feeCcy, date)
+            rateFiatCcy = self.priceLookup.fetchPriceAmount(feeCcy, date)
             if feeCcy == posCcy:
                 posCcyCost = None
                 posCcyPrice = amount.Amount(rateFiatCcy, 'CHF')
