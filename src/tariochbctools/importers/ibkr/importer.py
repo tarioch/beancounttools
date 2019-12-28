@@ -1,6 +1,6 @@
 import yaml
 from os import path
-from ibflex import client, parser, Types
+from ibflex import client, parser, Types, enums
 import xml.etree.ElementTree as ET
 
 from beancount import loader
@@ -14,6 +14,7 @@ from beancount.core.number import D
 
 import datetime
 from dateutil.relativedelta import relativedelta
+
 
 class Importer(importer.ImporterProtocol):
     """An importer for Interactive Broker using the flex query service."""
@@ -33,21 +34,20 @@ class Importer(importer.ImporterProtocol):
         response = client.download(token, queryId)
 
         root = ET.fromstring(response)
-        if root.tag != "FlexQueryResponse":
-            raise FlexParserError("Not a FlexQueryResponse")
         statement = parser.parse_element(root)
         assert isinstance(statement, Types.FlexQueryResponse)
 
         for divAccrual in statement.FlexStatements[0].ChangeInDividendAccruals:
-            print(divAccrual)
-            print(divAccrual.exDate)
-            print(divAccrual.payDate)
-            print(divAccrual.quantity)
-            print(divAccrual.symbol)
-            print(divAccrual.currency)
-            print(divAccrual.grossAmount)
-            print(divAccrual.tax)
-            print(divAccrual.fee)
-            print(divAccrual.fxRateToBase)
+            if divAccrual.code[0] != enums.Code.REVERSE:
+                print(divAccrual)
+                print(divAccrual.exDate)
+                print(divAccrual.payDate)
+                print(divAccrual.quantity)
+                print(divAccrual.symbol)
+                print(divAccrual.currency)
+                print(divAccrual.grossAmount)
+                print(divAccrual.tax)
+                print(divAccrual.fee)
+                print(divAccrual.fxRateToBase)
 
         return []
