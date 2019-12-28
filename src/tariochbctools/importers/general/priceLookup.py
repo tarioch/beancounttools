@@ -11,4 +11,7 @@ class PriceLookup:
         return price[1]
 
     def fetchPrice(self, instrument, date):
+        if instrument == self.baseCcy:
+            return None
+
         return amount.Amount(self.fetchPriceAmount(instrument, date), self.baseCcy)

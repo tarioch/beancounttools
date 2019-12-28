@@ -28,7 +28,7 @@ class Importer(importer.ImporterProtocol):
         token = config['token']
         queryId = config['queryId']
 
-        priceLookup = PriceLookup(existing_entries, 'CHF')
+        priceLookup = PriceLookup(existing_entries, config['baseCcy'])
 
         response = client.download(token, queryId)
 
@@ -78,10 +78,7 @@ class Importer(importer.ImporterProtocol):
         liquidityAccount = self.getLiquidityAccount(assetAccount, asset, currency)
         incomeAccount = self.getIncomeAccount(assetAccount, asset)
 
-        if currency != 'CHF':
-            price = priceLookup.fetchPrice(currency, date)
-        else:
-            price = None
+        price = priceLookup.fetchPrice(currency, date)
 
         postings = [
             data.Posting(assetAccount, amount.Amount(D(0), asset), None, None, None, None),
