@@ -112,12 +112,9 @@ Create a file called ibkr.yaml in your import location (e.g. downloads folder).
 
 ::
 
-token: <flex web query token>
-queryId: <flex query id>
-baseCcy: CHF
-
-::
-
+  token: <flex web query token>
+  queryId: <flex query id>
+  baseCcy: CHF
 
 **zak**
 
