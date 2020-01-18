@@ -11,7 +11,7 @@ def generate(entries, options_map, baseCcy):
     for entry in entries:
         if isinstance(entry, data.Price) and entry.amount.currency != baseCcy:
             fxRate = prices.get_price(priceMap, tuple([entry.amount.currency, baseCcy]), entry.date)
-            priceInBaseCcy = amount.Amount(entry.amount.number / fxRate[1], baseCcy)
+            priceInBaseCcy = amount.Amount(entry.amount.number * fxRate[1], baseCcy)
 
             additionalEntries.append(data.Price(
                 entry.meta,
