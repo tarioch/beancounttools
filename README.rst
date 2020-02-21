@@ -88,12 +88,19 @@ Import CSV from `Revolut <https://www.revolut.com/>`_
 
 **transferwise**
 
-Import CSV from `Transferwise <https://www.transferwise.com/>`_
+Import from `Transferwise <https://www.transferwise.com/>`_ using their api
 
 ::
 
   from tariochbctools.importers.transferwiseimport importer as twimp
-  CONFIG = [twimp.Importer('/statement_CHF.*\.csv', 'Assets:Transferwise:CHF')]
+  CONFIG = [twimp.Importer()]
+
+Create a file called transferwise.yaml in your import location (e.g. download folder).
+
+::
+
+  token: <your api token>
+  baseAccount: <Assets:Transferwise:>
 
 **zkb**
 
