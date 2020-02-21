@@ -1,7 +1,6 @@
 import yaml
 from os import path
 from ibflex import client, parser, Types, enums
-import xml.etree.ElementTree as ET
 from datetime import date
 
 from beancount.query import query
@@ -31,9 +30,7 @@ class Importer(importer.ImporterProtocol):
         priceLookup = PriceLookup(existing_entries, config['baseCcy'])
 
         response = client.download(token, queryId)
-
-        root = ET.fromstring(response)
-        statement = parser.parse_element(root)
+        statement = parser.parse(response)
         assert isinstance(statement, Types.FlexQueryResponse)
 
         result = []
