@@ -32,6 +32,17 @@ Requires the environment variable ``ALPHAVANTAGE_API_KEY`` to be set with your p
   2019-01-01 commodity VWRL
     price: "CHF:tariochbctools.plugins.prices.alphavantage/VWRL.SW"
 
+**alphavantagefx**
+
+Fetches fx rates from `Alphavantage <https://www.alphavantage.co/>`_
+Requires the environment variable ``ALPHAVANTAGE_API_KEY`` to be set with your personal api key.
+
+::
+
+  2019-01-01 commodity BTC
+    price: "CHF:tariochbctools.plugins.prices.alphavantagefx/BTC"
+
+
 **bitstamp**
 
 Fetches prices from `Bitstamp <https://www.bitstamp.com/>`_
