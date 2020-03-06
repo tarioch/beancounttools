@@ -1,7 +1,7 @@
 import yaml
 from os import path
-from ibflex import client, parser, Types, enums
-from datetime import date
+from ibflex import client, parser, Types
+from ibflex.enums import CashAction
 
 from beancount.query import query
 from beancount.parser import options
@@ -33,25 +33,54 @@ class Importer(importer.ImporterProtocol):
         statement = parser.parse(response)
         assert isinstance(statement, Types.FlexQueryResponse)
 
+        transactions = []
+        for trx in statement.FlexStatements[0].CashTransactions:
+            existingEntry = None
+            if CashAction.DIVIDEND == trx.type or CashAction.WHTAX == trx.type:
+                existingEntry = next((t for t in transactions if t['date'] == trx.dateTime), None)
+
+            if existingEntry:
+                if CashAction.WHTAX == trx.type:
+                    existingEntry['whAmount'] = trx.amount
+                else:
+                    existingEntry['amount'] = trx.amount
+                    existingEntry['description'] = trx.description
+                    existingEntry['type'] = trx.type
+            else:
+                if CashAction.WHTAX == trx.type:
+                    amount = 0
+                    whAmount = trx.amount
+                else:
+                    amount = trx.amount
+                    whAmount = 0
+
+                transactions.append({
+                    'date': trx.dateTime,
+                    'symbol': trx.symbol,
+                    'currency': trx.currency,
+                    'amount': amount,
+                    'whAmount': whAmount,
+                    'description': trx.description,
+                    'type': trx.type
+                })
+
         result = []
-        for divAccrual in statement.FlexStatements[0].ChangeInDividendAccruals:
-            if divAccrual.code[0] != enums.Code.REVERSE and divAccrual.payDate <= date.today():
-                asset = divAccrual.symbol.replace('z', '')
-                exDate = divAccrual.exDate
-                payDate = divAccrual.payDate
-                totalPayout = divAccrual.netAmount
-                totalWithholding = divAccrual.tax
-                currency = divAccrual.currency
+        for trx in transactions:
+            if trx['type'] == CashAction.DIVIDEND:
+                asset = trx['symbol'].replace('z', '')
+                payDate = trx['date'].date()
+                totalDividend = trx['amount']
+                totalWithholding = -trx['whAmount']
+                totalPayout = totalDividend - totalWithholding
+                currency = trx['currency']
 
                 _, rows = query.run_query(
                     existing_entries,
                     options.OPTIONS_DEFAULTS,
-                    'select sum(number) as quantity, account where currency="' + asset + '" and date<#"' + str(exDate) + '" group by account;')
+                    'select sum(number) as quantity, account where currency="' + asset + '" and date<#"' + str(payDate) + '" group by account;')
                 totalQuantity = D(0)
                 for row in rows:
                     totalQuantity += row.quantity
-                if totalQuantity != divAccrual.quantity:
-                    raise Exception(f"Different Total Quantities Dividend: {divAccrual.quantity} vs Ours: {totalQuantity}")
 
                 remainingPayout = totalPayout
                 remainingWithholding = totalWithholding
@@ -63,15 +92,15 @@ class Importer(importer.ImporterProtocol):
                     remainingPayout -= myPayout
                     myWithholding = round(totalWithholding * myQuantity / totalQuantity, 2)
                     remainingWithholding -= myWithholding
-                    result.append(self.createSingle(myPayout, myWithholding, myQuantity, myAccount, asset, currency, payDate, priceLookup))
+                    result.append(self.createSingle(myPayout, myWithholding, myQuantity, myAccount, asset, currency, payDate, priceLookup, trx['description']))
 
                 lastRow = rows[-1]
-                result.append(self.createSingle(remainingPayout, remainingWithholding, lastRow.quantity, lastRow.account, asset, currency, payDate, priceLookup))
+                result.append(self.createSingle(remainingPayout, remainingWithholding, lastRow.quantity, lastRow.account, asset, currency, payDate, priceLookup, trx['description']))
 
         return result
 
-    def createSingle(self, payout, withholding, quantity, assetAccount, asset, currency, date, priceLookup):
-        narration = "Dividend for " + str(quantity)
+    def createSingle(self, payout, withholding, quantity, assetAccount, asset, currency, date, priceLookup, description):
+        narration = "Dividend for " + str(quantity) + " : " + description
         liquidityAccount = self.getLiquidityAccount(assetAccount, asset, currency)
         incomeAccount = self.getIncomeAccount(assetAccount, asset)
 
