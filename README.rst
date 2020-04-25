@@ -103,7 +103,7 @@ Import from `Transferwise <https://www.transferwise.com/>`_ using their api
 
 ::
 
-  from tariochbctools.importers.transferwiseimport importer as twimp
+  from tariochbctools.importers.transferwise import importer as twimp
   CONFIG = [twimp.Importer()]
 
 Create a file called transferwise.yaml in your import location (e.g. download folder).
@@ -112,6 +112,25 @@ Create a file called transferwise.yaml in your import location (e.g. download fo
 
   token: <your api token>
   baseAccount: <Assets:Transferwise:>
+
+**TrueLayer**
+
+Import from `TrueLayer <https://www.truelayer.com/>`_ using their api services. e.g. supports Revolut.
+You need to create a dev account and see their documentation about how to get a refresh token.
+
+::
+
+  from tariochbctools.importers.truelayer import importer as tlimp
+  CONFIG = [tlimp.Importer()]
+
+Create a file called truelayer.yaml in your import location (e.g. download folder).
+
+::
+
+  baseAccount: <Assets:MyBank:>
+  client_id: <CLIENT ID>
+  client_secret: <CLIENT SECRET>
+  refresh_token: <REFRESH TOKEN>
 
 **zkb**
 
@@ -124,7 +143,7 @@ Import mt940 from `Zürcher Kantonalbank <https://www.zkb.ch/>`_
 
 **ibkr**
 
-Import transactions from `Interactive Brokers <https://www.interactivebrokers.com/>`_
+Import dividends from `Interactive Brokers <https://www.interactivebrokers.com/>`_
 
 Create a file called ibkr.yaml in your import location (e.g. downloads folder).
 
