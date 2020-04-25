@@ -44,7 +44,7 @@ class Importer(importer.ImporterProtocol):
             r = requests.get(f'https://api.truelayer.com/data/v1/accounts/{accountId}/transactions', headers=headers)
             for trx in r.json()['results']:
                 metakv = {
-                    'ref': trx['meta']['provider_id'],
+                    'tlref': trx['meta']['provider_id'],
                 }
                 if trx['transaction_classification']:
                     metakv['category'] = trx['transaction_classification'][0]
