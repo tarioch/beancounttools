@@ -1,5 +1,6 @@
 import yaml
 import dateutil.parser
+from datetime import timedelta
 from os import path
 import requests
 
@@ -42,25 +43,46 @@ class Importer(importer.ImporterProtocol):
             accountId = account['account_id']
             accountCcy = account['currency']
             r = requests.get(f'https://api.truelayer.com/data/v1/accounts/{accountId}/transactions', headers=headers)
-            for trx in r.json()['results']:
+            transactions = sorted(r.json()['results'], key=lambda trx: trx['timestamp'])
+            for trx in transactions:
                 metakv = {
                     'tlref': trx['meta']['provider_id'],
                 }
                 if trx['transaction_classification']:
                     metakv['category'] = trx['transaction_classification'][0]
                 meta = data.new_metadata('', 0, metakv)
+                trxDate = dateutil.parser.parse(trx['timestamp']).date()
+                account = baseAccount + accountCcy
                 entry = data.Transaction(
                     meta,
-                    dateutil.parser.parse(trx['timestamp']).date(),
+                    trxDate,
                     '*',
                     '',
                     trx['description'],
                     data.EMPTY_SET,
                     data.EMPTY_SET,
                     [
-                        data.Posting(baseAccount + accountCcy, amount.Amount(D(str(trx['amount'])), trx['currency']), None, None, None, None),
+                        data.Posting(account, amount.Amount(D(str(trx['amount'])), trx['currency']), None, None, None, None),
                     ]
                 )
                 entries.append(entry)
+
+                if trx['transaction_id'] == transactions[-1]['transaction_id']:
+                    balDate = trxDate + timedelta(days=1)
+                    metakv = {}
+                    if existing_entries is not None:
+                        for exEntry in existing_entries:
+                            if isinstance(exEntry, data.Balance) and exEntry.date == balDate and exEntry.account == account:
+                                metakv['__duplicate__'] = True
+
+                    meta = data.new_metadata('', 0, metakv)
+                    entries.append(data.Balance(
+                        meta,
+                        balDate,
+                        account,
+                        amount.Amount(D(str(trx['running_balance']['amount'])), trx['running_balance']['currency']),
+                        None,
+                        None,
+                    ))
 
         return entries
