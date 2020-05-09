@@ -7,8 +7,6 @@ import requests
 
 class Source(source.Source):
     def get_latest_price(self, ticker):
-        print(ticker)
-
         resp = requests.get(url='https://www.bitstamp.net/api/v2/ticker/' + ticker.lower() + 'eur/')
         data = resp.json()
 
