@@ -7,8 +7,6 @@ import requests
 
 class Source(source.Source):
     def get_latest_price(self, ticker):
-        print(ticker)
-
         resp = requests.get(url='https://api.exchangeratesapi.io/latest?base=' + ticker + '&symbols=CHF')
         data = resp.json()
 
