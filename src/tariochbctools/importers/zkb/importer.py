@@ -18,9 +18,12 @@ class ZkbImporter(mt940importer.Importer):
         extraReplacements[r'eBanking Mobile:.*'] = 'eBanking Mobile'
         extraReplacements[r'E-Rechnung:.*'] = 'E-Rechnung'
         extraReplacements[r'Kontouebertrag:.*'] = 'Kontouebertrag:'
+        extraReplacements[r'\?ZKB:\d+ '] = ''
 
         detailsReplacements = {}
-        detailsReplacements[r'\?ZI:\?9:1'] = ''
+        detailsReplacements[r'\?ZI:\?9:\d'] = ''
+        detailsReplacements[r'\?ZKB:\d+'] = ''
+        detailsReplacements[r'Einkauf ZKB Maestro Karte Nr. \d+,'] = 'Maestro'
 
         for pattern, replacement in extraReplacements.items():
             extra = re.sub(pattern, replacement, extra)
@@ -29,8 +32,8 @@ class ZkbImporter(mt940importer.Importer):
             details = re.sub(pattern, replacement, details)
 
         if extra:
-            narration = extra + ': ' + details
+            narration = extra.strip() + ': ' + details.strip()
         else:
-            narration = details
+            narration = details.strip()
 
         return narration
