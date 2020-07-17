@@ -61,6 +61,18 @@ Fetches prices from `exchangeratesapi.io <https://exchangeratesapi.io//>`_
   2019-01-01 commodity EUR
     price: "CHF:tariochbctools.plugins.prices.exchangeratesapi/EUR"
 
+**interactivebrokers**
+
+Fetches prices from `interactivebrokers <https://www.interactivebrokers.com/>`_
+Only works if you have open positions with the symbols.
+Requires the environment variables ``IBKR_TOKEN`` to be set with your flex query token and ``IBKR_QUERY_ID``
+with a flex query that contains the open positions.
+
+::
+
+  2019-01-01 commodity VWRL
+    price: "CHF:tariochbctools.plugins.prices.ibkr/VWRL"
+
 
 importers
 ---------
