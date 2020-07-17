@@ -67,7 +67,7 @@ class Importer(importer.ImporterProtocol):
         result = []
         for trx in transactions:
             if trx['type'] == CashAction.DIVIDEND:
-                asset = trx['symbol'].replace('z', '')
+                asset = trx['symbol'].rstrip('z')
                 payDate = trx['date'].date()
                 totalDividend = trx['amount']
                 totalWithholding = -trx['whAmount']
