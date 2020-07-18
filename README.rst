@@ -195,11 +195,16 @@ Define a file called schedule.yaml in your import location (e.g. downloads folde
   from tariochbctools.importers.schedule import importer as scheduleimp
   CONFIG = [ scheduleimp.Importer() ]
 
-** Cembra Mastercard Montly Statement **
+**Cembra Mastercard Montly Statement**
 
 Import Monthly Statement PDF from Cembra Money Bank (e.g. Cumulus Mastercard).
 Requires the dependencies for camelot to be installed. See https://camelot-py.readthedocs.io/en/master/user/install-deps.html#install-deps
 
+
+::
+
+  from tariochbctools.importers.cembrastatement import importer as cembrastatementimp
+  CONFIG = [cembrastatementimp.Importer('\d+.pdf', 'Liabilities:Cembra:Mastercard')]
 
 
 **stocks**
