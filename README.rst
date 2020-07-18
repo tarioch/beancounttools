@@ -195,6 +195,13 @@ Define a file called schedule.yaml in your import location (e.g. downloads folde
   from tariochbctools.importers.schedule import importer as scheduleimp
   CONFIG = [ scheduleimp.Importer() ]
 
+** Cembra Mastercard Montly Statement **
+
+Import Monthly Statement PDF from Cembra Money Bank (e.g. Cumulus Mastercard).
+Requires the dependencies for camelot to be installed. See https://camelot-py.readthedocs.io/en/master/user/install-deps.html#install-deps
+
+
+
 **stocks**
 
 **Planned rewrite**. Generate transaction for dividend payments based on entering values in the command line.
