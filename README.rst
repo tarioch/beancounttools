@@ -205,9 +205,3 @@ Requires the dependencies for camelot to be installed. See https://camelot-py.re
 
   from tariochbctools.importers.cembrastatement import importer as cembrastatementimp
   CONFIG = [cembrastatementimp.Importer('\d+.pdf', 'Liabilities:Cembra:Mastercard')]
-
-
-**stocks**
-
-**Planned rewrite**. Generate transaction for dividend payments based on entering values in the command line.
-
