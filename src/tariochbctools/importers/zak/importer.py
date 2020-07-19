@@ -1,4 +1,5 @@
 from dateutil.parser import parse
+from datetime import timedelta
 
 from beancount.ingest import importer
 from beancount.core import data
@@ -6,26 +7,29 @@ from beancount.core import amount
 from beancount.core.number import D
 from beancount.ingest.importers.mixins import identifier
 
-import tabula
-import pandas as pd
+import camelot
 import re
 
 
 class Importer(identifier.IdentifyMixin, importer.ImporterProtocol):
     """An importer for Bank Cler ZAK PDF files files."""
 
-    def __init__(self, regexps, account, currency):
+    def __init__(self, regexps, account):
         identifier.IdentifyMixin.__init__(self, matchers=[
             ('filename', regexps)
         ])
         self.account = account
-        self.currency = currency
 
     def file_account(self, file):
         return self.account
 
     def createEntry(self, file, date, amt, text):
-        meta = data.new_metadata(file.name, 0)
+        bookingNrRgexp = re.compile(r'BC Buchungsnr. (?P<bookingRef>\d+)$')
+        m = bookingNrRgexp.search(text)
+        bookingRef = m.group('bookingRef')
+        text = re.sub(bookingNrRgexp, '', text)
+
+        meta = data.new_metadata(file.name, 0, {'zakref': bookingRef})
         return data.Transaction(
             meta,
             parse(date.strip(), dayfirst=True).date(),
@@ -35,7 +39,7 @@ class Importer(identifier.IdentifyMixin, importer.ImporterProtocol):
             data.EMPTY_SET,
             data.EMPTY_SET,
             [
-                data.Posting(self.account, amount.Amount(D(amt), self.currency), None, None, None, None),
+                data.Posting(self.account, amount.Amount(D(amt), 'CHF'), None, None, None, None),
             ]
         )
 
@@ -43,9 +47,9 @@ class Importer(identifier.IdentifyMixin, importer.ImporterProtocol):
         meta = data.new_metadata(file.name, 0)
         return data.Balance(
             meta,
-            parse(date.strip(), dayfirst=True).date(),
+            parse(date.strip(), dayfirst=True).date() + timedelta(days=1),
             self.account,
-            amount.Amount(D(amt), self.currency),
+            amount.Amount(D(amt), 'CHF'),
             None,
             None,
         )
@@ -59,9 +63,11 @@ class Importer(identifier.IdentifyMixin, importer.ImporterProtocol):
     def extract(self, file, existing_entries):
         entries = []
 
-        dfFirst = tabula.read_pdf(file.name, pages=1, area=[340, 70, 700, 565], guess=False)
-        dfRest = tabula.read_pdf(file.name, pages=2, area=[185, 70, 610, 565], guess=False)
-        df = pd.concat([dfFirst, dfRest])
+        tables = camelot.read_pdf(file.name, flavor='stream', pages='all', table_regions=['60,450,600,200'])
+        df = tables[0].df
+        new_header = df.iloc[0]
+        df = df[1:]
+        df.columns = new_header
 
         date = None
         text = ''
@@ -69,7 +75,7 @@ class Importer(identifier.IdentifyMixin, importer.ImporterProtocol):
         saldo = None
 
         for row in df.itertuples():
-            if row.Saldo == row.Saldo:
+            if row.Saldo:
                 if date and amount:
                     entries.append(self.createEntry(file, date, amount, text))
 
@@ -77,26 +83,26 @@ class Importer(identifier.IdentifyMixin, importer.ImporterProtocol):
                 amount = None
                 text = ''
 
-            if row.Datum == row.Datum:
-                date = row.Datum
+            if row.Valuta:
+                date = row.Valuta
 
-            if row.Text == row.Text:
+            if row.Text:
                 text += ' ' + row.Text
 
-            if row.Belastung == row.Belastung:
+            if row.Belastung:
                 amount = -self.cleanNumber(row.Belastung)
 
-            if row.Gutschrift == row.Gutschrift:
+            if row.Gutschrift:
                 amount = self.cleanNumber(row.Gutschrift)
 
-            if row.Saldo == row.Saldo:
+            if row.Saldo:
                 saldo = self.cleanNumber(row.Saldo)
 
         if date and amount:
             entries.append(self.createEntry(file, date, amount, text))
 
-        p = re.compile(r'\d\d.\d\d.\d\d\d\d')
-        m = p.search(text)
+        dateRegexp = re.compile(r'\d\d.\d\d.\d\d\d\d')
+        m = dateRegexp.search(text)
         date = m.group()
         entries.append(self.createBalanceEntry(file, date, saldo))
 
