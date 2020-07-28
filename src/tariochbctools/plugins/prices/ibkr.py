@@ -4,6 +4,7 @@ from beancount.core.number import D
 from os import environ
 from ibflex import client, parser
 from datetime import datetime
+from time import sleep
 
 
 class Source(source.Source):
@@ -11,7 +12,15 @@ class Source(source.Source):
         token = environ['IBKR_TOKEN']
         queryId = environ['IBKR_QUERY_ID']
 
-        response = client.download(token, queryId)
+        try:
+            response = client.download(token, queryId)
+        except client.ResponseCodeError as e:
+            if e.code == '1018':
+                sleep(10)
+                response = client.download(token, queryId)
+            else:
+                raise e
+
         statement = parser.parse(response)
         for position in statement.FlexStatements[0].OpenPositions:
             if position.symbol.rstrip('z') == ticker:
