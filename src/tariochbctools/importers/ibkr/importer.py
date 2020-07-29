@@ -1,4 +1,5 @@
 import yaml
+import re
 from os import path
 from ibflex import client, parser, Types
 from ibflex.enums import CashAction
@@ -21,6 +22,13 @@ class Importer(importer.ImporterProtocol):
     def file_account(self, file):
         return ''
 
+    def matches(self, trx, t):
+        p = re.compile(r'.* (?P<perShare>\d+\.?\d+) PER SHARE')
+        trxPerShare = p.search(trx.description).group('perShare')
+        tPerShare = p.search(t['description']).group('perShare')
+
+        return t['date'] == trx.dateTime and t['symbol'] == trx.symbol and trxPerShare == tPerShare
+
     def extract(self, file, existing_entries):
         with open(file.name, 'r') as f:
             config = yaml.safe_load(f)
@@ -37,13 +45,13 @@ class Importer(importer.ImporterProtocol):
         for trx in statement.FlexStatements[0].CashTransactions:
             existingEntry = None
             if CashAction.DIVIDEND == trx.type or CashAction.WHTAX == trx.type:
-                existingEntry = next((t for t in transactions if t['date'] == trx.dateTime), None)
+                existingEntry = next((t for t in transactions if self.matches(trx, t)), None)
 
             if existingEntry:
                 if CashAction.WHTAX == trx.type:
-                    existingEntry['whAmount'] = trx.amount
+                    existingEntry['whAmount'] += trx.amount
                 else:
-                    existingEntry['amount'] = trx.amount
+                    existingEntry['amount'] += trx.amount
                     existingEntry['description'] = trx.description
                     existingEntry['type'] = trx.type
             else:
