@@ -25,7 +25,7 @@ class Importer(identifier.IdentifyMixin, importer.ImporterProtocol):
         meta = data.new_metadata(file.name, 0)
         return data.Transaction(
             meta,
-            parse(date.strip(), dayfirst=True).date(),
+            date,
             '*',
             '',
             text.strip(),
@@ -46,13 +46,18 @@ class Importer(identifier.IdentifyMixin, importer.ImporterProtocol):
         df.columns = new_header
 
         for index, row in df.iterrows():
-            date = row[1]
-            text = row[2]
-            credit = row[3]
-            debit = row[4]
-            amount = -D(debit) if debit else D(credit)
+            try:
+                date = parse(row[1].strip(), dayfirst=True).date()
+            except ValueError:
+                date = None
 
-            if date and amount:
-                entries.append(self.createEntry(file, date, amount, text))
+            if date:
+                text = row[2]
+                credit = row[3]
+                debit = row[4]
+                amount = -D(debit) if debit else D(credit)
+
+                if amount:
+                    entries.append(self.createEntry(file, date, amount, text))
 
         return entries
