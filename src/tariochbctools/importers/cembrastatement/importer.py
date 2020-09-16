@@ -32,7 +32,7 @@ class Importer(identifier.IdentifyMixin, importer.ImporterProtocol):
             data.EMPTY_SET,
             data.EMPTY_SET,
             [
-                data.Posting(self.account, amount.Amount(D(amt), 'CHF'), None, None, None, None),
+                data.Posting(self.account, amount.Amount(amt, 'CHF'), None, None, None, None),
             ]
         )
 
@@ -55,9 +55,12 @@ class Importer(identifier.IdentifyMixin, importer.ImporterProtocol):
                 text = row[2]
                 credit = row[3]
                 debit = row[4]
-                amount = -D(debit) if debit else D(credit)
+                amount = -self.cleanDecimal(debit) if debit else self.cleanDecimal(credit)
 
                 if amount:
                     entries.append(self.createEntry(file, date, amount, text))
 
         return entries
+
+    def cleanDecimal(self, formattedNumber):
+        return D(formattedNumber.replace("'", ""))
