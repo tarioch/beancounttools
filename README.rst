@@ -213,9 +213,11 @@ Import transactions from Blockchain
 
 Create a file called blockchain.yaml in your import location (e.g. downloads folder).
 
+
 ::
-base_ccy: CHF
-addresses:
+
+  base_ccy: CHF
+  addresses:
     - address: 'SOMEADDRESS'
       currency: 'BTC'
       narration: 'Some Narration'
@@ -224,6 +226,8 @@ addresses:
       currency: 'LTC'
       narration: 'Some Narration'
       asset_account: 'Assets:MyCrypto:LTC'
+
+
 ::
 
   from tariochbctools.importers.blockchain import importer as bcimp
