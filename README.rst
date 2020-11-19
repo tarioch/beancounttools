@@ -205,3 +205,26 @@ Requires the dependencies for camelot to be installed. See https://camelot-py.re
 
   from tariochbctools.importers.cembrastatement import importer as cembrastatementimp
   CONFIG = [cembrastatementimp.Importer('\d+.pdf', 'Liabilities:Cembra:Mastercard')]
+
+
+**blockchain**
+
+Import transactions from Blockchain
+
+Create a file called blockchain.yaml in your import location (e.g. downloads folder).
+
+::
+base_ccy: CHF
+addresses:
+    - address: 'SOMEADDRESS'
+      currency: 'BTC'
+      narration: 'Some Narration'
+      asset_account: 'Assets:MyCrypto:BTC'
+    - address: 'SOMEOTHERADDRESS'
+      currency: 'LTC'
+      narration: 'Some Narration'
+      asset_account: 'Assets:MyCrypto:LTC'
+::
+
+  from tariochbctools.importers.blockchain import importer as bcimp
+  CONFIG = [bcimp.Importer()]
