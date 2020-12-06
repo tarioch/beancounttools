@@ -1,13 +1,10 @@
 import yaml
 from os import path
-
-
-from beancount.core import prices
 from beancount.ingest import importer
 from beancount.core import data
 from beancount.core import amount
 from beancount.core.number import D
-
+from tariochbctools.importers.general.priceLookup import PriceLookup
 import blockcypher
 
 
@@ -23,8 +20,8 @@ class Importer(importer.ImporterProtocol):
     def extract(self, file, existing_entries):
         config = yaml.safe_load(file.contents())
         self.config = config
-        self.priceMap = prices.build_price_map(existing_entries)
         baseCcy = config['base_ccy']
+        priceLookup = PriceLookup(existing_entries, baseCcy)
 
         entries = []
         for address in self.config['addresses']:
@@ -37,9 +34,9 @@ class Importer(importer.ImporterProtocol):
                 meta = data.new_metadata(file.name, 0, metakv)
 
                 date = trx['confirmed'].date()
-                price = prices.get_price(self.priceMap, tuple([currency, baseCcy]), date)
+                price = priceLookup.fetchPriceAmount(currency, date)
                 cost = data.Cost(
-                    price[1],
+                    price,
                     baseCcy,
                     None,
                     None
