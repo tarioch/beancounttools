@@ -46,7 +46,7 @@ def check(entries, options_map):
                 errors.append(
                     DifferentWeightPerPortfolio(
                         entry.meta,
-                        f'Not all portfolios have the same weight',
+                        'Not all portfolios have the same weight',
                         entry
                     )
                 )
