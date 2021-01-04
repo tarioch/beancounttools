@@ -60,7 +60,7 @@ class Importer(identifier.IdentifyMixin, importer.ImporterProtocol):
                 # Transaction entry
                 try:
                     book_date = datetime.strptime(book_date, '%d.%m.%Y').date()
-                except (ValueError, OverflowError):
+                except Exception:
                     book_date = None
 
                 if book_date:
@@ -76,7 +76,7 @@ class Importer(identifier.IdentifyMixin, importer.ImporterProtocol):
                     book_date = datetime.strptime(book_date, '%d.%m.%Y').date()
                     # add 1 day: cembra provides balance at EOD, but beancount checks it at SOD
                     book_date = book_date + timedelta(days = 1)
-                except:
+                except Exception:
                     book_date = None
 
                 if book_date:
