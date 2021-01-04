@@ -9,6 +9,7 @@ from beancount.ingest.importers.mixins import identifier
 import camelot
 import re
 
+
 class Importer(identifier.IdentifyMixin, importer.ImporterProtocol):
     """An importer for Cembra Card Statement PDF files."""
 
@@ -72,10 +73,10 @@ class Importer(identifier.IdentifyMixin, importer.ImporterProtocol):
 
                 # Balance entry
                 try:
-                    book_date = re.search('Saldo per (\d\d\.\d\d\.\d\d\d\d) zu unseren Gunsten CHF', text).group(1)
+                    book_date = re.search(r'Saldo per (\d\d\.\d\d\.\d\d\d\d) zu unseren Gunsten CHF', text).group(1)
                     book_date = datetime.strptime(book_date, '%d.%m.%Y').date()
                     # add 1 day: cembra provides balance at EOD, but beancount checks it at SOD
-                    book_date = book_date + timedelta(days = 1)
+                    book_date = book_date + timedelta(days=1)
                 except Exception:
                     book_date = None
 
