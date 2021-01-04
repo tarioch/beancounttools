@@ -48,9 +48,8 @@ class Importer(identifier.IdentifyMixin, importer.ImporterProtocol):
                 continue
 
             for index, row in df.iterrows():
-                
                 trx_date, book_date, text, credit, debit = tuple(row)
-                
+
                 try:
                     book_date = parse(book_date.strip(), dayfirst=True).date()
                 except (ValueError, OverflowError):
