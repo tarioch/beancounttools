@@ -21,6 +21,7 @@ __pycache__/*
 .settings
 .idea
 tags
+*.code-workspace
 
 # Package files
 *.egg
