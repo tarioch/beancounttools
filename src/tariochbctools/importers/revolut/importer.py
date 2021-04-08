@@ -1,4 +1,5 @@
 from dateutil.parser import parse
+from datetime import timedelta
 from io import StringIO
 
 from beancount.ingest import importer
@@ -8,6 +9,7 @@ from beancount.core.number import D
 from beancount.ingest.importers.mixins import identifier
 
 import csv
+import logging
 
 
 class Importer(identifier.IdentifyMixin, importer.ImporterProtocol):
@@ -28,9 +30,10 @@ class Importer(identifier.IdentifyMixin, importer.ImporterProtocol):
 
     def extract(self, file, existing_entries):
         entries = []
+        has_balance = False
 
         with StringIO(file.contents()) as csvfile:
-            reader = csv.DictReader(csvfile, ['Date', 'Reference', 'PaidOut', 'PaidIn', 'ExchangeOut', 'ExchangeIn', 'Balance', 'Category', 'Notes'], delimiter=';', skipinitialspace=True)
+            reader = csv.DictReader(csvfile, ['Date', 'Reference', 'PaidOut', 'PaidIn', 'ExchangeOut', 'ExchangeIn', 'Balance', 'Category'], delimiter=';', skipinitialspace=True)
             next(reader)
             for row in reader:
                 metakv = {
@@ -46,18 +49,38 @@ class Importer(identifier.IdentifyMixin, importer.ImporterProtocol):
                 elif exchangeOut:
                     metakv['original'] = exchangeOut
 
+                book_date = parse(row['Date'].strip()).date()
+
+                try:
+                    credit = D(row['PaidIn'].replace('\'', '').strip())
+                    debit = D(row['PaidOut'].replace('\'', '').strip())
+                    bal = D(row['Balance'].replace('\'', '').strip())
+                    amt = amount.Amount(credit - debit, self.currency)
+                    balance = amount.Amount(bal, self.currency)
+                except Exception as e:
+                    logging.warning(e)
+                    continue
+
                 meta = data.new_metadata(file.name, 0, metakv)
                 entry = data.Transaction(
                     meta,
-                    parse(row['Date'].strip()).date(),
+                    book_date,
                     '*',
                     '',
-                    (row['Reference'].strip() + ' ' + row['Notes'].strip()).strip(),
+                    row['Reference'].strip(),
                     data.EMPTY_SET,
                     data.EMPTY_SET,
                     [
-                        data.Posting(self.account, amount.Amount(D(row['PaidIn'].strip()) - D(row['PaidOut'].strip()), self.currency), None, None, None, None),
+                        data.Posting(self.account, amt, None, None, None, None),
                     ]
                 )
                 entries.append(entry)
+
+                # only add balance after the top (newest) transaction
+                if not has_balance:
+                    book_date = book_date + timedelta(days=1)
+                    entry = data.Balance(meta, book_date, self.account, balance, None, None)
+                    entries.append(entry)
+                    has_balance = True
+
         return entries

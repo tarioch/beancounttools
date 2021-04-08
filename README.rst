@@ -232,3 +232,17 @@ Create a file called blockchain.yaml in your import location (e.g. downloads fol
 
   from tariochbctools.importers.blockchain import importer as bcimp
   CONFIG = [bcimp.Importer()]
+
+Syncing a fork
+--------------
+
+Details: https://docs.github.com/en/free-pro-team@latest/github/collaborating-with-issues-and-pull-requests/syncing-a-fork
+
+::
+
+  git remote add upstream https://github.com/tarioch/beancounttools.git
+  git remote -v
+  git fetch upstream
+  git checkout master
+  git merge upstream/master
+  git push
