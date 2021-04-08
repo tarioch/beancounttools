@@ -54,7 +54,7 @@ Fetches prices from `Bitstamp <https://www.bitstamp.com/>`_
 
 **exchangeratesapi**
 
-Fetches prices from `ratesapi.io <https://https://ratesapi.io>`_
+Fetches prices from `ratesapi.io <https://ratesapi.io>`_
 
 ::
 
