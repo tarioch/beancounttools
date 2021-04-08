@@ -7,7 +7,7 @@ import requests
 
 class Source(source.Source):
     def get_latest_price(self, ticker):
-        resp = requests.get(url='https://api.exchangeratesapi.io/latest?base=' + ticker + '&symbols=CHF')
+        resp = requests.get(url='https://api.ratesapi.io/latest?base=' + ticker + '&symbols=CHF')
         data = resp.json()
 
         price = D(str(data['rates']['CHF']))
@@ -21,7 +21,7 @@ class Source(source.Source):
         us_timezone = tz.gettz("Europe/Zurich")
         reqdate = time.astimezone(us_timezone).date()
 
-        resp = requests.get(url='https://api.exchangeratesapi.io/' + str(reqdate) + '?base=' + ticker + '&symbols=CHF')
+        resp = requests.get(url='https://api.ratesapi.io/' + str(reqdate) + '?base=' + ticker + '&symbols=CHF')
         data = resp.json()
 
         price = D(str(data['rates']['CHF']))
