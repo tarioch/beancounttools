@@ -73,6 +73,16 @@ with a flex query that contains the open positions.
   2019-01-01 commodity VWRL
     price: "CHF:tariochbctools.plugins.prices.ibkr/VWRL"
 
+**coinmarketcap**
+
+Fetches prices from `coinmarketcap <https://coinmarketcap.com/>`_
+Requires the environment variable ``COINMARKETCAP_API_KEY`` to be set to your api key.
+
+::
+
+  2019-01-01 commodity BTC
+    price: "CHF:tariochbctools.plugins.prices.coinmarketcap/BTC"
+
 
 importers
 ---------
