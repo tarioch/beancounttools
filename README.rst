@@ -9,6 +9,13 @@ tariochbctools
 
 Some importers, plugins and price fetchers for the double-entry bookkeeping software `Beancount <http://furius.ca/beancount/>`__.
 
+Install it with
+
+::
+
+   pip install tariochbctools
+
+
 plugins
 -------
 **generate_base_ccy_prices**
