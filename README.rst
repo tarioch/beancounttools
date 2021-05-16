@@ -250,6 +250,34 @@ Create a file called blockchain.yaml in your import location (e.g. downloads fol
   from tariochbctools.importers.blockchain import importer as bcimp
   CONFIG = [bcimp.Importer()]
 
+**mail adapter**
+
+Instead of expecting files to be in a local directory.
+Connect per imap to a mail account and search for attachments to import using other importers.
+
+Create a file called mail.yaml in your import location (e.g. downloads folder).
+
+
+::
+
+  host: "imap.example.tld"
+  user: "myuser"
+  password: "mypassword"
+  folder: "INBOX"
+  targetFolder: "Archive"
+
+::
+
+
+The targetFolder is optional, if present, mails that had attachments which were valid, will be moved to this folder.
+
+
+::
+
+  from tariochbctools.importers.general.mailAdapterImporter import MailAdapterImporter
+  CONFIG = [MailAdapterImporter([MyImporter1(), MyImporter2()])]
+
+
 Syncing a fork
 --------------
 
