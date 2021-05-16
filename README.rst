@@ -266,8 +266,6 @@ Create a file called mail.yaml in your import location (e.g. downloads folder).
   folder: "INBOX"
   targetFolder: "Archive"
 
-::
-
 
 The targetFolder is optional, if present, mails that had attachments which were valid, will be moved to this folder.
 
