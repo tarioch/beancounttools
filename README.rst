@@ -275,6 +275,15 @@ The targetFolder is optional, if present, mails that had attachments which were 
   from tariochbctools.importers.general.mailAdapterImporter import MailAdapterImporter
   CONFIG = [MailAdapterImporter([MyImporter1(), MyImporter2()])]
 
+**neon**
+
+Import CSV from `Neon <https://www.neon-free.ch/>`_
+
+::
+
+  from tariochbctools.importers.neon import importer as neonimp
+  CONFIG = [neonimp.Importer('\d\d\d\d_account_statements\.csv', 'Assets:Neon:CHF')]
+
 
 Syncing a fork
 --------------
