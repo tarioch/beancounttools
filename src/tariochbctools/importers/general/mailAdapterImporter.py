@@ -26,6 +26,7 @@ class MailAdapterImporter(importer.ImporterProtocol):
                         attFileName = path.join(tmpdirname, att.filename)
                         with open(attFileName, 'wb') as attFile:
                             attFile.write(att.payload)
+                            attFile.flush()
                             fileMemo = cache.get_file(attFileName)
 
                             for delegate in self.importers:
