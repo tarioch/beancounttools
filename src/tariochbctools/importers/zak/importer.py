@@ -7,6 +7,7 @@ from beancount.core import amount
 from beancount.core.number import D
 from beancount.ingest.importers.mixins import identifier
 
+import pandas as pd
 import camelot
 import re
 
@@ -63,17 +64,27 @@ class Importer(identifier.IdentifyMixin, importer.ImporterProtocol):
     def extract(self, file, existing_entries):
         entries = []
 
-        tables = camelot.read_pdf(file.name, flavor='stream', pages='all', table_regions=['60,450,600,200'])
-        df = tables[0].df
-        new_header = df.iloc[0]
-        df = df[1:]
-        df.columns = new_header
+        firstPageTables = camelot.read_pdf(file.name, flavor='stream', pages='1', table_regions=['60,450,600,170'])
+        otherPageTables = camelot.read_pdf(file.name, flavor='stream', pages='2-end', table_regions=['60,630,600,170'])
+
+        tables = [*firstPageTables, *otherPageTables]
+
+        df = None
+        for table in tables:
+            cur_df = table.df
+            new_header = cur_df.iloc[0]
+            cur_df = cur_df[1:]
+            cur_df.columns = new_header
+
+            if df is None:
+                df = cur_df
+            else:
+                df = pd.concat([df, cur_df])
 
         date = None
         text = ''
         amount = None
         saldo = None
-
         for row in df.itertuples():
             if row.Saldo:
                 if date and amount:
@@ -101,7 +112,7 @@ class Importer(identifier.IdentifyMixin, importer.ImporterProtocol):
         if date and amount:
             entries.append(self.createEntry(file, date, amount, text))
 
-        dateRegexp = re.compile(r'\d\d.\d\d.\d\d\d\d')
+        dateRegexp = re.compile(r'\d\d\.\d\d\.\d\d\d\d')
         m = dateRegexp.search(text)
         date = m.group()
         entries.append(self.createBalanceEntry(file, date, saldo))
