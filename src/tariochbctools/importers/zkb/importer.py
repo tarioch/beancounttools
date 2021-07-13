@@ -11,7 +11,7 @@ class ZkbImporter(mt940importer.Importer):
         details = trxdata['transaction_details']
 
         extraReplacements = {}
-        extraReplacements[r'Einkauf ZKB Maestro Karte'] = ''
+        extraReplacements[r'Einkauf ZKB Maestro[- ]Karte'] = ''
         extraReplacements[r'LSV:.*'] = 'LSV'
         extraReplacements[r'Gutschrift:.*'] = 'Gutschrift'
         extraReplacements[r'eBanking:.*'] = 'eBanking'
@@ -23,7 +23,7 @@ class ZkbImporter(mt940importer.Importer):
         detailsReplacements = {}
         detailsReplacements[r'\?ZI:\?9:\d'] = ''
         detailsReplacements[r'\?ZKB:\d+'] = ''
-        detailsReplacements[r'Einkauf ZKB Maestro Karte Nr. \d+,'] = 'Maestro'
+        detailsReplacements[r'Einkauf ZKB Maestro[- ]Karte Nr. \d+,'] = 'Maestro'
 
         for pattern, replacement in extraReplacements.items():
             extra = re.sub(pattern, replacement, extra)
