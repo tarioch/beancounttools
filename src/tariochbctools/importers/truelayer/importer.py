@@ -96,7 +96,6 @@ class Importer(importer.ImporterProtocol):
 
         for account in r.json()["results"]:
             accountId = account["account_id"]
-            accountCcy = account["currency"]
             r = requests.get(
                 f"https://api.{self.domain}/data/v1/{endpoint}/{accountId}/transactions",
                 headers=headers,
@@ -105,14 +104,12 @@ class Importer(importer.ImporterProtocol):
 
             for trx in transactions:
                 entries.extend(
-                    self._extract_transaction(
-                        trx, accountCcy, transactions, invert_sign
-                    )
+                    self._extract_transaction(trx, transactions, invert_sign)
                 )
 
         return entries
 
-    def _extract_transaction(self, trx, accountCcy, transactions, invert_sign):
+    def _extract_transaction(self, trx, transactions, invert_sign):
         entries = []
         metakv = {}
 
@@ -133,7 +130,7 @@ class Importer(importer.ImporterProtocol):
 
         meta = data.new_metadata("", 0, metakv)
         trxDate = dateutil.parser.parse(trx["timestamp"]).date()
-        account = self.baseAccount + accountCcy
+        account = self.baseAccount
 
         tx_amount = D(str(trx["amount"]))
         # avoid pylint invalid-unary-operand-type
