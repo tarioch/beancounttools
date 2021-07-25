@@ -44,7 +44,6 @@ class Importer(importer.ImporterProtocol):
         r = requests.get("https://api.truelayer.com/data/v1/accounts", headers=headers)
         for account in r.json()["results"]:
             accountId = account["account_id"]
-            accountCcy = account["currency"]
             r = requests.get(
                 f"https://api.truelayer.com/data/v1/accounts/{accountId}/transactions",
                 headers=headers,
@@ -58,7 +57,7 @@ class Importer(importer.ImporterProtocol):
                     metakv["category"] = trx["transaction_classification"][0]
                 meta = data.new_metadata("", 0, metakv)
                 trxDate = dateutil.parser.parse(trx["timestamp"]).date()
-                account = baseAccount + accountCcy
+                account = baseAccount
                 entry = data.Transaction(
                     meta,
                     trxDate,
@@ -67,16 +66,18 @@ class Importer(importer.ImporterProtocol):
                     trx["description"],
                     data.EMPTY_SET,
                     data.EMPTY_SET,
-                    [
-                        data.Posting(
-                            account,
-                            amount.Amount(D(str(trx["amount"])), trx["currency"]),
-                            None,
-                            None,
-                            None,
-                            None,
-                        ),
-                    ],
+                    [],
+                )
+                # Attach one posting to the transaction
+                entry.postings.append(
+                    data.Posting(
+                        account,
+                        amount.Amount(D(str(trx["amount"])), trx["currency"]),
+                        None,
+                        None,
+                        None,
+                        None,
+                    )
                 )
                 entries.append(entry)
 
