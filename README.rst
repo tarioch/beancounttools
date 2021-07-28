@@ -29,44 +29,8 @@ Dynamically generates prices to the base ccy by applying the fx rate to the base
 
 price fetchers
 --------------
-**alphavantage**
 
-Fetches prices from `Alphavantage <https://www.alphavantage.co/>`_
-Requires the environment variable ``ALPHAVANTAGE_API_KEY`` to be set with your personal api key.
-
-::
-
-  2019-01-01 commodity VWRL
-    price: "CHF:tariochbctools.plugins.prices.alphavantage/VWRL.SW"
-
-**alphavantagefx**
-
-Fetches fx rates from `Alphavantage <https://www.alphavantage.co/>`_
-Requires the environment variable ``ALPHAVANTAGE_API_KEY`` to be set with your personal api key.
-
-::
-
-  2019-01-01 commodity BTC
-    price: "CHF:tariochbctools.plugins.prices.alphavantagefx/BTC"
-
-
-**bitstamp**
-
-Fetches prices from `Bitstamp <https://www.bitstamp.com/>`_
-
-::
-
-  2019-01-01 commodity BTC
-    price: "EUR:tariochbctools.plugins.prices.bitstamp/BTC"
-
-**exchangeratesapi**
-
-Fetches prices from `ratesapi.io <https://ratesapi.io>`_
-
-::
-
-  2019-01-01 commodity EUR
-    price: "CHF:tariochbctools.plugins.prices.exchangeratesapi/EUR"
+Also see `Beanprice <https://github.com/beancount/beanprice>`_
 
 **interactivebrokers**
 
@@ -79,16 +43,6 @@ with a flex query that contains the open positions.
 
   2019-01-01 commodity VWRL
     price: "CHF:tariochbctools.plugins.prices.ibkr/VWRL"
-
-**coinmarketcap**
-
-Fetches prices from `coinmarketcap <https://coinmarketcap.com/>`_
-Requires the environment variable ``COINMARKETCAP_API_KEY`` to be set to your api key.
-
-::
-
-  2019-01-01 commodity BTC
-    price: "CHF:tariochbctools.plugins.prices.coinmarketcap/BTC"
 
 
 importers
@@ -184,7 +138,12 @@ Create a file called ibkr.yaml in your import location (e.g. downloads folder).
 
 **zak**
 
-**Currently not working reliably**. Import PDF from `Bank Cler ZAK <https://www.cler.ch/de/info/zak/>`_
+Import PDF from `Bank Cler ZAK <https://www.cler.ch/de/info/zak/>`_
+
+::
+
+  from tariochbctools.importers.zak import importer as zakimp
+  CONFIG = [ zakimp.Importer(r'Kontoauszug.*\.pdf', 'Assets:ZAK:CHF') ]
 
 **mt940**
 
@@ -283,6 +242,28 @@ Import CSV from `Neon <https://www.neon-free.ch/>`_
 
   from tariochbctools.importers.neon import importer as neonimp
   CONFIG = [neonimp.Importer('\d\d\d\d_account_statements\.csv', 'Assets:Neon:CHF')]
+
+**woob**
+
+Import transactions using any of the `Woob <https://woob.tech/>`_ Backends
+
+Create a file called woob.yaml in your import location (e.g. downloads folder).
+
+::
+
+  workdir: './woob'
+  datadir: './woob'
+  accounts:
+    - account: 'myaccount'
+      asset_account: 'Assets:MyAccount'
+
+workdir and datadir are optional, by default the use the standard locations,
+if specified they can be relative to the woob.yaml location
+
+::
+
+  from tariochbctools.importers.woob import importer as woobimp
+  CONFIG = [woobimp.Importer()]
 
 
 Syncing a fork
