@@ -33,7 +33,7 @@ class Importer(identifier.IdentifyMixin, importer.ImporterProtocol):
         has_balance = False
 
         with StringIO(file.contents()) as csvfile:
-            reader = csv.DictReader(csvfile, ['Date', 'Reference', 'PaidOut', 'PaidIn', 'ExchangeOut', 'ExchangeIn', 'Balance', 'Category'], delimiter=';', skipinitialspace=True)
+            reader = csv.DictReader(csvfile, ['Date', 'Reference', 'PaidOut', 'PaidIn', 'ExchangeOut', 'ExchangeIn', 'Balance', 'Category'], delimiter=',', skipinitialspace=True)
             next(reader)
             for row in reader:
                 metakv = {
