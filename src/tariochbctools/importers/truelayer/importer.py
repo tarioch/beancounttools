@@ -25,9 +25,15 @@ class Importer(importer.ImporterProtocol):
         clientId = config["client_id"]
         clientSecret = config["client_secret"]
         refreshToken = config["refresh_token"]
+        sandbox = clientId.startswith("sandbox")
+
+        if sandbox:
+            domain = "truelayer-sandbox.com"
+        else:
+            domain = "truelayer.com"
 
         r = requests.post(
-            "https://auth.truelayer.com/connect/token",
+            f"https://auth.{domain}/connect/token",
             data={
                 "grant_type": "refresh_token",
                 "client_id": clientId,
@@ -40,21 +46,26 @@ class Importer(importer.ImporterProtocol):
         headers = {"Authorization": "Bearer " + accessToken}
 
         entries = []
-        r = requests.get("https://api.truelayer.com/data/v1/accounts", headers=headers)
+        r = requests.get(f"https://api.{domain}/data/v1/accounts", headers=headers)
         for account in r.json()["results"]:
             accountId = account["account_id"]
             accountCcy = account["currency"]
             r = requests.get(
-                f"https://api.truelayer.com/data/v1/accounts/{accountId}/transactions",
+                f"https://api.{domain}/data/v1/accounts/{accountId}/transactions",
                 headers=headers,
             )
             transactions = sorted(r.json()["results"], key=lambda trx: trx["timestamp"])
+
             for trx in transactions:
-                metakv = {
-                    "tlref": trx["meta"]["provider_id"],
-                }
+                metakv = {}
+
+                # sandbox Mock bank doesn't have a provider_id
+                if "meta" in trx and "provider_id" in trx["meta"]:
+                    metakv["tlref"] = trx["meta"]["provider_id"]
+
                 if trx["transaction_classification"]:
                     metakv["category"] = trx["transaction_classification"][0]
+
                 meta = data.new_metadata("", 0, metakv)
                 trxDate = dateutil.parser.parse(trx["timestamp"]).date()
                 account = baseAccount + accountCcy
