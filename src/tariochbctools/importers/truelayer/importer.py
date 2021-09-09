@@ -25,6 +25,7 @@ class Importer(importer.ImporterProtocol):
         baseAccount = config["baseAccount"]
         clientId = config["client_id"]
         clientSecret = config["client_secret"]
+        endpoint = config.get("endpoint", "accounts")  # or "cards"
         refreshToken = config["refresh_token"]
         sandbox = clientId.startswith("sandbox")
 
@@ -47,12 +48,12 @@ class Importer(importer.ImporterProtocol):
         headers = {"Authorization": "Bearer " + accessToken}
 
         entries = []
-        r = requests.get(f"https://api.{domain}/data/v1/accounts", headers=headers)
+        r = requests.get(f"https://api.{domain}/data/v1/{endpoint}", headers=headers)
         for account in r.json()["results"]:
             accountId = account["account_id"]
             accountCcy = account["currency"]
             r = requests.get(
-                f"https://api.{domain}/data/v1/accounts/{accountId}/transactions",
+                f"https://api.{domain}/data/v1/{endpoint}/{accountId}/transactions",
                 headers=headers,
             )
             transactions = sorted(r.json()["results"], key=lambda trx: trx["timestamp"])
