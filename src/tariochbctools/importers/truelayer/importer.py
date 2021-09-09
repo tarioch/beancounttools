@@ -103,18 +103,21 @@ class Importer(importer.ImporterProtocol):
                                 metakv["__duplicate__"] = True
 
                     meta = data.new_metadata("", 0, metakv)
-                    entries.append(
-                        data.Balance(
-                            meta,
-                            balDate,
-                            account,
-                            amount.Amount(
-                                D(str(trx["running_balance"]["amount"])),
-                                trx["running_balance"]["currency"],
-                            ),
-                            None,
-                            None,
+
+                    # Only if the 'balance' permission is present
+                    if "running_balance" in trx:
+                        entries.append(
+                            data.Balance(
+                                meta,
+                                balDate,
+                                account,
+                                amount.Amount(
+                                    D(str(trx["running_balance"]["amount"])),
+                                    trx["running_balance"]["currency"],
+                                ),
+                                None,
+                                None,
+                            )
                         )
-                    )
 
         return entries
