@@ -9,6 +9,20 @@ from beancount.core import amount, data
 from beancount.core.number import D
 from beancount.ingest import importer
 
+# https://docs.truelayer.com/#retrieve-account-transactions
+
+TX_MANDATORY_ID_FIELDS = ("transaction_id",)
+
+TX_OPTIONAL_ID_FIELDS = (
+    "normalised_provider_transaction_id",
+    "provider_transaction_id",
+)
+
+TX_OPTIONAL_META_ID_FIELDS = (
+    "provider_id",
+    "provider_reference",
+)
+
 
 class Importer(importer.ImporterProtocol):
     """An importer for Truelayer API (e.g. for Revolut)."""
@@ -101,9 +115,18 @@ class Importer(importer.ImporterProtocol):
     def _extract_transaction(self, trx, accountCcy, transactions, invert_sign):
         entries = []
         metakv = {}
-        # sandbox Mock bank doesn't have a provider_id
-        if "meta" in trx and "provider_id" in trx["meta"]:
-            metakv["tlref"] = trx["meta"]["provider_id"]
+
+        id_meta_kvs = {
+            k: trx["meta"][k] for k in TX_OPTIONAL_META_ID_FIELDS if trx["meta"].get(k)
+        }
+        metakv.update(id_meta_kvs)
+
+        id_kvs = {
+            k: trx[k]
+            for k in TX_MANDATORY_ID_FIELDS + TX_OPTIONAL_ID_FIELDS
+            if trx.get(k)
+        }
+        metakv.update(id_kvs)
 
         if trx["transaction_classification"]:
             metakv["category"] = trx["transaction_classification"][0]
