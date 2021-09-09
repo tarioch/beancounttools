@@ -62,9 +62,11 @@ class Importer(importer.ImporterProtocol):
 
         return entries
 
-    def _extract_endpoint_transactions(self, endpoint, headers):
+    def _extract_endpoint_transactions(self, endpoint, headers, invert_sign=False):
         entries = []
-        r = requests.get(f"https://api.{self.domain}/data/v1/{endpoint}", headers=headers)
+        r = requests.get(
+            f"https://api.{self.domain}/data/v1/{endpoint}", headers=headers
+        )
 
         for account in r.json()["results"]:
             accountId = account["account_id"]
@@ -76,11 +78,15 @@ class Importer(importer.ImporterProtocol):
             transactions = sorted(r.json()["results"], key=lambda trx: trx["timestamp"])
 
             for trx in transactions:
-                entries.extend(self._extract_transaction(trx, accountCcy, transactions))
+                entries.extend(
+                    self._extract_transaction(
+                        trx, accountCcy, transactions, invert_sign
+                    )
+                )
 
         return entries
 
-    def _extract_transaction(self, trx, accountCcy, transactions):
+    def _extract_transaction(self, trx, accountCcy, transactions, invert_sign):
         entries = []
         metakv = {}
         # sandbox Mock bank doesn't have a provider_id
@@ -93,6 +99,11 @@ class Importer(importer.ImporterProtocol):
         meta = data.new_metadata("", 0, metakv)
         trxDate = dateutil.parser.parse(trx["timestamp"]).date()
         account = self.baseAccount + accountCcy
+
+        tx_amount = D(str(trx["amount"]))
+        # avoid pylint invalid-unary-operand-type
+        signed_amount = -1 * tx_amount if invert_sign else tx_amount
+
         entry = data.Transaction(
             meta,
             trxDate,
@@ -104,7 +115,7 @@ class Importer(importer.ImporterProtocol):
             [
                 data.Posting(
                     account,
-                    amount.Amount(D(str(trx["amount"])), trx["currency"]),
+                    amount.Amount(signed_amount, trx["currency"]),
                     None,
                     None,
                     None,
@@ -130,14 +141,17 @@ class Importer(importer.ImporterProtocol):
 
             # Only if the 'balance' permission is present
             if "running_balance" in trx:
+                tx_balance = D(str(trx["running_balance"]["amount"]))
+                # avoid pylint invalid-unary-operand-type
+                signed_balance = -1 * tx_balance if invert_sign else tx_balance
+
                 entries.append(
                     data.Balance(
                         meta,
                         balDate,
                         account,
                         amount.Amount(
-                            D(str(trx["running_balance"]["amount"])),
-                            trx["running_balance"]["currency"],
+                            signed_balance, trx["running_balance"]["currency"]
                         ),
                         None,
                         None,
