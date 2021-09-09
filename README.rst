@@ -29,44 +29,8 @@ Dynamically generates prices to the base ccy by applying the fx rate to the base
 
 price fetchers
 --------------
-**alphavantage**
 
-Fetches prices from `Alphavantage <https://www.alphavantage.co/>`_
-Requires the environment variable ``ALPHAVANTAGE_API_KEY`` to be set with your personal api key.
-
-::
-
-  2019-01-01 commodity VWRL
-    price: "CHF:tariochbctools.plugins.prices.alphavantage/VWRL.SW"
-
-**alphavantagefx**
-
-Fetches fx rates from `Alphavantage <https://www.alphavantage.co/>`_
-Requires the environment variable ``ALPHAVANTAGE_API_KEY`` to be set with your personal api key.
-
-::
-
-  2019-01-01 commodity BTC
-    price: "CHF:tariochbctools.plugins.prices.alphavantagefx/BTC"
-
-
-**bitstamp**
-
-Fetches prices from `Bitstamp <https://www.bitstamp.com/>`_
-
-::
-
-  2019-01-01 commodity BTC
-    price: "EUR:tariochbctools.plugins.prices.bitstamp/BTC"
-
-**exchangeratesapi**
-
-Fetches prices from `ratesapi.io <https://ratesapi.io>`_
-
-::
-
-  2019-01-01 commodity EUR
-    price: "CHF:tariochbctools.plugins.prices.exchangeratesapi/EUR"
+Also see `Beanprice <https://github.com/beancount/beanprice>`_
 
 **interactivebrokers**
 
@@ -79,16 +43,6 @@ with a flex query that contains the open positions.
 
   2019-01-01 commodity VWRL
     price: "CHF:tariochbctools.plugins.prices.ibkr/VWRL"
-
-**coinmarketcap**
-
-Fetches prices from `coinmarketcap <https://coinmarketcap.com/>`_
-Requires the environment variable ``COINMARKETCAP_API_KEY`` to be set to your api key.
-
-::
-
-  2019-01-01 commodity BTC
-    price: "CHF:tariochbctools.plugins.prices.coinmarketcap/BTC"
 
 
 importers
@@ -161,6 +115,37 @@ Create a file called truelayer.yaml in your import location (e.g. download folde
   client_secret: <CLIENT SECRET>
   refresh_token: <REFRESH TOKEN>
 
+**Nordigen**
+
+Import from `Nordigen <http://nordigen.com/>`_ using their api services. e.g. supports Revolut.
+You need to create a free account and create a token. I've included a small cli to allow to hook up
+to different banks with nordigen. If you're country is not supported you can play around with other countries
+e.g. CH is not allowed but things like revolut still work. You can also create multiple links and they will
+all be listed in the end.
+
+::
+
+  nordigen-conf list_banks --token YOURTOKEN --country DE
+  nordigen-conf create_link --token YOURTOKEN --bank REVOLUT_REVOGB21
+  nordigen-conf list_accounts --token YOURTOKEN list_accounts
+
+
+::
+
+  from tariochbctools.importers.nordigen import importer as nordimp
+  CONFIG = [nordimp.Importer()]
+
+Create a file called nordigen.yaml in your import location (e.g. download folder).
+
+::
+
+  token: <TOKEN>
+
+  accounts:
+    - id: <ACCOUNT-ID>
+      asset_account: "Assets:MyAccount:CHF"
+
+
 **zkb**
 
 Import mt940 from `Zürcher Kantonalbank <https://www.zkb.ch/>`_
@@ -184,7 +169,12 @@ Create a file called ibkr.yaml in your import location (e.g. downloads folder).
 
 **zak**
 
-**Currently not working reliably**. Import PDF from `Bank Cler ZAK <https://www.cler.ch/de/info/zak/>`_
+Import PDF from `Bank Cler ZAK <https://www.cler.ch/de/info/zak/>`_
+
+::
+
+  from tariochbctools.importers.zak import importer as zakimp
+  CONFIG = [ zakimp.Importer(r'Kontoauszug.*\.pdf', 'Assets:ZAK:CHF') ]
 
 **mt940**
 
@@ -283,18 +273,3 @@ Import CSV from `Neon <https://www.neon-free.ch/>`_
 
   from tariochbctools.importers.neon import importer as neonimp
   CONFIG = [neonimp.Importer('\d\d\d\d_account_statements\.csv', 'Assets:Neon:CHF')]
-
-
-Syncing a fork
---------------
-
-Details: https://docs.github.com/en/free-pro-team@latest/github/collaborating-with-issues-and-pull-requests/syncing-a-fork
-
-::
-
-  git remote add upstream https://github.com/tarioch/beancounttools.git
-  git remote -v
-  git fetch upstream
-  git checkout master
-  git merge upstream/master
-  git push
