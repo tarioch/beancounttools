@@ -1,3 +1,4 @@
+import logging
 from datetime import timedelta
 from os import path
 
@@ -59,6 +60,9 @@ class Importer(importer.ImporterProtocol):
 
         entries = []
         entries.extend(self._extract_endpoint_transactions("accounts", headers))
+        entries.extend(
+            self._extract_endpoint_transactions("cards", headers, invert_sign=True)
+        )
 
         return entries
 
@@ -67,6 +71,14 @@ class Importer(importer.ImporterProtocol):
         r = requests.get(
             f"https://api.{self.domain}/data/v1/{endpoint}", headers=headers
         )
+
+        if not r:
+            try:
+                r.raise_for_status()
+            except requests.HTTPError as e:
+                logging.warning(e)
+
+            return []
 
         for account in r.json()["results"]:
             accountId = account["account_id"]
