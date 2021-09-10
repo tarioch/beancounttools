@@ -1,6 +1,6 @@
-from beancount.core import data, prices, amount
+from beancount.core import amount, data, prices
 
-__plugins__ = ['generate']
+__plugins__ = ["generate"]
 
 
 def generate(entries, options_map, baseCcy):
@@ -12,15 +12,14 @@ def generate(entries, options_map, baseCcy):
         if isinstance(entry, data.Price) and entry.amount.currency != baseCcy:
             fxTuple = tuple([entry.amount.currency, baseCcy])
             fxRate = prices.get_price(priceMap, fxTuple, entry.date)
-            if fxRate[1] and not _alreadyExistingPrice(priceMap, tuple([entry.currency, baseCcy]), entry.date):
+            if fxRate[1] and not _alreadyExistingPrice(
+                priceMap, tuple([entry.currency, baseCcy]), entry.date
+            ):
                 priceInBaseCcy = amount.Amount(entry.amount.number * fxRate[1], baseCcy)
 
-                additionalEntries.append(data.Price(
-                    entry.meta,
-                    entry.date,
-                    entry.currency,
-                    priceInBaseCcy
-                ))
+                additionalEntries.append(
+                    data.Price(entry.meta, entry.date, entry.currency, priceInBaseCcy)
+                )
 
     entries.extend(additionalEntries)
 

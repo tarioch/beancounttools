@@ -1,4 +1,4 @@
-from beancount.core import prices, amount
+from beancount.core import amount, prices
 
 
 class PriceLookup:

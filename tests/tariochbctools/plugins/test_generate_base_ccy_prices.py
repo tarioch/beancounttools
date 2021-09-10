@@ -1,15 +1,12 @@
 import os
 from io import StringIO
-from beancount.parser import printer
-from beancount import loader
+
 import pytest
+from beancount import loader
+from beancount.parser import printer
 
 
-@pytest.mark.parametrize("testCase", [
-    "normal",
-    "missing_fx",
-    "entry_already_exists"
-])
+@pytest.mark.parametrize("testCase", ["normal", "missing_fx", "entry_already_exists"])
 def test_data(testCase):
     dataDir = os.path.join(
         os.path.dirname(__file__), "data", "generate_base_ccy_prices"
@@ -27,9 +24,9 @@ def test_data(testCase):
     actual = actualStrIo.getvalue()
 
     if os.path.isfile(expectedPath):
-        with open(expectedPath, 'r') as expectedFile:
+        with open(expectedPath, "r") as expectedFile:
             expected = expectedFile.read()
             assert actual == expected
     else:
-        with open(expectedPath, 'w') as expectedFile:
+        with open(expectedPath, "w") as expectedFile:
             expectedFile.write(actual)
