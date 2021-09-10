@@ -21,9 +21,6 @@ jobs:
       - name: Pre Commit
         run: >-
           tox -e pre-commit
-      - name: Lint
-        run: >-
-          tox -e lint
       - name: Test
         run: >-
           tox
