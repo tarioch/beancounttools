@@ -18,6 +18,9 @@ jobs:
       - name: Install tox
         run: >-
           pip install tox
+      - name: Pre Commit
+        run: >-
+          tox -e pre-commit
       - name: Lint
         run: >-
           tox -e lint
