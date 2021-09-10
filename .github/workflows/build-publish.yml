@@ -24,6 +24,9 @@ jobs:
       - name: Test
         run: >-
           tox
+      - name: Build
+        run: >-
+          tox -e build
       - name: Publish distribution 📦 to Test PyPI
         if: contains(github.ref, 'refs/heads/master')
         env:
