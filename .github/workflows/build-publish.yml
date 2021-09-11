@@ -27,6 +27,9 @@ jobs:
       - name: Build
         run: >-
           tox -e build
+      - name: Generate Docs
+        run: >-
+          tox -e docs
       - name: Publish distribution 📦 to Test PyPI
         if: contains(github.ref, 'refs/heads/master')
         env:
