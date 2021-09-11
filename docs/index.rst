@@ -2,7 +2,7 @@
 tariochbctools
 ==============
 
-This is the documentation of **tariochbctools**.
+Some importers, plugins and price fetchers for the double-entry bookkeeping software `Beancount <http://furius.ca/beancount/>`__.
 
 Contents
 ========
