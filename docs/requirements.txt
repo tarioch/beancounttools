@@ -1,5 +1,14 @@
 # Requirements file for ReadTheDocs, check .readthedocs.yml.
 # To build the module reference correctly, make sure every external package
 # under `install_requires` in `setup.cfg` is also listed here!
+beancount
+bitstampclient
+blockcypher
+camelot-py[cv]
+ibflex
+imap-tools
+mt-940
+pyyaml
+requests
 sphinx>=3.2.1
 sphinx_rtd_theme
