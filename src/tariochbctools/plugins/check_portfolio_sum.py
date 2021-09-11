@@ -1,3 +1,7 @@
+"""A plugin that verifies that on each transaction, all the "portfolios" have
+the same weight.
+"""
+
 import collections
 from collections import defaultdict
 from decimal import Decimal
