@@ -1,3 +1,6 @@
+"""A plugin that inserts an additional price to the base rate by applying
+fx rate to a price.
+"""
 from beancount.core import amount, data, prices
 
 __plugins__ = ["generate"]
