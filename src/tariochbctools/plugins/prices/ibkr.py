@@ -9,7 +9,7 @@ from ibflex import client, parser
 
 
 class Source(source.Source):
-    def get_latest_price(self, ticker):
+    def get_latest_price(self, ticker: str):
         token: str = environ["IBKR_TOKEN"]
         queryId: str = environ["IBKR_QUERY_ID"]
 
