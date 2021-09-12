@@ -8,9 +8,12 @@ Contents
 ========
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
 
-   Overview <readme>
+   Installation <installation>
+   Importers <importers>
+   Plugins <plugins>
+   Price Fetchers <price_fetchers>
    License <license>
    Module Reference <api/modules>
 
