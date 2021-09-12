@@ -25,14 +25,39 @@ TEST_TRX = b"""
   "transaction_classification": [],
   "amount": -20.5,
   "currency": "GBP",
-  "transaction_id": "81cd222c77f49eb11b72a82478a07dbd",
+  "transaction_id": "mandatory-transaction-id-value",
   "provider_transaction_id": "6906e4ecbf4a9775e3",
   "normalised_provider_transaction_id": "txn-4912996e337e5b5f3",
   "running_balance": {
     "currency": "GBP",
     "amount": 332.94
   },
-  "meta": {"provider_transaction_category": "DEB"}
+  "meta": {
+    "provider_id": "SOME-PROVIDER-ID",
+    "provider_reference": "SOME-PROVIDER-REFERENCE",
+    "provider_transaction_category": "DEB"
+  }
+}
+"""
+
+# Example from the truelayer Mock bank
+TEST_TRX_WITHOUT_IDS = b"""
+{
+  "timestamp": "2021-06-14T00:00:00Z",
+  "description": "MT SECURETRADE LIM",
+  "transaction_type": "CREDIT",
+  "transaction_category": "PURCHASE",
+  "transaction_classification": [],
+  "amount": -20.5,
+  "currency": "GBP",
+  "transaction_id": "81cd222c77f49eb11b72a82478a07dbd",
+  "running_balance": {
+    "currency": "GBP",
+    "amount": 332.94
+  },
+  "meta": {
+    "provider_transaction_category": "DEB"
+  }
 }
 """
 
@@ -81,3 +106,46 @@ def test_extract_transaction_invert_sign(importer, tmp_trx):
     """Show that sign inversion works"""
     entries = importer._extract_transaction(tmp_trx, "GBP", [tmp_trx], invert_sign=True)
     assert entries[0].postings[0].units.number == -D(str(tmp_trx["amount"]))
+
+
+@pytest.mark.parametrize("id_field", tlimp.TX_MANDATORY_ID_FIELDS)
+def test_extract_transaction_has_transaction_id(importer, tmp_trx, id_field):
+    """Ensure mandatory IDs are in extracted transactions."""
+    entries = importer._extract_transaction(
+        tmp_trx, "GBP", [tmp_trx], invert_sign=False
+    )
+    assert entries[0].meta[id_field] == tmp_trx[id_field]
+
+
+@pytest.mark.parametrize("id_field", tlimp.TX_OPTIONAL_ID_FIELDS)
+def test_trx_id(importer, tmp_trx, id_field):
+    entries = importer._extract_transaction(
+        tmp_trx, "GBP", [tmp_trx], invert_sign=False
+    )
+    assert entries[0].meta[id_field] == tmp_trx[id_field]
+
+
+@pytest.mark.parametrize("id_field", tlimp.TX_OPTIONAL_ID_FIELDS)
+def test_trx_id_is_optional(importer, id_field):
+    tmp_trx = json.loads(TEST_TRX_WITHOUT_IDS)
+    entries = importer._extract_transaction(
+        tmp_trx, "GBP", [tmp_trx], invert_sign=False
+    )
+    assert entries[0].meta.get(id_field) is None
+
+
+@pytest.mark.parametrize("id_field", tlimp.TX_OPTIONAL_META_ID_FIELDS)
+def test_trx_meta_id(importer, tmp_trx, id_field):
+    entries = importer._extract_transaction(
+        tmp_trx, "GBP", [tmp_trx], invert_sign=False
+    )
+    assert entries[0].meta[id_field] == tmp_trx["meta"][id_field]
+
+
+@pytest.mark.parametrize("id_field", tlimp.TX_OPTIONAL_META_ID_FIELDS)
+def test_trx_meta_id_is_optional(importer, id_field):
+    tmp_trx = json.loads(TEST_TRX_WITHOUT_IDS)
+    entries = importer._extract_transaction(
+        tmp_trx, "GBP", [tmp_trx], invert_sign=False
+    )
+    assert entries[0].meta.get(id_field) is None
