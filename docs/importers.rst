@@ -27,6 +27,7 @@ Create a file called bitstamp.yaml in your import location (e.g. downloads folde
 .. code-block:: python
 
   from tariochbctools.importers.bitst import importer as bitstimp
+
   CONFIG = [bitstimp.Importer()]
 
 
@@ -38,7 +39,8 @@ Import CSV from `Revolut <https://www.revolut.com/>`__
 .. code-block:: python
 
   from tariochbctools.importers.revolut import importer as revolutimp
-  CONFIG = [revolutimp.Importer('/Revolut-CHF.*\.csv', 'Assets:Revolut:CHF', 'CHF')]
+
+  CONFIG = [revolutimp.Importer("/Revolut-CHF.*\.csv", "Assets:Revolut:CHF", "CHF")]
 
 
 Transferwise
@@ -49,6 +51,7 @@ Import from `Transferwise <https://www.transferwise.com/>`__ using their api
 .. code-block:: python
 
   from tariochbctools.importers.transferwise import importer as twimp
+
   CONFIG = [twimp.Importer()]
 
 Create a file called transferwise.yaml in your import location (e.g. download folder).
@@ -68,6 +71,7 @@ You need to create a dev account and see their documentation about how to get a 
 .. code-block:: python
 
   from tariochbctools.importers.truelayer import importer as tlimp
+
   CONFIG = [tlimp.Importer()]
 
 Create a file called truelayer.yaml in your import location (e.g. download folder).
@@ -99,6 +103,7 @@ all be listed in the end.
 .. code-block:: python
 
   from tariochbctools.importers.nordigen import importer as nordimp
+
   CONFIG = [nordimp.Importer()]
 
 Create a file called nordigen.yaml in your import location (e.g. download folder).
@@ -120,7 +125,8 @@ Import mt940 from `Zürcher Kantonalbank <https://www.zkb.ch/>`__
 .. code-block:: python
 
   from tariochbctools.importers.zkb import importer as zkbimp
-  CONFIG = [zkbimp.ZkbImporter('/\d+\.mt940', 'Assets:ZKB')]
+
+  CONFIG = [zkbimp.ZkbImporter("/\d+\.mt940", "Assets:ZKB")]
 
 
 Interactivebrokers
@@ -139,6 +145,7 @@ Create a file called ibkr.yaml in your import location (e.g. downloads folder).
 .. code-block:: python
 
   from tariochbctools.importers.ibkr import importer as ibkrimp
+
   CONFIG = [ibkrimp.Importer()]
 
 
@@ -150,7 +157,8 @@ Import PDF from `Bank Cler ZAK <https://www.cler.ch/de/info/zak/>`__
 .. code-block:: python
 
   from tariochbctools.importers.zak import importer as zakimp
-  CONFIG = [ zakimp.Importer(r'Kontoauszug.*\.pdf', 'Assets:ZAK:CHF') ]
+
+  CONFIG = [zakimp.Importer(r"Kontoauszug.*\.pdf", "Assets:ZAK:CHF")]
 
 
 mt940
@@ -180,7 +188,8 @@ Define a file called schedule.yaml in your import location (e.g. downloads folde
 .. code-block:: python
 
   from tariochbctools.importers.schedule import importer as scheduleimp
-  CONFIG = [ scheduleimp.Importer() ]
+
+  CONFIG = [scheduleimp.Importer()]
 
 
 Cembra Mastercard Montly Statement
@@ -193,7 +202,8 @@ Requires the dependencies for camelot to be installed. See https://camelot-py.re
 .. code-block:: python
 
   from tariochbctools.importers.cembrastatement import importer as cembrastatementimp
-  CONFIG = [cembrastatementimp.Importer('\d+.pdf', 'Liabilities:Cembra:Mastercard')]
+
+  CONFIG = [cembrastatementimp.Importer("\d+.pdf", "Liabilities:Cembra:Mastercard")]
 
 
 Blockchain
@@ -221,6 +231,7 @@ Create a file called blockchain.yaml in your import location (e.g. downloads fol
 .. code-block:: python
 
   from tariochbctools.importers.blockchain import importer as bcimp
+
   CONFIG = [bcimp.Importer()]
 
 
@@ -248,6 +259,7 @@ The targetFolder is optional, if present, mails that had attachments which were 
 .. code-block:: python
 
   from tariochbctools.importers.general.mailAdapterImporter import MailAdapterImporter
+
   CONFIG = [MailAdapterImporter([MyImporter1(), MyImporter2()])]
 
 
@@ -259,4 +271,5 @@ Import CSV from `Neon <https://www.neon-free.ch/>`__
 .. code-block:: python
 
   from tariochbctools.importers.neon import importer as neonimp
-  CONFIG = [neonimp.Importer('\d\d\d\d_account_statements\.csv', 'Assets:Neon:CHF')]
+
+  CONFIG = [neonimp.Importer("\d\d\d\d_account_statements\.csv", "Assets:Neon:CHF")]
