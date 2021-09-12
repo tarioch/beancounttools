@@ -10,8 +10,8 @@ from ibflex import client, parser
 
 class Source(source.Source):
     def get_latest_price(self, ticker):
-        token = environ["IBKR_TOKEN"]
-        queryId = environ["IBKR_QUERY_ID"]
+        token: str = environ["IBKR_TOKEN"]
+        queryId: str = environ["IBKR_QUERY_ID"]
 
         try:
             response = client.download(token, queryId)
