@@ -80,6 +80,19 @@ class Importer(importer.ImporterProtocol):
 
         return entries
 
+    def _get_account_for_account_id(self, account_id):
+        """
+        Find a matching account for the account ID.
+        If the user hasn't specified any in the config, return
+        the base account.
+
+        Otherwise return None.
+        """
+        if "accounts" not in self.config:
+            return self.baseAccount
+
+        return self.config["accounts"].get(account_id, None)
+
     def _extract_endpoint_transactions(self, endpoint, headers, invert_sign=False):
         entries = []
         r = requests.get(
@@ -96,6 +109,13 @@ class Importer(importer.ImporterProtocol):
 
         for account in r.json()["results"]:
             accountId = account["account_id"]
+
+            local_account = self._get_account_for_account_id(accountId)
+
+            if not local_account:
+                logging.warning("Ignoring account ID %s", accountId)
+                continue
+
             r = requests.get(
                 f"https://api.{self.domain}/data/v1/{endpoint}/{accountId}/transactions",
                 headers=headers,
@@ -104,12 +124,14 @@ class Importer(importer.ImporterProtocol):
 
             for trx in transactions:
                 entries.extend(
-                    self._extract_transaction(trx, transactions, invert_sign)
+                    self._extract_transaction(
+                        trx, local_account, transactions, invert_sign
+                    )
                 )
 
         return entries
 
-    def _extract_transaction(self, trx, transactions, invert_sign):
+    def _extract_transaction(self, trx, local_account, transactions, invert_sign):
         entries = []
         metakv = {}
 
@@ -130,7 +152,6 @@ class Importer(importer.ImporterProtocol):
 
         meta = data.new_metadata("", 0, metakv)
         trxDate = dateutil.parser.parse(trx["timestamp"]).date()
-        account = self.baseAccount
 
         tx_amount = D(str(trx["amount"]))
         # avoid pylint invalid-unary-operand-type
@@ -146,7 +167,7 @@ class Importer(importer.ImporterProtocol):
             data.EMPTY_SET,
             [
                 data.Posting(
-                    account,
+                    local_account,
                     amount.Amount(signed_amount, trx["currency"]),
                     None,
                     None,
@@ -165,7 +186,7 @@ class Importer(importer.ImporterProtocol):
                     if (
                         isinstance(exEntry, data.Balance)
                         and exEntry.date == balDate
-                        and exEntry.account == account
+                        and exEntry.account == local_account
                     ):
                         metakv["__duplicate__"] = True
 
@@ -181,7 +202,7 @@ class Importer(importer.ImporterProtocol):
                     data.Balance(
                         meta,
                         balDate,
-                        account,
+                        local_account,
                         amount.Amount(
                             signed_balance, trx["running_balance"]["currency"]
                         ),

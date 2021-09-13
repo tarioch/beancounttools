@@ -1,6 +1,7 @@
 import json
 
 import pytest
+import yaml
 from beancount.core.amount import Decimal as D
 from beancount.ingest import cache
 
@@ -14,6 +15,11 @@ TEST_CONFIG = b"""
     client_secret: deadc0de-dead-c0de-dead-c0dedeadc0de
     refresh_token: 98D124C0E677865CB2F7D9DE91DC394CEED31DA3469C681B41FB7831F2F9B089
     access_token: eyJhbGciOiJSUzI1NiIsImtpZsomethingSomethingsomethingDarkSideOEJBNk
+    accounts:
+      hex-account-id-1: Assets:Other
+      hex-account-id-2: Assets:Savings
+      hex-account-id-3: Liabilities:Mastercard
+      hex-account-id-4: Liabilities:Visa
 """
 
 # Example from the truelayer Mock bank
@@ -87,12 +93,16 @@ def test_identify(importer, tmp_config):
 
 
 def test_extract_transaction_simple(importer, tmp_trx):
-    entries = importer._extract_transaction(tmp_trx, [tmp_trx], invert_sign=False)
+    entries = importer._extract_transaction(
+        tmp_trx, "Assets:Other", [tmp_trx], invert_sign=False
+    )
     assert entries[0].postings[0].units.number == D(str(tmp_trx["amount"]))
 
 
 def test_extract_transaction_with_balance(importer, tmp_trx):
-    entries = importer._extract_transaction(tmp_trx, [tmp_trx], invert_sign=False)
+    entries = importer._extract_transaction(
+        tmp_trx, "Assets:Other", [tmp_trx], invert_sign=False
+    )
     # one entry, one balance
     assert len(entries) == 2
     assert entries[1].amount.number == D(str(tmp_trx["running_balance"]["amount"]))
@@ -100,38 +110,62 @@ def test_extract_transaction_with_balance(importer, tmp_trx):
 
 def test_extract_transaction_invert_sign(importer, tmp_trx):
     """Show that sign inversion works"""
-    entries = importer._extract_transaction(tmp_trx, [tmp_trx], invert_sign=True)
+    entries = importer._extract_transaction(
+        tmp_trx, "Assets:Other", [tmp_trx], invert_sign=True
+    )
     assert entries[0].postings[0].units.number == -D(str(tmp_trx["amount"]))
 
 
 @pytest.mark.parametrize("id_field", tlimp.TX_MANDATORY_ID_FIELDS)
 def test_extract_transaction_has_transaction_id(importer, tmp_trx, id_field):
     """Ensure mandatory IDs are in extracted transactions."""
-    entries = importer._extract_transaction(tmp_trx, [tmp_trx], invert_sign=False)
+    entries = importer._extract_transaction(
+        tmp_trx, "Assets:Other", [tmp_trx], invert_sign=False
+    )
     assert entries[0].meta[id_field] == tmp_trx[id_field]
 
 
 @pytest.mark.parametrize("id_field", tlimp.TX_OPTIONAL_ID_FIELDS)
 def test_trx_id(importer, tmp_trx, id_field):
-    entries = importer._extract_transaction(tmp_trx, [tmp_trx], invert_sign=False)
+    entries = importer._extract_transaction(
+        tmp_trx, "Assets:Other", [tmp_trx], invert_sign=False
+    )
     assert entries[0].meta[id_field] == tmp_trx[id_field]
 
 
 @pytest.mark.parametrize("id_field", tlimp.TX_OPTIONAL_ID_FIELDS)
 def test_trx_id_is_optional(importer, id_field):
     tmp_trx = json.loads(TEST_TRX_WITHOUT_IDS)
-    entries = importer._extract_transaction(tmp_trx, [tmp_trx], invert_sign=False)
+    entries = importer._extract_transaction(
+        tmp_trx, "Assets:Other", [tmp_trx], invert_sign=False
+    )
     assert entries[0].meta.get(id_field) is None
 
 
 @pytest.mark.parametrize("id_field", tlimp.TX_OPTIONAL_META_ID_FIELDS)
 def test_trx_meta_id(importer, tmp_trx, id_field):
-    entries = importer._extract_transaction(tmp_trx, [tmp_trx], invert_sign=False)
+    entries = importer._extract_transaction(
+        tmp_trx, "Assets:Other", [tmp_trx], invert_sign=False
+    )
     assert entries[0].meta[id_field] == tmp_trx["meta"][id_field]
 
 
 @pytest.mark.parametrize("id_field", tlimp.TX_OPTIONAL_META_ID_FIELDS)
 def test_trx_meta_id_is_optional(importer, id_field):
     tmp_trx = json.loads(TEST_TRX_WITHOUT_IDS)
-    entries = importer._extract_transaction(tmp_trx, [tmp_trx], invert_sign=False)
+    entries = importer._extract_transaction(
+        tmp_trx, "Assets:Other", [tmp_trx], invert_sign=False
+    )
     assert entries[0].meta.get(id_field) is None
+
+
+@pytest.mark.parametrize("account_id", yaml.safe_load(TEST_CONFIG)["accounts"].keys())
+def test_get_account_for_account_id(importer, account_id):
+    assert (
+        importer._get_account_for_account_id(account_id)
+        == importer.config["accounts"][account_id]
+    )
+
+
+def test_get_account_for_account_id_returns_none(importer):
+    assert importer._get_account_for_account_id("unknown-account-id") is None
