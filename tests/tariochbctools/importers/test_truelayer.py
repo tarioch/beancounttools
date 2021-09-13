@@ -1,7 +1,7 @@
 import json
-import pytest
 
-from beancount.core.amount import Amount as A, Decimal as D
+import pytest
+from beancount.core.amount import Decimal as D
 
 from tariochbctools.importers.truelayer import importer as tlimp
 
@@ -36,12 +36,14 @@ TEST_TRX = b"""
 }
 """
 
+
 @pytest.fixture(name="importer")
 def truelayer_importer_fixture():
     importer = tlimp.Importer()
     # TODO: _configure the importer
     importer.baseAccount = "Liabilities:Other"
     yield importer
+
 
 @pytest.fixture(name="tmp_config")
 def tmp_config_fixture(tmp_path):
@@ -60,12 +62,16 @@ def test_identify(importer, tmp_config):
 
 
 def test_extract_transaction_simple(importer, tmp_trx):
-    entries = importer._extract_transaction(tmp_trx, "GBP", [tmp_trx], invert_sign=False)
+    entries = importer._extract_transaction(
+        tmp_trx, "GBP", [tmp_trx], invert_sign=False
+    )
     assert entries[0].postings[0].units.number == D(str(tmp_trx["amount"]))
 
 
 def test_extract_transaction_with_balance(importer, tmp_trx):
-    entries = importer._extract_transaction(tmp_trx, "GBP", [tmp_trx], invert_sign=False)
+    entries = importer._extract_transaction(
+        tmp_trx, "GBP", [tmp_trx], invert_sign=False
+    )
     # one entry, one balance
     assert len(entries) == 2
     assert entries[1].amount.number == D(str(tmp_trx["running_balance"]["amount"]))
