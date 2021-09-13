@@ -2,6 +2,7 @@ import json
 
 import pytest
 from beancount.core.amount import Decimal as D
+from beancount.ingest import cache
 
 from tariochbctools.importers.truelayer import importer as tlimp
 
@@ -62,19 +63,18 @@ TEST_TRX_WITHOUT_IDS = b"""
 """
 
 
-@pytest.fixture(name="importer")
-def truelayer_importer_fixture():
-    importer = tlimp.Importer()
-    # TODO: _configure the importer
-    importer.baseAccount = "Liabilities:Other"
-    yield importer
-
-
 @pytest.fixture(name="tmp_config")
 def tmp_config_fixture(tmp_path):
     config = tmp_path / "truelayer.yaml"
     config.write_bytes(TEST_CONFIG)
-    yield config
+    yield cache.get_file(config)  # a FileMemo, not a Path
+
+
+@pytest.fixture(name="importer")
+def truelayer_importer_fixture(tmp_config):
+    importer = tlimp.Importer()
+    importer._configure(tmp_config, [])
+    yield importer
 
 
 @pytest.fixture(name="tmp_trx")
