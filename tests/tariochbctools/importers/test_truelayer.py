@@ -83,6 +83,22 @@ def truelayer_importer_fixture(tmp_config):
     yield importer
 
 
+@pytest.fixture(name="importer_factory")
+def truelayer_importer_factory(tmp_path):
+    """A truelayer importer factory for
+    generating an importer with a custom config
+    """
+
+    def _importer_with_config(custom_config):
+        config = tmp_path / "truelayer.yaml"
+        config.write_bytes(custom_config)
+        importer = tlimp.Importer()
+        importer._configure(cache.get_file(config), [])
+        return importer
+
+    yield _importer_with_config
+
+
 @pytest.fixture(name="tmp_trx")
 def tmp_trx_fixture():
     yield json.loads(TEST_TRX)
@@ -169,3 +185,18 @@ def test_get_account_for_account_id(importer, account_id):
 
 def test_get_account_for_account_id_returns_none(importer):
     assert importer._get_account_for_account_id("unknown-account-id") is None
+
+
+def test_accounts_config_is_optional(importer_factory):
+    TEST_CONFIG_WITHOUT_ACCOUNTS = b"""
+        baseAccount: Liabilities:Other
+        client_id: sandbox-random
+        client_secret: deadc0de-dead-c0de-dead-c0dedeadc0de
+        refresh_token: 98D124C0E677865CB2F7D9DE91DC394CEED31DA3469C681B41FB7831F2F9B089
+        access_token: eyJhbGciOiJSUzI1NiIsImtpZsomethingSomethingsomethingDarkSideOEJBNk
+    """
+
+    importer = importer_factory(TEST_CONFIG_WITHOUT_ACCOUNTS)
+    assert (
+        importer._get_account_for_account_id("any-account-id-1") is importer.baseAccount
+    )
