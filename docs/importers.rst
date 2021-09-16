@@ -78,10 +78,21 @@ Create a file called truelayer.yaml in your import location (e.g. download folde
 
 .. code-block:: yaml
 
-  baseAccount: <Assets:MyBank:>
+  baseAccount: <Assets:MyBank>
   client_id: <CLIENT ID>
   client_secret: <CLIENT SECRET>
   refresh_token: <REFRESH TOKEN>
+
+The configuration may include a mapping from TrueLayer account IDs to beancount
+accounts. e.g.:
+
+.. code-block:: yaml
+
+  accounts:
+    1aacb3110398ec5a2334fb0ffc2fface: Assets:Revolut:GBP
+    ec34db160c61d468dc1cedde8bedb1f1: Liabilities:Visa
+
+If it is present, transactions for *only these accounts* will be imported.
 
 
 Nordigen
