@@ -1,18 +1,25 @@
 import json
 
 import pytest
+import yaml
 from beancount.core.amount import Decimal as D
+from beancount.ingest import cache
 
 from tariochbctools.importers.truelayer import importer as tlimp
 
 # pylint: disable=protected-access
 
 TEST_CONFIG = b"""
-    baseAccount: Liabilities:Other
+    account: DefaultAccount
     client_id: sandbox-random
     client_secret: deadc0de-dead-c0de-dead-c0dedeadc0de
     refresh_token: 98D124C0E677865CB2F7D9DE91DC394CEED31DA3469C681B41FB7831F2F9B089
     access_token: eyJhbGciOiJSUzI1NiIsImtpZsomethingSomethingsomethingDarkSideOEJBNk
+    accounts:
+      hex-account-id-1: Assets:Other
+      hex-account-id-2: Assets:Savings
+      hex-account-id-3: Liabilities:Mastercard
+      hex-account-id-4: Liabilities:Visa
 """
 
 # Example from the truelayer Mock bank
@@ -62,19 +69,34 @@ TEST_TRX_WITHOUT_IDS = b"""
 """
 
 
-@pytest.fixture(name="importer")
-def truelayer_importer_fixture():
-    importer = tlimp.Importer()
-    # TODO: _configure the importer
-    importer.baseAccount = "Liabilities:Other"
-    yield importer
-
-
 @pytest.fixture(name="tmp_config")
 def tmp_config_fixture(tmp_path):
     config = tmp_path / "truelayer.yaml"
     config.write_bytes(TEST_CONFIG)
-    yield config
+    yield cache.get_file(config)  # a FileMemo, not a Path
+
+
+@pytest.fixture(name="importer")
+def truelayer_importer_fixture(tmp_config):
+    importer = tlimp.Importer()
+    importer._configure(tmp_config, [])
+    yield importer
+
+
+@pytest.fixture(name="importer_factory")
+def truelayer_importer_factory(tmp_path):
+    """A truelayer importer factory for
+    generating an importer with a custom config
+    """
+
+    def _importer_with_config(custom_config):
+        config = tmp_path / "truelayer.yaml"
+        config.write_bytes(custom_config)
+        importer = tlimp.Importer()
+        importer._configure(cache.get_file(config), [])
+        return importer
+
+    yield _importer_with_config
 
 
 @pytest.fixture(name="tmp_trx")
@@ -88,14 +110,14 @@ def test_identify(importer, tmp_config):
 
 def test_extract_transaction_simple(importer, tmp_trx):
     entries = importer._extract_transaction(
-        tmp_trx, "GBP", [tmp_trx], invert_sign=False
+        tmp_trx, "Assets:Other", [tmp_trx], invert_sign=False
     )
     assert entries[0].postings[0].units.number == D(str(tmp_trx["amount"]))
 
 
 def test_extract_transaction_with_balance(importer, tmp_trx):
     entries = importer._extract_transaction(
-        tmp_trx, "GBP", [tmp_trx], invert_sign=False
+        tmp_trx, "Assets:Other", [tmp_trx], invert_sign=False
     )
     # one entry, one balance
     assert len(entries) == 2
@@ -104,7 +126,9 @@ def test_extract_transaction_with_balance(importer, tmp_trx):
 
 def test_extract_transaction_invert_sign(importer, tmp_trx):
     """Show that sign inversion works"""
-    entries = importer._extract_transaction(tmp_trx, "GBP", [tmp_trx], invert_sign=True)
+    entries = importer._extract_transaction(
+        tmp_trx, "Assets:Other", [tmp_trx], invert_sign=True
+    )
     assert entries[0].postings[0].units.number == -D(str(tmp_trx["amount"]))
 
 
@@ -112,7 +136,7 @@ def test_extract_transaction_invert_sign(importer, tmp_trx):
 def test_extract_transaction_has_transaction_id(importer, tmp_trx, id_field):
     """Ensure mandatory IDs are in extracted transactions."""
     entries = importer._extract_transaction(
-        tmp_trx, "GBP", [tmp_trx], invert_sign=False
+        tmp_trx, "Assets:Other", [tmp_trx], invert_sign=False
     )
     assert entries[0].meta[id_field] == tmp_trx[id_field]
 
@@ -120,7 +144,7 @@ def test_extract_transaction_has_transaction_id(importer, tmp_trx, id_field):
 @pytest.mark.parametrize("id_field", tlimp.TX_OPTIONAL_ID_FIELDS)
 def test_trx_id(importer, tmp_trx, id_field):
     entries = importer._extract_transaction(
-        tmp_trx, "GBP", [tmp_trx], invert_sign=False
+        tmp_trx, "Assets:Other", [tmp_trx], invert_sign=False
     )
     assert entries[0].meta[id_field] == tmp_trx[id_field]
 
@@ -129,7 +153,7 @@ def test_trx_id(importer, tmp_trx, id_field):
 def test_trx_id_is_optional(importer, id_field):
     tmp_trx = json.loads(TEST_TRX_WITHOUT_IDS)
     entries = importer._extract_transaction(
-        tmp_trx, "GBP", [tmp_trx], invert_sign=False
+        tmp_trx, "Assets:Other", [tmp_trx], invert_sign=False
     )
     assert entries[0].meta.get(id_field) is None
 
@@ -137,7 +161,7 @@ def test_trx_id_is_optional(importer, id_field):
 @pytest.mark.parametrize("id_field", tlimp.TX_OPTIONAL_META_ID_FIELDS)
 def test_trx_meta_id(importer, tmp_trx, id_field):
     entries = importer._extract_transaction(
-        tmp_trx, "GBP", [tmp_trx], invert_sign=False
+        tmp_trx, "Assets:Other", [tmp_trx], invert_sign=False
     )
     assert entries[0].meta[id_field] == tmp_trx["meta"][id_field]
 
@@ -146,6 +170,31 @@ def test_trx_meta_id(importer, tmp_trx, id_field):
 def test_trx_meta_id_is_optional(importer, id_field):
     tmp_trx = json.loads(TEST_TRX_WITHOUT_IDS)
     entries = importer._extract_transaction(
-        tmp_trx, "GBP", [tmp_trx], invert_sign=False
+        tmp_trx, "Assets:Other", [tmp_trx], invert_sign=False
     )
     assert entries[0].meta.get(id_field) is None
+
+
+@pytest.mark.parametrize("account_id", yaml.safe_load(TEST_CONFIG)["accounts"].keys())
+def test_get_account_for_account_id(importer, account_id):
+    assert (
+        importer._get_account_for_account_id(account_id)
+        == importer.config["accounts"][account_id]
+    )
+
+
+def test_get_account_for_account_id_returns_none(importer):
+    assert importer._get_account_for_account_id("unknown-account-id") is None
+
+
+def test_accounts_config_is_optional(importer_factory):
+    TEST_CONFIG_WITHOUT_ACCOUNTS = b"""
+        account: DefaultAccount
+        client_id: sandbox-random
+        client_secret: deadc0de-dead-c0de-dead-c0dedeadc0de
+        refresh_token: 98D124C0E677865CB2F7D9DE91DC394CEED31DA3469C681B41FB7831F2F9B089
+        access_token: eyJhbGciOiJSUzI1NiIsImtpZsomethingSomethingsomethingDarkSideOEJBNk
+    """
+
+    importer = importer_factory(TEST_CONFIG_WITHOUT_ACCOUNTS)
+    assert importer._get_account_for_account_id("any-account-id-1") == "DefaultAccount"

@@ -29,7 +29,6 @@ class Importer(importer.ImporterProtocol):
 
     def __init__(self):
         self.config = None
-        self.baseAccount = None
         self.clientId = None
         self.clientSecret = None
         self.refreshToken = None
@@ -40,7 +39,6 @@ class Importer(importer.ImporterProtocol):
     def _configure(self, file, existing_entries):
         with open(file.name, "r") as f:
             self.config = yaml.safe_load(f)
-        self.baseAccount = self.config["baseAccount"]
         self.clientId = self.config["client_id"]
         self.clientSecret = self.config["client_secret"]
         self.refreshToken = self.config["refresh_token"]
@@ -49,6 +47,9 @@ class Importer(importer.ImporterProtocol):
 
         if self.sandbox:
             self.domain = "truelayer-sandbox.com"
+
+        if "account" not in self.config and "accounts" not in self.config:
+            raise KeyError("At least one of `account` or `accounts` must be specified")
 
     def identify(self, file):
         return "truelayer.yaml" == path.basename(file.name)
@@ -80,6 +81,24 @@ class Importer(importer.ImporterProtocol):
 
         return entries
 
+    def _get_account_for_account_id(self, account_id):
+        """
+        Find a matching account for the account ID.
+        If the user hasn't specified any in the config, return
+        the base account.
+
+        Otherwise return None.
+        """
+        if "accounts" not in self.config:
+            return self.config["account"]
+
+        # Empty `accounts` will generate warnings for all accounts
+        #  including their account IDs
+        if self.config["accounts"] is None:
+            return None
+
+        return self.config["accounts"].get(account_id, None)
+
     def _extract_endpoint_transactions(self, endpoint, headers, invert_sign=False):
         entries = []
         r = requests.get(
@@ -96,7 +115,13 @@ class Importer(importer.ImporterProtocol):
 
         for account in r.json()["results"]:
             accountId = account["account_id"]
-            accountCcy = account["currency"]
+
+            local_account = self._get_account_for_account_id(accountId)
+
+            if not local_account:
+                logging.warning("Ignoring account ID %s", accountId)
+                continue
+
             r = requests.get(
                 f"https://api.{self.domain}/data/v1/{endpoint}/{accountId}/transactions",
                 headers=headers,
@@ -106,13 +131,13 @@ class Importer(importer.ImporterProtocol):
             for trx in transactions:
                 entries.extend(
                     self._extract_transaction(
-                        trx, accountCcy, transactions, invert_sign
+                        trx, local_account, transactions, invert_sign
                     )
                 )
 
         return entries
 
-    def _extract_transaction(self, trx, accountCcy, transactions, invert_sign):
+    def _extract_transaction(self, trx, local_account, transactions, invert_sign):
         entries = []
         metakv = {}
 
@@ -133,7 +158,6 @@ class Importer(importer.ImporterProtocol):
 
         meta = data.new_metadata("", 0, metakv)
         trxDate = dateutil.parser.parse(trx["timestamp"]).date()
-        account = self.baseAccount + accountCcy
 
         tx_amount = D(str(trx["amount"]))
         # avoid pylint invalid-unary-operand-type
@@ -149,7 +173,7 @@ class Importer(importer.ImporterProtocol):
             data.EMPTY_SET,
             [
                 data.Posting(
-                    account,
+                    local_account,
                     amount.Amount(signed_amount, trx["currency"]),
                     None,
                     None,
@@ -168,7 +192,7 @@ class Importer(importer.ImporterProtocol):
                     if (
                         isinstance(exEntry, data.Balance)
                         and exEntry.date == balDate
-                        and exEntry.account == account
+                        and exEntry.account == local_account
                     ):
                         metakv["__duplicate__"] = True
 
@@ -184,7 +208,7 @@ class Importer(importer.ImporterProtocol):
                     data.Balance(
                         meta,
                         balDate,
-                        account,
+                        local_account,
                         amount.Amount(
                             signed_balance, trx["running_balance"]["currency"]
                         ),
