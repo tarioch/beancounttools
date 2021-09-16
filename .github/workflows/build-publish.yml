@@ -42,4 +42,4 @@ jobs:
           TWINE_PASSWORD: ${{ secrets.pypi_password }}
           TWINE_REPOSITORY_URL: https://upload.pypi.org/legacy/
         run: >-
-          tox -e publish --repository pypi
+          tox -e publish -- --repository pypi
