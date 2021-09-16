@@ -10,7 +10,7 @@ from tariochbctools.importers.truelayer import importer as tlimp
 # pylint: disable=protected-access
 
 TEST_CONFIG = b"""
-    baseAccount: Liabilities:Other
+    account: DefaultAccount
     client_id: sandbox-random
     client_secret: deadc0de-dead-c0de-dead-c0dedeadc0de
     refresh_token: 98D124C0E677865CB2F7D9DE91DC394CEED31DA3469C681B41FB7831F2F9B089
@@ -189,7 +189,7 @@ def test_get_account_for_account_id_returns_none(importer):
 
 def test_accounts_config_is_optional(importer_factory):
     TEST_CONFIG_WITHOUT_ACCOUNTS = b"""
-        baseAccount: Liabilities:Other
+        account: DefaultAccount
         client_id: sandbox-random
         client_secret: deadc0de-dead-c0de-dead-c0dedeadc0de
         refresh_token: 98D124C0E677865CB2F7D9DE91DC394CEED31DA3469C681B41FB7831F2F9B089
@@ -197,6 +197,4 @@ def test_accounts_config_is_optional(importer_factory):
     """
 
     importer = importer_factory(TEST_CONFIG_WITHOUT_ACCOUNTS)
-    assert (
-        importer._get_account_for_account_id("any-account-id-1") is importer.baseAccount
-    )
+    assert importer._get_account_for_account_id("any-account-id-1") == "DefaultAccount"

@@ -29,7 +29,6 @@ class Importer(importer.ImporterProtocol):
 
     def __init__(self):
         self.config = None
-        self.baseAccount = None
         self.clientId = None
         self.clientSecret = None
         self.refreshToken = None
@@ -40,7 +39,6 @@ class Importer(importer.ImporterProtocol):
     def _configure(self, file, existing_entries):
         with open(file.name, "r") as f:
             self.config = yaml.safe_load(f)
-        self.baseAccount = self.config["baseAccount"]
         self.clientId = self.config["client_id"]
         self.clientSecret = self.config["client_secret"]
         self.refreshToken = self.config["refresh_token"]
@@ -49,6 +47,9 @@ class Importer(importer.ImporterProtocol):
 
         if self.sandbox:
             self.domain = "truelayer-sandbox.com"
+
+        if "account" not in self.config and "accounts" not in self.config:
+            raise KeyError("At least one of `account` or `accounts` must be specified")
 
     def identify(self, file):
         return "truelayer.yaml" == path.basename(file.name)
@@ -89,7 +90,12 @@ class Importer(importer.ImporterProtocol):
         Otherwise return None.
         """
         if "accounts" not in self.config:
-            return self.baseAccount
+            return self.config["account"]
+
+        # Empty `accounts` will generate warnings for all accounts
+        #  including their account IDs
+        if self.config["accounts"] is None:
+            return None
 
         return self.config["accounts"].get(account_id, None)
 

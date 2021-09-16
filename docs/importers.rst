@@ -78,13 +78,13 @@ Create a file called truelayer.yaml in your import location (e.g. download folde
 
 .. code-block:: yaml
 
-  baseAccount: <Assets:MyBank>
+  account: <Assets:MyBank>
   client_id: <CLIENT ID>
   client_secret: <CLIENT SECRET>
   refresh_token: <REFRESH TOKEN>
 
-The configuration may include a mapping from TrueLayer account IDs to beancount
-accounts. e.g.:
+Instead of a single ``account``, the configuration may include a *mapping* from
+TrueLayer account IDs to beancount accounts. e.g.:
 
 .. code-block:: yaml
 
