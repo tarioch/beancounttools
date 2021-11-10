@@ -5,7 +5,7 @@ import requests
 
 
 def build_header(token):
-    return {"Authorization": "Token " + token}
+    return {"Authorization": "Bearer " + token}
 
 
 def check_result(result):
@@ -15,9 +15,22 @@ def check_result(result):
         raise Exception(e, e.response.text)
 
 
+def get_token(secret_id, secret_key):
+    r = requests.post(
+        "https://ob.nordigen.com/api/v2/token/new/",
+        data={
+            "secret_id": secret_id,
+            "secret_key": secret_key,
+        },
+    )
+    check_result(r)
+
+    return r.json()["access"]
+
+
 def list_bank(token, country):
     r = requests.get(
-        "https://ob.nordigen.com/api/aspsps/",
+        "https://ob.nordigen.com/api/v2/institutions/",
         params={"country": country},
         headers=build_header(token),
     )
@@ -27,51 +40,46 @@ def list_bank(token, country):
         print(asp["name"] + ": " + asp["id"])
 
 
-def create_link(token, userId, bank):
+def create_link(token, reference, bank):
     if not bank:
         raise Exception("Please specify --bank it is required for create_link")
-    headers = build_header(token)
-    requisitionId = _find_requisition_id(token, userId)
-    if not requisitionId:
+    requisitionId = _find_requisition_id(token, reference)
+    if requisitionId:
+        print(f"Link for for reference {reference} already exists.")
+    else:
         r = requests.post(
-            "https://ob.nordigen.com/api/requisitions/",
+            "https://ob.nordigen.com/api/v2/requisitions/",
             data={
                 "redirect": "http://localhost",
-                "enduser_id": userId,
-                "reference": userId,
+                "institution_id": bank,
+                "reference": reference,
             },
             headers=build_header(token),
         )
         check_result(r)
-        requisitionId = r.json()["id"]
-
-    r = requests.post(
-        f"https://ob.nordigen.com/api/requisitions/{requisitionId}/links/",
-        data={"aspsp_id": bank},
-        headers=headers,
-    )
-    check_result(r)
-    link = r.json()["initiate"]
-    print(f"Go to {link} for connecting to your bank.")
+        link = r.json()["link"]
+        print(f"Go to {link} for connecting to your bank.")
 
 
 def list_accounts(token):
     headers = build_header(token)
-    r = requests.get("https://ob.nordigen.com/api/requisitions/", headers=headers)
+    r = requests.get("https://ob.nordigen.com/api/v2/requisitions/", headers=headers)
+    print(r.json())
     check_result(r)
     for req in r.json()["results"]:
-        print(req["enduser_id"] + ": " + req["id"])
+        reference = req["reference"]
+        print(f"Reference: {reference}")
         for account in req["accounts"]:
             ra = requests.get(
-                f"https://ob.nordigen.com/api/accounts/{account}", headers=headers
+                f"https://ob.nordigen.com/api/v2/accounts/{account}", headers=headers
             )
             check_result(ra)
             acc = ra.json()
-            asp = acc["aspsp_identifier"]
+            asp = acc["institution_id"]
             iban = acc["iban"]
 
             ra = requests.get(
-                f"https://ob.nordigen.com/api/accounts/{account}/details",
+                f"https://ob.nordigen.com/api/v2/accounts/{account}/details",
                 headers=headers,
             )
             check_result(ra)
@@ -82,11 +90,11 @@ def list_accounts(token):
             print(f"{account}: {asp} {owner} {iban} {currency}")
 
 
-def delete_user(token, userId):
-    requisitionId = _find_requisition_id(token, userId)
+def delete_link(token, reference):
+    requisitionId = _find_requisition_id(token, reference)
     if requisitionId:
         r = requests.delete(
-            f"https://ob.nordigen.com/api/requisitions/{requisitionId}",
+            f"https://ob.nordigen.com/api/v2/requisitions/{requisitionId}",
             headers=build_header(token),
         )
         check_result(r)
@@ -94,10 +102,10 @@ def delete_user(token, userId):
 
 def _find_requisition_id(token, userId):
     headers = build_header(token)
-    r = requests.get("https://ob.nordigen.com/api/requisitions/", headers=headers)
+    r = requests.get("https://ob.nordigen.com/api/v2/requisitions/", headers=headers)
     check_result(r)
     for req in r.json()["results"]:
-        if req["enduser_id"] == userId:
+        if req["reference"] == userId:
             return req["id"]
 
     return None
@@ -106,9 +114,14 @@ def _find_requisition_id(token, userId):
 def parse_args(args):
     parser = argparse.ArgumentParser(description="nordigen-config")
     parser.add_argument(
-        "--token",
+        "--secret_id",
         required=True,
-        help="API Token, can be generated on Nordigen website",
+        help="API secret id, can be generated on Nordigen website",
+    )
+    parser.add_argument(
+        "--secret_key",
+        required=True,
+        help="API secret key, can be generated on Nordigen website",
     )
     parser.add_argument(
         "--country",
@@ -116,9 +129,9 @@ def parse_args(args):
         help="Country Code for list_bank",
     )
     parser.add_argument(
-        "--userId",
+        "--reference",
         default="beancount",
-        help="UserId for create_link and delete_user",
+        help="reference for add_bank and delete_bank, needs to be unique",
     )
     parser.add_argument(
         "--bank",
@@ -130,7 +143,7 @@ def parse_args(args):
             "list_banks",
             "create_link",
             "list_accounts",
-            "delete_user",
+            "delete_link",
         ],
     )
     return parser.parse_args(args)
@@ -139,14 +152,16 @@ def parse_args(args):
 def main(args):
     args = parse_args(args)
 
+    token = get_token(args.secret_id, args.secret_key)
+
     if args.mode == "list_banks":
-        list_bank(args.token, args.country)
+        list_bank(token, args.country)
     elif args.mode == "create_link":
-        create_link(args.token, args.userId, args.bank)
+        create_link(token, args.reference, args.bank)
     elif args.mode == "list_accounts":
-        list_accounts(args.token)
-    elif args.mode == "delete_user":
-        delete_user(args.token, args.userId)
+        list_accounts(token)
+    elif args.mode == "delete_link":
+        delete_link(token, args.reference)
 
 
 def run():
