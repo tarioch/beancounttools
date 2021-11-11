@@ -24,15 +24,28 @@ class Importer(importer.ImporterProtocol):
     def extract(self, file, existing_entries):
         with open(file.name, "r") as f:
             config = yaml.safe_load(f)
-        token = config["token"]
-        headers = {"Authorization": "Token " + token}
+
+        r = requests.post(
+            "https://ob.nordigen.com/api/v2/token/new/",
+            data={
+                "secret_id": config["secret_id"],
+                "secret_key": config["secret_key"],
+            },
+        )
+        try:
+            r.raise_for_status()
+        except requests.exceptions.HTTPError as e:
+            raise HttpServiceException(e, e.response.text)
+
+        token = r.json()["access"]
+        headers = {"Authorization": "Bearer " + token}
 
         entries = []
         for account in config["accounts"]:
             accountId = account["id"]
             assetAccount = account["asset_account"]
             r = requests.get(
-                f"https://ob.nordigen.com/api/accounts/{accountId}/transactions/",
+                f"https://ob.nordigen.com/api/v2/accounts/{accountId}/transactions/",
                 headers=headers,
             )
             try:

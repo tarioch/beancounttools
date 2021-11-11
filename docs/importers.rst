@@ -106,9 +106,10 @@ all be listed in the end.
 
 .. code-block:: console
 
-  nordigen-conf list_banks --token YOURTOKEN --country DE
-  nordigen-conf create_link --token YOURTOKEN --bank REVOLUT_REVOGB21
-  nordigen-conf list_accounts --token YOURTOKEN list_accounts
+  nordigen-conf list_banks --secret_id YOURSECRET_ID --secret_key YOURSECRET_KEY --country DE
+  nordigen-conf create_link --secret_id YOURSECRET_ID --secret_key YOURSECRET_KEY --bank REVOLUT_REVOGB21 --reference myref
+  nordigen-conf list_accounts --secret_id YOURSECRET_ID --secret_key YOURSECRET_KEY
+  nordigen-conf delete_link --secret_id YOURSECRET_ID --secret_key YOURSECRET_KEY --reference myref
 
 
 .. code-block:: python
@@ -121,7 +122,8 @@ Create a file called nordigen.yaml in your import location (e.g. download folder
 
 .. code-block:: yaml
 
-  token: <TOKEN>
+  secret_id: <YOURSECRET_ID>
+  secret_key: <YOURSECRET_KEY>
 
   accounts:
     - id: <ACCOUNT-ID>
