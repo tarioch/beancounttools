@@ -22,11 +22,10 @@ class Importer(importer.ImporterProtocol):
             config = yaml.safe_load(f)
         self.transactions = config["transactions"]
 
-        lastDayOfMonth = datetime.date.today() + relativedelta(day=31)
         result = []
         for trx in config["transactions"]:
             for i in reversed(range(1, 6)):
-                date = lastDayOfMonth + relativedelta(months=-i)
+                date = datetime.date.today() + relativedelta(months=-i, day=31)
                 result.append(self.createForDate(trx, date))
 
         return result
