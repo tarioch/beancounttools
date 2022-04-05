@@ -1,6 +1,7 @@
 import json
 
 import pytest
+from beancount.core.amount import Decimal as D
 from beancount.ingest import cache
 
 from tariochbctools.importers.quickfile import importer as qfimp
@@ -12,6 +13,13 @@ TEST_CONFIG = b"""
 
 # Example from the quickfile API docs
 TEST_TRX = b"""
+{
+    "TransactionDate": "2017-01-04T12:34:56",
+    "Reference": "WATERSTONES REF 364 2177333010 BCC",
+    "Amount": -4.75,
+    "TagStatus": null,
+    "TransactionId": 666
+}
 """
 
 
@@ -52,3 +60,10 @@ def tmp_trx_fixture():
 
 def test_identify(importer, tmp_config):
     assert importer.identify(tmp_config)
+
+
+def test_extract_transaction_simple(importer, tmp_trx):
+    entries = importer._extract_transaction(
+        tmp_trx, "Assets:Other", [tmp_trx], invert_sign=False
+    )
+    assert entries[0].postings[0].units.number == D(str(tmp_trx["Amount"]))
