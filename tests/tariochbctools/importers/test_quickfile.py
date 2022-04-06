@@ -17,6 +17,7 @@ app_id: SOME_APP_ID
 accounts:
     1200: Assets:Other
     1201: Assets:Savings
+transaction_count: 200
 """
 
 # Example from the quickfile API docs

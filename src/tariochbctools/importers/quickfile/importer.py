@@ -131,13 +131,13 @@ class QuickFile:
 
         return r
 
-    def bank_search(self, account_number):
+    def bank_search(self, account_number, transaction_count):
         endpoint_data = {
             "SearchParameters": {
-                "ReturnCount": "10",
+                "ReturnCount": str(transaction_count),
                 "Offset": "0",
                 "OrderResultsBy": "TransactionDate",
-                "OrderDirection": "ASC",
+                "OrderDirection": "DESC",
                 "NominalCode": str(account_number),
             }
         }
@@ -182,7 +182,8 @@ class Importer(importer.ImporterProtocol):
 
     def _extract_bank_transactions(self, bank_account, invert_sign=False):
         entries = []
-        response = self.quickfile.bank_search(bank_account)
+        transaction_count = self.config["transaction_count"]  # [0..200]
+        response = self.quickfile.bank_search(bank_account, transaction_count)
         metadata = response.MetaData
         transactions = response.Transactions["Transaction"]
         local_account = self.config["accounts"].get(bank_account)
