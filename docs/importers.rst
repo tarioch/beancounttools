@@ -31,6 +31,44 @@ Create a file called bitstamp.yaml in your import location (e.g. downloads folde
   CONFIG = [bitstimp.Importer()]
 
 
+QuickFile
+--------------
+Import from `QuickFile <https://www.quickfile.co.uk/>`__ using their API services.
+Supports a `range of (mostly UK) banks <https://www.quickfile.co.uk/openbanking/providers>`__.
+
+Requires a QuickFile account (any pricing plan, including free) but with a paid
+Automated Bank Feed subscription (`small annual fee <https://www.quickfile.co.uk/home/pricing>`__).
+
+It is assumed you already have automated bank feeds configured within QuickFile
+for the accounts of interest and are able to browse transactions within the QuickFile dashboard.
+
+.. code-block:: python
+
+  from tariochbctools.importers.quickfile import importer as qfimp
+
+  CONFIG = [qfimp.Importer()]
+
+Create a file called ``quickfile.yaml`` in your import location (e.g. download folder).
+
+.. code-block:: yaml
+
+  account_number: "YOUR_ACCOUNT_NUMBER"
+  api_key: YOUR_API_KEY
+  app_id: YOUR_APP_ID
+  accounts:
+      1200: Assets:Other
+      1201: Assets:Savings
+  transaction_count: 200
+
+
+To obtain an API key you must create an app in the `Account Settings | 3rd
+Party Integration | API` section of your account dashboard.
+
+Accounts are indexed in the config by their ``nominal code`` (typically: ~1200)
+visible in each account's settings. Only accounts listed in the config will be
+queried.
+
+
 Revolut
 -------
 
