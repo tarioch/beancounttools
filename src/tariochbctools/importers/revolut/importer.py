@@ -26,47 +26,39 @@ class Importer(identifier.IdentifyMixin, importer.ImporterProtocol):
 
     def extract(self, file, existing_entries):
         entries = []
-        has_balance = False
 
         with StringIO(file.contents()) as csvfile:
             reader = csv.DictReader(
                 csvfile,
                 [
-                    "Date",
-                    "Reference",
-                    "PaidOut",
-                    "PaidIn",
-                    "ExchangeOut",
-                    "ExchangeIn",
-                    "Balance",
-                    "Category",
+                   "Type",
+                   "Product",
+                   "Started Date",
+                   "Completed Date",
+                   "Description",
+                   "Amount",
+                   "Fee",
+                   "Currency",
+                   "State",
+                   "Balance",
+ 
                 ],
+
                 delimiter=",",
                 skipinitialspace=True,
             )
             next(reader)
             for row in reader:
-                metakv = {
-                    "category": row["Category"].strip(),
-                }
-                exchangeIn = row["ExchangeIn"].strip()
-                exchangeOut = row["ExchangeOut"].strip()
-                if exchangeIn and exchangeOut:
-                    metakv["originalIn"] = exchangeIn
-                    metakv["originalOut"] = exchangeOut
-                elif exchangeIn:
-                    metakv["original"] = exchangeIn
-                elif exchangeOut:
-                    metakv["original"] = exchangeOut
+                metakv = {}
 
-                book_date = parse(row["Date"].strip()).date()
+                
 
                 try:
-                    credit = D(row["PaidIn"].replace("'", "").strip())
-                    debit = D(row["PaidOut"].replace("'", "").strip())
                     bal = D(row["Balance"].replace("'", "").strip())
-                    amt = amount.Amount(credit - debit, self.currency)
+                    amount_raw = D(row["Amount"].replace("'", "").strip())
+                    amt = amount.Amount(amount_raw, row["Currency"])
                     balance = amount.Amount(bal, self.currency)
+                    book_date = parse(row["Completed Date"].strip()).date()
                 except Exception as e:
                     logging.warning(e)
                     continue
@@ -77,7 +69,7 @@ class Importer(identifier.IdentifyMixin, importer.ImporterProtocol):
                     book_date,
                     "*",
                     "",
-                    row["Reference"].strip(),
+                    row["Description"].strip(),
                     data.EMPTY_SET,
                     data.EMPTY_SET,
                     [
@@ -86,13 +78,14 @@ class Importer(identifier.IdentifyMixin, importer.ImporterProtocol):
                 )
                 entries.append(entry)
 
-                # only add balance after the top (newest) transaction
-                if not has_balance:
-                    book_date = book_date + timedelta(days=1)
-                    entry = data.Balance(
-                        meta, book_date, self.account, balance, None, None
-                    )
-                    entries.append(entry)
-                    has_balance = True
+            # only add balance after the last (newest) transaction
+            try:
+                book_date = book_date + timedelta(days=1)
+                entry = data.Balance(
+                    meta, book_date, self.account, balance, None, None
+                )
+                entries.append(entry)
+            except NameError:
+                pass
 
         return entries
