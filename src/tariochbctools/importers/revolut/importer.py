@@ -31,27 +31,23 @@ class Importer(identifier.IdentifyMixin, importer.ImporterProtocol):
             reader = csv.DictReader(
                 csvfile,
                 [
-                   "Type",
-                   "Product",
-                   "Started Date",
-                   "Completed Date",
-                   "Description",
-                   "Amount",
-                   "Fee",
-                   "Currency",
-                   "State",
-                   "Balance",
- 
+                    "Type",
+                    "Product",
+                    "Started Date",
+                    "Completed Date",
+                    "Description",
+                    "Amount",
+                    "Fee",
+                    "Currency",
+                    "State",
+                    "Balance",
                 ],
-
                 delimiter=",",
                 skipinitialspace=True,
             )
             next(reader)
             for row in reader:
                 metakv = {}
-
-                
 
                 try:
                     bal = D(row["Balance"].replace("'", "").strip())
@@ -81,9 +77,7 @@ class Importer(identifier.IdentifyMixin, importer.ImporterProtocol):
             # only add balance after the last (newest) transaction
             try:
                 book_date = book_date + timedelta(days=1)
-                entry = data.Balance(
-                    meta, book_date, self.account, balance, None, None
-                )
+                entry = data.Balance(meta, book_date, self.account, balance, None, None)
                 entries.append(entry)
             except NameError:
                 pass
