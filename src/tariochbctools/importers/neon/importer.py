@@ -29,22 +29,46 @@ class Importer(identifier.IdentifyMixin, importer.ImporterProtocol):
             print(file.contents())
             reader = csv.DictReader(
                 csvfile,
-                ["date", "amount", "description"],
+                [
+                    "Date",
+                    "Amount",
+                    "Original amount",
+                    "Original currency",
+                    "Exchange rate",
+                    "Description",
+                    "Subject",
+                    "Category",
+                    "Tags",
+                    "Wise",
+                    "Spaces",
+                ],
                 delimiter=";",
                 skipinitialspace=True,
             )
             next(reader)
             for row in reader:
-                book_date = parse(row["date"].strip()).date()
-                amt = amount.Amount(D(row["amount"]), "CHF")
+                book_date = parse(row["Date"].strip()).date()
+                amt = amount.Amount(D(row["Amount"]), "CHF")
+                metakv = {
+                    "category": row["Category"],
+                }
+                print(row)
+                if row["Original currency"] != "":
+                    metakv["original_currency"] = row["Original currency"]
+                    metakv["original_amount"] = row["Original amount"]
+                    metakv["exchange_rate"] = row["Exchange rate"]
 
-                meta = data.new_metadata(file.name, 0)
+                meta = data.new_metadata(file.name, 0, metakv)
+                description = row["Description"].strip()
+                if row["Subject"].strip() != "":
+                    description = description + ": " + row["Subject"].strip()
+
                 entry = data.Transaction(
                     meta,
                     book_date,
                     "*",
                     "",
-                    row["description"].strip(),
+                    description,
                     data.EMPTY_SET,
                     data.EMPTY_SET,
                     [
