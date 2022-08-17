@@ -324,3 +324,15 @@ Import CSV from `Neon <https://www.neon-free.ch/>`__
   from tariochbctools.importers.neon import importer as neonimp
 
   CONFIG = [neonimp.Importer("\d\d\d\d_account_statements\.csv", "Assets:Neon:CHF")]
+
+
+Viseca One
+----------
+
+Import PDF from `Viseca One <https://one-digitalservice.ch/>`__
+
+.. code-block:: python
+
+  from tariochbctools.importers.viseca import importer as visecaimp
+
+  CONFIG = [visecaimp.Importer(r"Kontoauszug.*\.pdf", "Assets:Viseca:CHF")]
