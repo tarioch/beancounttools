@@ -25,8 +25,6 @@ class Importer(identifier.IdentifyMixin, importer.ImporterProtocol):
         entries = []
 
         with StringIO(file.contents()) as csvfile:
-            print(file.name)
-            print(file.contents())
             reader = csv.DictReader(
                 csvfile,
                 [
