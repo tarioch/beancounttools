@@ -76,9 +76,9 @@ class Importer(identifier.IdentifyMixin, importer.ImporterProtocol):
                     if lastTrxDate:
                         amt = None
                         if "-" in lastAmount:
-                            amt = -amount.Amount(D(lastAmount.strip(" -")), "CHF")
+                            amt = amount.Amount(D(lastAmount.strip(" -")), "CHF")
                         else:
-                            amt = amount.Amount(D(lastAmount), "CHF")
+                            amt = -amount.Amount(D(lastAmount), "CHF")
 
                         book_date = datetime.strptime(lastTrxDate, "%d.%m.%y").date()
 
