@@ -19,14 +19,23 @@ class Importer(identifier.IdentifyMixin, importer.ImporterProtocol):
     def file_account(self, file):
         return self.account
 
-    def createEntry(self, file, date, amt, text):
+    def createEntry(self, file, date, entryAmount, text):
+        amt = None
+        entryAmount = entryAmount.replace("'", "")
+        if "-" in entryAmount:
+            amt = amount.Amount(D(entryAmount.strip(" -")), "CHF")
+        else:
+            amt = -amount.Amount(D(entryAmount), "CHF")
+
+        book_date = datetime.strptime(date, "%d.%m.%y").date()
+
         meta = data.new_metadata(file.name, 0)
         return data.Transaction(
             meta,
-            date,
+            book_date,
             "*",
             "",
-            text,
+            text.strip(),
             data.EMPTY_SET,
             data.EMPTY_SET,
             [
@@ -37,60 +46,63 @@ class Importer(identifier.IdentifyMixin, importer.ImporterProtocol):
     def extract(self, file, existing_entries):
         entries = []
 
-        p = re.compile(
-            r"^(?P<bookingDate>\d\d\.\d\d\.\d\d) (?P<valueDate>\d\d\.\d\d\.\d\d) (?P<detail>.*)$"
+        p = re.compile(r"^\d\d\.\d\d\.\d\d$")
+
+        columns = ["100,132,400,472,523"]
+
+        firstPageTables = camelot.read_pdf(
+            file.name,
+            flavor="stream",
+            pages="1",
+            table_regions=["65,450,585,50"],
+            columns=columns,
+            split_text=True,
+        )
+        otherPageTables = camelot.read_pdf(
+            file.name,
+            flavor="stream",
+            pages="2-end",
+            table_regions=["65,650,585,50"],
+            columns=columns,
+            split_text=True,
         )
 
-        tables = camelot.read_pdf(
-            file.name, flavor="stream", table_areas=["65,450,575,100"]
-        )
+        tables = [*firstPageTables, *otherPageTables]
+
         for table in tables:
             df = table.df
 
             # skip incompatible tables
-            if df.columns.size != 4:
+            if df.columns.size != 6:
                 continue
 
             lastTrxDate = None
             lastAmount = None
             lastDetails = ""
             for _, row in df.iterrows():
-                dateValutaDetails, currency, amountCcy, amountChf = tuple(row)
+                date, valueDate, details, _, _, amountChf = tuple(row)
 
-                if (
-                    "XX XXXX" in dateValutaDetails
-                    or "Kartenlimite" in dateValutaDetails
-                ):
+                if date and not p.match(date) or "Totalbetrag" in details:
                     continue
 
-                trxDate = None
-                detail = ""
-                m = p.match(dateValutaDetails)
-                if m:
-                    trxDate = m.group("valueDate")
-                    detail = m.group("detail").strip() + " "
-                else:
-                    detail = dateValutaDetails.strip() + " "
+                trxDate = valueDate
+                details = details.strip()
 
                 if amountChf:
                     if lastTrxDate:
-                        amt = None
-                        lastAmount = lastAmount.replace("'", "")
-                        if "-" in lastAmount:
-                            amt = amount.Amount(D(lastAmount.strip(" -")), "CHF")
-                        else:
-                            amt = -amount.Amount(D(lastAmount), "CHF")
-
-                        book_date = datetime.strptime(lastTrxDate, "%d.%m.%y").date()
-
                         entries.append(
-                            self.createEntry(file, book_date, amt, lastDetails.strip())
+                            self.createEntry(file, lastTrxDate, lastAmount, lastDetails)
                         )
 
                     lastTrxDate = trxDate
                     lastAmount = amountChf
                     lastDetails = ""
 
-                lastDetails += detail + " "
+                lastDetails += details + " "
+
+            if lastTrxDate:
+                entries.append(
+                    self.createEntry(file, lastTrxDate, lastAmount, lastDetails)
+                )
 
         return entries
