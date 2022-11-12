@@ -75,6 +75,7 @@ class Importer(identifier.IdentifyMixin, importer.ImporterProtocol):
                 if amountChf:
                     if lastTrxDate:
                         amt = None
+                        lastAmount = lastAmount.replace("'", "")
                         if "-" in lastAmount:
                             amt = amount.Amount(D(lastAmount.strip(" -")), "CHF")
                         else:
