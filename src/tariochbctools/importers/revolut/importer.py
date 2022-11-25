@@ -47,8 +47,6 @@ class Importer(identifier.IdentifyMixin, importer.ImporterProtocol):
             )
             next(reader)
             for row in reader:
-                metakv = {}
-
                 try:
                     bal = D(row["Balance"].replace("'", "").strip())
                     amount_raw = D(row["Amount"].replace("'", "").strip())
@@ -59,9 +57,8 @@ class Importer(identifier.IdentifyMixin, importer.ImporterProtocol):
                     logging.warning(e)
                     continue
 
-                meta = data.new_metadata(file.name, 0, metakv)
                 entry = data.Transaction(
-                    meta,
+                    data.new_metadata(file.name, 0, {}),
                     book_date,
                     "*",
                     "",
@@ -77,7 +74,14 @@ class Importer(identifier.IdentifyMixin, importer.ImporterProtocol):
             # only add balance after the last (newest) transaction
             try:
                 book_date = book_date + timedelta(days=1)
-                entry = data.Balance(meta, book_date, self.account, balance, None, None)
+                entry = data.Balance(
+                    data.new_metadata(file.name, 0, {}),
+                    book_date,
+                    self.account,
+                    balance,
+                    None,
+                    None,
+                )
                 entries.append(entry)
             except NameError:
                 pass
