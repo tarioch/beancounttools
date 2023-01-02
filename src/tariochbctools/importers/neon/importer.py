@@ -50,7 +50,6 @@ class Importer(identifier.IdentifyMixin, importer.ImporterProtocol):
                 metakv = {
                     "category": row["Category"],
                 }
-                print(row)
                 if row["Original currency"] != "":
                     metakv["original_currency"] = row["Original currency"]
                     metakv["original_amount"] = row["Original amount"]
