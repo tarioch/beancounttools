@@ -37,7 +37,7 @@ def list_bank(token, country):
     check_result(r)
 
     for asp in r.json():
-        print(asp["name"] + ": " + asp["id"])
+        print(asp["name"] + ": " + asp["id"])  # noqa: T201
 
 
 def create_link(token, reference, bank):
@@ -45,7 +45,7 @@ def create_link(token, reference, bank):
         raise Exception("Please specify --bank it is required for create_link")
     requisitionId = _find_requisition_id(token, reference)
     if requisitionId:
-        print(f"Link for for reference {reference} already exists.")
+        print(f"Link for for reference {reference} already exists.")  # noqa: T201
     else:
         r = requests.post(
             "https://ob.nordigen.com/api/v2/requisitions/",
@@ -58,17 +58,17 @@ def create_link(token, reference, bank):
         )
         check_result(r)
         link = r.json()["link"]
-        print(f"Go to {link} for connecting to your bank.")
+        print(f"Go to {link} for connecting to your bank.")  # noqa: T201
 
 
 def list_accounts(token):
     headers = build_header(token)
     r = requests.get("https://ob.nordigen.com/api/v2/requisitions/", headers=headers)
-    print(r.json())
+    print(r.json())  # noqa: T201
     check_result(r)
     for req in r.json()["results"]:
         reference = req["reference"]
-        print(f"Reference: {reference}")
+        print(f"Reference: {reference}")  # noqa: T201
         for account in req["accounts"]:
             ra = requests.get(
                 f"https://ob.nordigen.com/api/v2/accounts/{account}", headers=headers
@@ -87,7 +87,7 @@ def list_accounts(token):
 
             currency = accDetails["currency"]
             owner = accDetails["ownerName"] if "ownerName" in accDetails else "-"
-            print(f"{account}: {asp} {owner} {iban} {currency}")
+            print(f"{account}: {asp} {owner} {iban} {currency}")  # noqa: T201
 
 
 def delete_link(token, reference):
