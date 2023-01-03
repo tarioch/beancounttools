@@ -17,7 +17,7 @@ if __name__ == "__main__":
             }
         )
     except:  # noqa
-        print(
+        print(  # noqa: T201
             "\n\nAn error occurred while building the project, "
             "please ensure you have the most updated version of setuptools, "
             "setuptools_scm and wheel with:\n"
