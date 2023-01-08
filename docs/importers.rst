@@ -64,6 +64,10 @@ Create a file called ``quickfile.yaml`` in your import location (e.g. download f
 To obtain an API key you must create an app in the `Account Settings | 3rd
 Party Integration | API` section of your account dashboard.
 
+The only permissions it needs to have is "Invoices.Bank_Search"
+
+your api_key is for your account, you can find it on "Settings - My Apps" or in the quickfile sandbox 
+
 Accounts are indexed in the config by their ``nominal code`` (typically: ~1200)
 visible in each account's settings. Only accounts listed in the config will be
 queried.
