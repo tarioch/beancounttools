@@ -52,7 +52,6 @@ class Importer(identifier.IdentifyMixin, importer.ImporterProtocol):
                 continue
 
             for index, row in df.iterrows():
-
                 trx_date, book_date, text, credit, debit = tuple(row)
                 trx_date, book_date, text, credit, debit = (
                     trx_date.strip(),

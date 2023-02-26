@@ -26,7 +26,6 @@ class Importer(IdentifyMixin, ImporterProtocol):
         entries = []
 
         for row in reader:
-
             try:
                 book_date, text, credit, debit, val_date, balance = tuple(row)
                 book_date = datetime.strptime(book_date, "%Y-%m-%d").date()
