@@ -15,6 +15,9 @@ class MailAdapterImporter(importer.ImporterProtocol):
     def identify(self, file):
         return "mail.yaml" == path.basename(file.name)
 
+    def file_account(self, file):
+        return ""
+
     def extract(self, file, existing_entries):
         config = yaml.safe_load(file.contents())
 
