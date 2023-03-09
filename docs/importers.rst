@@ -55,11 +55,14 @@ Create a file called ``quickfile.yaml`` in your import location (e.g. download f
   account_number: "YOUR_ACCOUNT_NUMBER"
   api_key: YOUR_API_KEY
   app_id: YOUR_APP_ID
+  from_date: 2020-12-13
+  to_date: 2020-12-20
   accounts:
       1200: Assets:Other
       1201: Assets:Savings
   transaction_count: 200
 
+from_date and to_date are both optional
 
 To obtain an API key you must create an app in the `Account Settings | 3rd
 Party Integration | API` section of your account dashboard.
