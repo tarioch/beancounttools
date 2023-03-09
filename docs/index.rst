@@ -2,7 +2,7 @@
 tariochbctools
 ==============
 
-Some importers, plugins and price fetchers for the double-entry bookkeeping software `Beancount <https://github.com/beancount/beancount>`__.
+Some importers, plugins and price fetchers for the double-entry bookkeeping software `Beancount <https://beancount.github.io/>`__.
 
 Contents
 ========
