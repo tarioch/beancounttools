@@ -177,6 +177,7 @@ def test_extract_all_accounts(importer, tmp_config):
     calls = [call(1200), call(1201)]
     importer._extract_bank_transactions.assert_has_calls(calls, any_order=True)
 
+
 def test_bank_search_with_dates():
     account_number = "37823"
     transaction_count = 13
@@ -187,15 +188,14 @@ def test_bank_search_with_dates():
     under_test._post.return_value = json.loads(TEST_BANK_SEARCH)
     under_test.bank_search(account_number, transaction_count, from_date, to_date)
     expected_search_parameters = {
-            "SearchParameters": {
-                "ReturnCount": str(transaction_count),
-                "Offset": "0",
-                "OrderResultsBy": "TransactionDate",
-                "OrderDirection": "DESC",
-                "NominalCode": str(account_number),
-                "FromDate": from_date,
-                "ToDate": to_date,
-            }
+        "SearchParameters": {
+            "ReturnCount": str(transaction_count),
+            "Offset": "0",
+            "OrderResultsBy": "TransactionDate",
+            "OrderDirection": "DESC",
+            "NominalCode": str(account_number),
+            "FromDate": from_date,
+            "ToDate": to_date,
         }
+    }
     under_test._post.assert_called_with("bank/search", expected_search_parameters)
-
