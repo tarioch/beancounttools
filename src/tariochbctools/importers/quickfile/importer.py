@@ -129,7 +129,7 @@ class QuickFile:
 
         self._update_submission_number()
 
-        return r
+        return r.json()
 
     def bank_search(
         self, account_number, transaction_count, from_date=None, to_date=None
@@ -147,7 +147,7 @@ class QuickFile:
             endpoint_data["SearchParameters"]["FromDate"] = str(from_date)
         if to_date:
             endpoint_data["SearchParameters"]["ToDate"] = str(to_date)
-        response = self._post("bank/search", endpoint_data).json()
+        response = self._post("bank/search", endpoint_data)
         body = response["Bank_Search"]["Body"]
         return QuickFileBankSearch(**body)
 
