@@ -131,7 +131,7 @@ class QuickFile:
 
         return r
 
-    def bank_search(self, account_number, transaction_count):
+    def bank_search(self, account_number, transaction_count, from_date=None, to_date=None):
         endpoint_data = {
             "SearchParameters": {
                 "ReturnCount": str(transaction_count),
@@ -141,7 +141,10 @@ class QuickFile:
                 "NominalCode": str(account_number),
             }
         }
-
+        if (from_date):
+            endpoint_data["SearchParameters"]["FromDate"] = str(from_date)
+        if (to_date):
+            endpoint_data["SearchParameters"]["ToDate"] = str(to_date)
         response = self._post("bank/search", endpoint_data).json()
         body = response["Bank_Search"]["Body"]
         return QuickFileBankSearch(**body)
@@ -183,7 +186,9 @@ class Importer(importer.ImporterProtocol):
     def _extract_bank_transactions(self, bank_account, invert_sign=False):
         entries = []
         transaction_count = self.config["transaction_count"]  # [0..200]
-        response = self.quickfile.bank_search(bank_account, transaction_count)
+        from_date = self.config.get("from_date", None)
+        to_date = self.config.get("to_date", None)
+        response = self.quickfile.bank_search(bank_account, transaction_count, from_date, to_date)
         metadata = response.MetaData
         transactions = response.Transactions["Transaction"]
         local_account = self.config["accounts"].get(bank_account)
