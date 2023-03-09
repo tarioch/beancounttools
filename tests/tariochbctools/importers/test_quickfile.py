@@ -5,6 +5,7 @@ import pytest
 from beancount.core import data
 from beancount.core.number import D
 from beancount.ingest import cache
+import requests
 
 from tariochbctools.importers.quickfile import importer as qfimp
 
@@ -176,3 +177,26 @@ def test_extract_all_accounts(importer, tmp_config):
     importer.extract(tmp_config)
     calls = [call(1200), call(1201)]
     importer._extract_bank_transactions.assert_has_calls(calls, any_order=True)
+
+def test_bank_search_with_dates():
+    account_number = "37823"
+    transaction_count = 13
+    from_date = "2017-01-01"
+    to_date = "2017-01-31"
+    under_test = qfimp.QuickFile(account_number, "an_api_key", "an_app_id")
+    under_test._post = MagicMock()
+    under_test._post.return_value = json.loads(TEST_BANK_SEARCH)
+    under_test.bank_search(account_number, transaction_count, "2017-01-01", "2017-01-31")
+    expected_search_parameters = {
+            "SearchParameters": {
+                "ReturnCount": str(transaction_count),
+                "Offset": "0",
+                "OrderResultsBy": "TransactionDate",
+                "OrderDirection": "DESC",
+                "NominalCode": str(account_number),
+                "FromDate": from_date,
+                "ToDate": to_date,
+            }
+        }
+    under_test._post.assert_called_with("bank/search", expected_search_parameters)
+
