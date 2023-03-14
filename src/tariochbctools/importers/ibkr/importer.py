@@ -46,103 +46,108 @@ class Importer(importer.ImporterProtocol):
         assert isinstance(statement, Types.FlexQueryResponse)
 
         transactions = []
-        for trx in statement.FlexStatements[0].CashTransactions:
-            existingEntry = None
-            if CashAction.DIVIDEND == trx.type or CashAction.WHTAX == trx.type:
-                existingEntry = next(
-                    (t for t in transactions if self.matches(trx, t)), None
-                )
-
-            if existingEntry:
-                if CashAction.WHTAX == trx.type:
-                    existingEntry["whAmount"] += trx.amount
-                else:
-                    existingEntry["amount"] += trx.amount
-                    existingEntry["description"] = trx.description
-                    existingEntry["type"] = trx.type
-            else:
-                if CashAction.WHTAX == trx.type:
-                    amount = 0
-                    whAmount = trx.amount
-                else:
-                    amount = trx.amount
-                    whAmount = 0
-
-                transactions.append(
-                    {
-                        "date": trx.dateTime,
-                        "symbol": trx.symbol,
-                        "currency": trx.currency,
-                        "amount": amount,
-                        "whAmount": whAmount,
-                        "description": trx.description,
-                        "type": trx.type,
-                    }
-                )
-
-        result = []
-        for trx in transactions:
-            if trx["type"] == CashAction.DIVIDEND:
-                asset = trx["symbol"].rstrip("z")
-                payDate = trx["date"].date()
-                totalDividend = trx["amount"]
-                totalWithholding = -trx["whAmount"]
-                totalPayout = totalDividend - totalWithholding
-                currency = trx["currency"]
-
-                _, rows = query.run_query(
-                    existing_entries,
-                    options.OPTIONS_DEFAULTS,
-                    'select sum(number) as quantity, account where currency="'
-                    + asset
-                    + '" and date<#"'
-                    + str(payDate)
-                    + '" group by account;',
-                )
-                totalQuantity = D(0)
-                for row in rows:
-                    totalQuantity += row.quantity
-
-                remainingPayout = totalPayout
-                remainingWithholding = totalWithholding
-                for row in rows[:-1]:
-                    myAccount = row.account
-                    myQuantity = row.quantity
-
-                    myPayout = round(totalPayout * myQuantity / totalQuantity, 2)
-                    remainingPayout -= myPayout
-                    myWithholding = round(
-                        totalWithholding * myQuantity / totalQuantity, 2
+        for stmt in statement.FlexStatements:
+            for trx in stmt.CashTransactions:
+                existingEntry = None
+                if CashAction.DIVIDEND == trx.type or CashAction.WHTAX == trx.type:
+                    existingEntry = next(
+                        (t for t in transactions if self.matches(trx, t)), None
                     )
-                    remainingWithholding -= myWithholding
+
+                if existingEntry:
+                    if CashAction.WHTAX == trx.type:
+                        existingEntry["whAmount"] += trx.amount
+                    else:
+                        existingEntry["amount"] += trx.amount
+                        existingEntry["description"] = trx.description
+                        existingEntry["type"] = trx.type
+                else:
+                    if CashAction.WHTAX == trx.type:
+                        amount = 0
+                        whAmount = trx.amount
+                    else:
+                        amount = trx.amount
+                        whAmount = 0
+
+                    transactions.append(
+                        {
+                            "date": trx.dateTime,
+                            "symbol": trx.symbol,
+                            "currency": trx.currency,
+                            "amount": amount,
+                            "whAmount": whAmount,
+                            "description": trx.description,
+                            "type": trx.type,
+                            "account": stmt.accountId,
+                        }
+                    )
+
+            result = []
+            for trx in transactions:
+                if trx["type"] == CashAction.DIVIDEND:
+                    asset = trx["symbol"].rstrip("z")
+                    payDate = trx["date"].date()
+                    totalDividend = trx["amount"]
+                    totalWithholding = -trx["whAmount"]
+                    totalPayout = totalDividend - totalWithholding
+                    currency = trx["currency"]
+                    account = trx["account"]
+
+                    _, rows = query.run_query(
+                        existing_entries,
+                        options.OPTIONS_DEFAULTS,
+                        'select sum(number) as quantity, account where currency="'
+                        + asset
+                        + '" and date<#"'
+                        + str(payDate)
+                        + '" group by account;',
+                    )
+                    totalQuantity = D(0)
+                    for row in rows:
+                        totalQuantity += row.quantity
+
+                    remainingPayout = totalPayout
+                    remainingWithholding = totalWithholding
+                    for row in rows[:-1]:
+                        myAccount = row.account
+                        myQuantity = row.quantity
+
+                        myPayout = round(totalPayout * myQuantity / totalQuantity, 2)
+                        remainingPayout -= myPayout
+                        myWithholding = round(
+                            totalWithholding * myQuantity / totalQuantity, 2
+                        )
+                        remainingWithholding -= myWithholding
+                        result.append(
+                            self.createSingle(
+                                myPayout,
+                                myWithholding,
+                                myQuantity,
+                                myAccount,
+                                asset,
+                                currency,
+                                payDate,
+                                priceLookup,
+                                trx["description"],
+                                account,
+                            )
+                        )
+
+                    lastRow = rows[-1]
                     result.append(
                         self.createSingle(
-                            myPayout,
-                            myWithholding,
-                            myQuantity,
-                            myAccount,
+                            remainingPayout,
+                            remainingWithholding,
+                            lastRow.quantity,
+                            lastRow.account,
                             asset,
                             currency,
                             payDate,
                             priceLookup,
                             trx["description"],
+                            account,
                         )
                     )
-
-                lastRow = rows[-1]
-                result.append(
-                    self.createSingle(
-                        remainingPayout,
-                        remainingWithholding,
-                        lastRow.quantity,
-                        lastRow.account,
-                        asset,
-                        currency,
-                        payDate,
-                        priceLookup,
-                        trx["description"],
-                    )
-                )
 
         return result
 
@@ -157,6 +162,7 @@ class Importer(importer.ImporterProtocol):
         date,
         priceLookup,
         description,
+        account,
     ):
         narration = "Dividend for " + str(quantity) + " : " + description
         liquidityAccount = self.getLiquidityAccount(assetAccount, asset, currency)
@@ -191,7 +197,7 @@ class Importer(importer.ImporterProtocol):
             )
         postings.append(data.Posting(incomeAccount, None, None, None, None, None))
 
-        meta = data.new_metadata("dividend", 0)
+        meta = data.new_metadata("dividend", 0, {"account": account})
         return data.Transaction(
             meta, date, "*", "", narration, data.EMPTY_SET, data.EMPTY_SET, postings
         )

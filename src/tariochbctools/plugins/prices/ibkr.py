@@ -23,15 +23,16 @@ class Source(source.Source):
                 raise e
 
         statement = parser.parse(response)
-        for position in statement.FlexStatements[0].OpenPositions:
-            if position.symbol.rstrip("z") == ticker:
-                price = D(position.markPrice)
-                timezone = tz.gettz("Europe/Zurich")
-                time = datetime.combine(
-                    position.reportDate, datetime.min.time()
-                ).astimezone(timezone)
+        for custStatement in statement.FlexStatements:
+            for position in custStatement.OpenPositions:
+                if position.symbol.rstrip("z") == ticker:
+                    price = D(position.markPrice)
+                    timezone = tz.gettz("Europe/Zurich")
+                    time = datetime.combine(
+                        position.reportDate, datetime.min.time()
+                    ).astimezone(timezone)
 
-                return source.SourcePrice(price, time, position.currency)
+                    return source.SourcePrice(price, time, position.currency)
 
         return None
 
