@@ -22,7 +22,7 @@ class Importer(importer.ImporterProtocol):
     def file_account(self, file):
         return ""
 
-    def matches(self, trx, t):
+    def matches(self, trx, t, account):
         p = re.compile(r".* (?P<perShare>\d+\.?\d+) PER SHARE")
         trxPerShare = p.search(trx.description).group("perShare")
         tPerShare = p.search(t["description"]).group("perShare")
@@ -31,6 +31,7 @@ class Importer(importer.ImporterProtocol):
             t["date"] == trx.dateTime
             and t["symbol"] == trx.symbol
             and trxPerShare == tPerShare
+            and t["account"] == account
         )
 
     def extract(self, file, existing_entries):
@@ -51,7 +52,12 @@ class Importer(importer.ImporterProtocol):
                 existingEntry = None
                 if CashAction.DIVIDEND == trx.type or CashAction.WHTAX == trx.type:
                     existingEntry = next(
-                        (t for t in transactions if self.matches(trx, t)), None
+                        (
+                            t
+                            for t in transactions
+                            if self.matches(trx, t, stmt.accountId)
+                        ),
+                        None,
                     )
 
                 if existingEntry:
