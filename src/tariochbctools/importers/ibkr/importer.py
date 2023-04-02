@@ -1,12 +1,12 @@
 import re
+from datetime import date
+from decimal import Decimal
 from os import path
 
 import yaml
 from beancount.core import amount, data
 from beancount.core.number import D
 from beancount.ingest import importer
-from beancount.parser import options
-from beancount.query import query
 from ibflex import Types, client, parser
 from ibflex.enums import CashAction
 
@@ -99,53 +99,10 @@ class Importer(importer.ImporterProtocol):
                     currency = trx["currency"]
                     account = trx["account"]
 
-                    _, rows = query.run_query(
-                        existing_entries,
-                        options.OPTIONS_DEFAULTS,
-                        'select sum(number) as quantity, account where currency="'
-                        + asset
-                        + '" and date<#"'
-                        + str(payDate)
-                        + '" group by account;',
-                    )
-                    totalQuantity = D(0)
-                    for row in rows:
-                        totalQuantity += row.quantity
-
-                    remainingPayout = totalPayout
-                    remainingWithholding = totalWithholding
-                    for row in rows[:-1]:
-                        myAccount = row.account
-                        myQuantity = row.quantity
-
-                        myPayout = round(totalPayout * myQuantity / totalQuantity, 2)
-                        remainingPayout -= myPayout
-                        myWithholding = round(
-                            totalWithholding * myQuantity / totalQuantity, 2
-                        )
-                        remainingWithholding -= myWithholding
-                        result.append(
-                            self.createSingle(
-                                myPayout,
-                                myWithholding,
-                                myQuantity,
-                                myAccount,
-                                asset,
-                                currency,
-                                payDate,
-                                priceLookup,
-                                trx["description"],
-                                account,
-                            )
-                        )
-
-                    lastRow = rows[-1]
                     result.append(
-                        self.createSingle(
-                            remainingPayout,
-                            remainingWithholding,
-                            lastRow.quantity,
-                            lastRow.account,
+                        self.createDividen(
+                            totalPayout,
+                            totalWithholding,
                             asset,
                             currency,
                             payDate,
@@ -157,22 +114,21 @@ class Importer(importer.ImporterProtocol):
 
         return result
 
-    def createSingle(
+    def createDividen(
         self,
-        payout,
-        withholding,
-        quantity,
-        assetAccount,
-        asset,
-        currency,
-        date,
-        priceLookup,
-        description,
-        account,
+        payout: Decimal,
+        withholding: Decimal,
+        asset: str,
+        currency: str,
+        date: date,
+        priceLookup: PriceLookup,
+        description: str,
+        account: str,
     ):
-        narration = "Dividend for " + str(quantity) + " : " + description
-        liquidityAccount = self.getLiquidityAccount(assetAccount, asset, currency)
-        incomeAccount = self.getIncomeAccount(assetAccount, asset)
+        narration = "Dividend: " + description
+        liquidityAccount = self.getLiquidityAccount(account, currency)
+        incomeAccount = self.getIncomeAccount(account)
+        assetAccount = self.getAssetAccount(account, asset)
 
         price = priceLookup.fetchPrice(currency, date)
 
@@ -190,7 +146,7 @@ class Importer(importer.ImporterProtocol):
             ),
         ]
         if withholding > 0:
-            receivableAccount = self.getReceivableAccount(assetAccount, asset)
+            receivableAccount = self.getReceivableAccount(account)
             postings.append(
                 data.Posting(
                     receivableAccount,
@@ -208,15 +164,14 @@ class Importer(importer.ImporterProtocol):
             meta, date, "*", "", narration, data.EMPTY_SET, data.EMPTY_SET, postings
         )
 
-    def getLiquidityAccount(self, assetAccount, asset, currency):
-        return assetAccount.replace(":Investment:", ":Liquidity:").replace(
-            ":" + asset, ":" + currency
-        )
+    def getAssetAccount(self, account: str, asset: str):
+        return f"Asset:{account}:Investment:IB:{asset}"
 
-    def getReceivableAccount(self, assetAccount, asset):
-        parts = assetAccount.split(":")
-        return "Assets:" + parts[1] + ":Receivable:Verrechnungssteuer"
+    def getLiquidityAccount(self, account: str, currency: str):
+        return f"Asset:{account}:Liquidity:IB:{currency}"
 
-    def getIncomeAccount(self, assetAccount, asset):
-        parts = assetAccount.split(":")
-        return "Income:" + parts[1] + ":Interest"
+    def getReceivableAccount(self, account: str):
+        return f"Assets:{account}:Receivable:Verrechnungssteuer"
+
+    def getIncomeAccount(self, account: str):
+        return f"Income:{account}:Interest"
