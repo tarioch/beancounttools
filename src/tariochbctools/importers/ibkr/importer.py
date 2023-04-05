@@ -46,8 +46,28 @@ class Importer(importer.ImporterProtocol):
         statement = parser.parse(response)
         assert isinstance(statement, Types.FlexQueryResponse)
 
+        result = []
         transactions = []
         for stmt in statement.FlexStatements:
+            account = stmt.accountId
+            for trx in stmt.Trades:
+                result.append(
+                    self.createBuy(
+                        trx.tradeDate,
+                        account,
+                        trx.symbol.rstrip("z"),
+                        trx.quantity,
+                        trx.currency,
+                        trx.tradePrice,
+                        amount.Amount(
+                            round(-trx.ibCommission, 2), trx.ibCommissionCurrency
+                        ),
+                        amount.Amount(round(trx.netCash, 2), trx.currency),
+                        config["baseCcy"],
+                        trx.fxRateToBase,
+                    )
+                )
+
             for trx in stmt.CashTransactions:
                 existingEntry = None
                 if CashAction.DIVIDEND == trx.type or CashAction.WHTAX == trx.type:
@@ -69,10 +89,10 @@ class Importer(importer.ImporterProtocol):
                         existingEntry["type"] = trx.type
                 else:
                     if CashAction.WHTAX == trx.type:
-                        amount = 0
+                        amt = 0
                         whAmount = trx.amount
                     else:
-                        amount = trx.amount
+                        amt = trx.amount
                         whAmount = 0
 
                     transactions.append(
@@ -80,15 +100,14 @@ class Importer(importer.ImporterProtocol):
                             "date": trx.dateTime,
                             "symbol": trx.symbol,
                             "currency": trx.currency,
-                            "amount": amount,
+                            "amount": amt,
                             "whAmount": whAmount,
                             "description": trx.description,
                             "type": trx.type,
-                            "account": stmt.accountId,
+                            "account": account,
                         }
                     )
 
-            result = []
             for trx in transactions:
                 if trx["type"] == CashAction.DIVIDEND:
                     asset = trx["symbol"].rstrip("z")
@@ -164,6 +183,57 @@ class Importer(importer.ImporterProtocol):
             meta, date, "*", "", narration, data.EMPTY_SET, data.EMPTY_SET, postings
         )
 
+    def createBuy(
+        self,
+        date: date,
+        account: str,
+        asset: str,
+        quantity: Decimal,
+        currency: str,
+        price: Decimal,
+        commission: amount.Amount,
+        netCash: amount.Amount,
+        baseCcy: str,
+        fxRateToBase: Decimal,
+    ):
+        narration = "Buy"
+        feeAccount = self.getFeeAccount(account)
+        liquidityAccount = self.getLiquidityAccount(account, currency)
+        assetAccount = self.getAssetAccount(account, asset)
+
+        liquidityPrice = None
+        if currency != baseCcy:
+            price = price * fxRateToBase
+            commission = amount.Amount(
+                round(commission.number * fxRateToBase, 2), baseCcy
+            )
+            liquidityPrice = amount.Amount(fxRateToBase, baseCcy)
+
+        postings = [
+            data.Posting(
+                assetAccount,
+                amount.Amount(quantity, asset),
+                data.Cost(price, baseCcy, None, None),
+                None,
+                None,
+                None,
+            ),
+            data.Posting(feeAccount, commission, None, None, None, None),
+            data.Posting(
+                liquidityAccount,
+                netCash,
+                None,
+                liquidityPrice,
+                None,
+                None,
+            ),
+        ]
+
+        meta = data.new_metadata("buy", 0, {"account": account})
+        return data.Transaction(
+            meta, date, "*", "", narration, data.EMPTY_SET, data.EMPTY_SET, postings
+        )
+
     def getAssetAccount(self, account: str, asset: str):
         return f"Asset:{account}:Investment:IB:{asset}"
 
@@ -175,3 +245,6 @@ class Importer(importer.ImporterProtocol):
 
     def getIncomeAccount(self, account: str):
         return f"Income:{account}:Interest"
+
+    def getFeeAccount(self, account: str):
+        return f"Expenses:{account}:Fees"

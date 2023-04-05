@@ -190,7 +190,7 @@ Import mt940 from `Zürcher Kantonalbank <https://www.zkb.ch/>`__
 Interactivebrokers
 ------------------
 
-Import dividends from `Interactive Brokers <https://www.interactivebrokers.com/>`__
+Import dividends and buys from `Interactive Brokers <https://www.interactivebrokers.com/>`__
 
 Create a file called ibkr.yaml in your import location (e.g. downloads folder).
 
