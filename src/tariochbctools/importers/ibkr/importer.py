@@ -235,10 +235,10 @@ class Importer(importer.ImporterProtocol):
         )
 
     def getAssetAccount(self, account: str, asset: str):
-        return f"Asset:{account}:Investment:IB:{asset}"
+        return f"Assets:{account}:Investment:IB:{asset}"
 
     def getLiquidityAccount(self, account: str, currency: str):
-        return f"Asset:{account}:Liquidity:IB:{currency}"
+        return f"Assets:{account}:Liquidity:IB:{currency}"
 
     def getReceivableAccount(self, account: str):
         return f"Assets:{account}:Receivable:Verrechnungssteuer"
