@@ -47,8 +47,8 @@ class Importer(importer.ImporterProtocol):
         assert isinstance(statement, Types.FlexQueryResponse)
 
         result = []
-        transactions = []
         for stmt in statement.FlexStatements:
+            transactions = []
             account = stmt.accountId
             for trx in stmt.Trades:
                 result.append(
