@@ -67,12 +67,17 @@ class Importer(importer.ImporterProtocol):
                     )
                 meta = data.new_metadata("", 0, metakv)
                 trxDate = date.fromisoformat(trx["bookingDate"])
+                narration = ""
+                if "remittanceInformationUnstructured" in trx:
+                    narration += trx["remittanceInformationUnstructured"]
+                if "remittanceInformationUnstructuredArray" in trx:
+                    narration += " ".join(trx["remittanceInformationUnstructuredArray"])
                 entry = data.Transaction(
                     meta,
                     trxDate,
                     "*",
                     "",
-                    " ".join(trx["remittanceInformationUnstructuredArray"]),
+                    narration,
                     data.EMPTY_SET,
                     data.EMPTY_SET,
                     [
