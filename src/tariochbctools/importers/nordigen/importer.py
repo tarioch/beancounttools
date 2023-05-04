@@ -60,6 +60,10 @@ class Importer(importer.ImporterProtocol):
                 metakv = {
                     "nordref": trx["transactionId"],
                 }
+                if "creditorName" in trx:
+                    metakv["creditorName"] = trx["creditorName"]
+                if "debtorName" in trx:
+                    metakv["debtorName"] = trx["debtorName"]
                 if "currencyExchange" in trx:
                     instructedAmount = trx["currencyExchange"]["instructedAmount"]
                     metakv["original"] = (
