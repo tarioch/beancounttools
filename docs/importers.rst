@@ -88,10 +88,26 @@ Import CSV from `Revolut <https://www.revolut.com/>`__
   CONFIG = [revolutimp.Importer("/Revolut-CHF.*\.csv", "Assets:Revolut:CHF", "CHF")]
 
 
-Transferwise
-------------
+Wise (formerly Transferwise)
+----------------------------
 
-Import from `Transferwise <https://www.transferwise.com/>`__ using their api
+Import from `Wise <https://www.wise.com/>`__ using their api.
+
+First, generate a personal API token by logging on and going to settings.
+Next, you need to generate a public/private key pair and then upload the public
+key part to your account. To generate the keys, execute (e.g. in your ``.ssh`` folder)
+
+.. code-block:: bash
+
+   openssl genrsa -out wise.pem
+   openssl rsa -pubout -in wise.pem -out wise_public.pem
+   openssl pkey -in wise.pem -traditional > wise_traditional.pem
+
+The final command makes a traditional private key for compatibility with the python rsa library. This may stop being necessary at some point. See `this page https://github.com/sybrenstuvel/python-rsa/issues/80` for details.
+
+Now upload the *public* key part to your Wise account.
+
+You can then create an import config for beancount, or add Wise to your existing one.
 
 .. code-block:: python
 
@@ -105,7 +121,21 @@ Create a file called transferwise.yaml in your import location (e.g. download fo
 
   token: <your api token>
   baseAccount: <Assets:Transferwise:>
+  privateKeyPath: /path/to/wise_traditional.pem
 
+
+Optionally, you can provide a dictionary of account names mapped by currency. In this case
+you must provide a name for every currency in your Wise account, otherwise the import will
+fail.
+
+
+.. code-block:: yaml
+
+  token: <your api token>
+  baseAccount:
+    SEK: "Assets:MySwedishWiseAccount"
+    GBP: "Assets:MyUKWiseAccount"
+  privateKeyPath: /path/to/wise_traditional.pem
 
 TrueLayer
 ---------
