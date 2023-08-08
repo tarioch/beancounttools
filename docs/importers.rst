@@ -123,6 +123,19 @@ Create a file called transferwise.yaml in your import location (e.g. download fo
   privateKeyPath: /path/to/wise_traditional.pem
 
 
+Optionally, you can provide a dictionary of account names mapped by currency. In this case
+you must provide a name for every currency in your Wise account, otherwise the import will
+fail.
+
+
+.. code-block:: yaml
+
+  token: <your api token>
+  baseAccount:
+    SEK: "Assets:MySwedishWiseAccount"
+    GBP: "Assets:MyUKWiseAccount"
+  privateKeyPath: /path/to/wise_traditional.pem
+
 TrueLayer
 ---------
 
