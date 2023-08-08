@@ -107,6 +107,7 @@ The final command makes a traditional private key for compatibility with the pyt
 
 Now upload the *public* key part to your Wise account.
 
+You can then create an import config for beancount, or add Wise to your existing one.
 
 .. code-block:: python
 
