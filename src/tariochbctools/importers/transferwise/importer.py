@@ -1,18 +1,19 @@
+import base64
+import json
+import sys
 from datetime import date, datetime, timezone
 from os import path
+from urllib.parse import urlencode
 
 import dateutil.parser
 import requests
+import rsa
+import urllib3
 import yaml
-import base64
 from beancount.core import amount, data
 from beancount.core.number import D
 from beancount.ingest import importer
 from dateutil.relativedelta import relativedelta
-import urllib3
-from urllib.parse import urlencode
-import rsa
-import json
 
 http = urllib3.PoolManager()
 
