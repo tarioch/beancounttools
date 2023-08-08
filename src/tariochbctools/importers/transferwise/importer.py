@@ -146,6 +146,10 @@ class Importer(importer.ImporterProtocol):
         base_url = "https://api.transferwise.com"
         for account in accounts[0]["balances"]:
             accountCcy = account["currency"]
+            if isinstance(baseAccount, dict):
+                account_name = baseAccount[accountCcy]
+            else: 
+                account_name = baseAccount + accountCcy
             transactions = self._get_statement(
                 currency=accountCcy,
                 base_url=base_url,
@@ -167,7 +171,7 @@ class Importer(importer.ImporterProtocol):
                     data.EMPTY_SET,
                     [
                         data.Posting(
-                            baseAccount + accountCcy,
+                            account_name,
                             amount.Amount(
                                 D(str(transaction["amount"]["value"])),
                                 transaction["amount"]["currency"],
