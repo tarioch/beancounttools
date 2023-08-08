@@ -148,7 +148,7 @@ class Importer(importer.ImporterProtocol):
             accountCcy = account["currency"]
             if isinstance(baseAccount, dict):
                 account_name = baseAccount[accountCcy]
-            else: 
+            else:
                 account_name = baseAccount + accountCcy
             transactions = self._get_statement(
                 currency=accountCcy,
