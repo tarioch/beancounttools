@@ -1,6 +1,5 @@
 import base64
 import json
-import sys
 from datetime import date, datetime, timezone
 from os import path
 from urllib.parse import urlencode
@@ -79,13 +78,8 @@ class Importer(importer.ImporterProtocol):
         if hasattr(self, "one_time_token"):
             headers["x-2fa-approval"] = self.one_time_token
             headers["X-Signature"] = self.signature
-            print(headers["x-2fa-approval"], headers["X-Signature"])
-
-        print("GET", url)
 
         r = http.request("GET", url, headers=headers, retries=False)
-
-        print("status:", r.status)
 
         if r.status == 200 or r.status == 201:
             return json.loads(r.data)
@@ -98,13 +92,9 @@ class Importer(importer.ImporterProtocol):
                 statement_type=statement_type,
             )
         else:
-            print("failed: ", r.status)
-            print(r.data)
-            sys.exit(0)
+            raise Exception("Failed to get transactions.")
 
     def _do_sca_challenge(self):
-        print("doing sca challenge")
-
         # Read the private key file as bytes.
         with open(self.private_key_path, "rb") as f:
             private_key_data = f.read()
