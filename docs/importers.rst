@@ -381,6 +381,6 @@ Import mt940 from `BCGE <https://www.bcge.ch/>`__
 
 .. code-block:: python
 
-  from tariochbctools.importers.bcge import importer as  bcge
+  from tariochbctools.importers.bcge import importer as bcge
 
   CONFIG = [bcge.BCGEImporter("/\d+\.mt940", "Assets:BCGE")]
