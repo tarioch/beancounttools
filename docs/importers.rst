@@ -373,3 +373,14 @@ Import PDF from `Viseca One <https://one-digitalservice.ch/>`__
   from tariochbctools.importers.viseca import importer as visecaimp
 
   CONFIG = [visecaimp.Importer(r"Kontoauszug.*\.pdf", "Assets:Viseca:CHF")]
+
+BCGE
+----
+
+Import mt940 from `BCGE <https://www.bcge.ch/>`__
+
+.. code-block:: python
+
+  from tariochbctools.importers.bcge import importer as  bcge
+
+  CONFIG = [bcge.BCGEImporter("/\d+\.mt940", "Assets:BCGE")]
