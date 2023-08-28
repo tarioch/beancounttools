@@ -12,8 +12,7 @@ class SwisscardImporter(identifier.IdentifyMixin, importer.ImporterProtocol):
     """An importer for Swisscard's cashback CSV files."""
 
     def __init__(self, regexps, account):
-        identifier.IdentifyMixin.__init__(
-            self, matchers=[("filename", regexps)])
+        identifier.IdentifyMixin.__init__(self, matchers=[("filename", regexps)])
         self.account = account
 
     def name(self):
@@ -31,8 +30,7 @@ class SwisscardImporter(identifier.IdentifyMixin, importer.ImporterProtocol):
                 skipinitialspace=True,
             )
             for row in reader:
-                book_date = parse(
-                    row["Transaction date"].strip(), dayfirst=True).date()
+                book_date = parse(row["Transaction date"].strip(), dayfirst=True).date()
                 amt = amount.Amount(-D(row["Amount"]), row["Currency"])
                 metakv = {
                     "category": row["Category"],
@@ -48,8 +46,7 @@ class SwisscardImporter(identifier.IdentifyMixin, importer.ImporterProtocol):
                     data.EMPTY_SET,
                     data.EMPTY_SET,
                     [
-                        data.Posting(self.account, amt,
-                                     None, None, None, None),
+                        data.Posting(self.account, amt, None, None, None, None),
                     ],
                 )
                 entries.append(entry)
