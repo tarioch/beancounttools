@@ -384,3 +384,14 @@ Import mt940 from `BCGE <https://www.bcge.ch/>`__
   from tariochbctools.importers.bcge import importer as bcge
 
   CONFIG = [bcge.BCGEImporter("/\d+\.mt940", "Assets:BCGE")]
+
+Swisscard cards
+---------------
+
+Import Swisscard's `Cashback Cards <https://www.cashback-cards.ch/>` transactions from a CSV export.__
+
+.. code-block:: python
+
+  from tariochbctools.importers.swisscard import importer as swisscard
+
+  CONFIG = [swisscard.SwisscardImporter("swisscard/.*\.csv", "Liabilities:Cashback")]
