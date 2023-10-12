@@ -52,7 +52,7 @@ class Importer(importer.ImporterProtocol):
             raise KeyError("At least one of `account` or `accounts` must be specified")
 
     def identify(self, file):
-        return "truelayer.yaml" == path.basename(file.name)
+        return path.basename(file.name).endswith("truelayer.yaml")
 
     def file_account(self, file):
         return ""

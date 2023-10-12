@@ -16,7 +16,7 @@ class Importer(importer.ImporterProtocol):
     """An importer for Bitstamp."""
 
     def identify(self, file):
-        return "bitstamp.yaml" == path.basename(file.name)
+        return path.basename(file.name).endswith("bitstamp.yaml")
 
     def file_account(self, file):
         return ""

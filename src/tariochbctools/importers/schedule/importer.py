@@ -12,7 +12,7 @@ class Importer(importer.ImporterProtocol):
     """An importer for Scheduled/Recurring Transactions."""
 
     def identify(self, file):
-        return "schedule.yaml" == path.basename(file.name)
+        return path.basename(file.name).endswith("schedule.yaml")
 
     def file_account(self, file):
         return ""

@@ -21,7 +21,7 @@ class Importer(importer.ImporterProtocol):
     """An importer for Transferwise using the API."""
 
     def identify(self, file):
-        return "transferwise.yaml" == path.basename(file.name)
+        return path.basename(file.name).endswith("transferwise.yaml")
 
     def file_account(self, file):
         return ""

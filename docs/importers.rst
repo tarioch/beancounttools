@@ -9,7 +9,7 @@ Bitstamp
 
 Import transactions from `Bitstamp <https://www.bitstamp.com/>`__
 
-Create a file called bitstamp.yaml in your import location (e.g. downloads folder).
+Create a file called (or ending with) bitstamp.yaml in your import location (e.g. downloads folder).
 
 .. code-block:: yaml
 
@@ -115,7 +115,7 @@ You can then create an import config for beancount, or add Wise to your existing
 
   CONFIG = [twimp.Importer()]
 
-Create a file called transferwise.yaml in your import location (e.g. download folder).
+Create a file called (or ending with) transferwise.yaml in your import location (e.g. download folder).
 
 .. code-block:: yaml
 
@@ -149,7 +149,7 @@ You need to create a dev account and see their documentation about how to get a 
 
   CONFIG = [tlimp.Importer()]
 
-Create a file called truelayer.yaml in your import location (e.g. download folder).
+Create a file called (or ending with) truelayer.yaml in your import location (e.g. download folder).
 
 .. code-block:: yaml
 
@@ -193,7 +193,7 @@ all be listed in the end.
 
   CONFIG = [nordimp.Importer()]
 
-Create a file called nordigen.yaml in your import location (e.g. download folder).
+Create a file called (or ending with) nordigen.yaml in your import location (e.g. download folder).
 
 .. code-block:: yaml
 
@@ -222,7 +222,7 @@ Interactivebrokers
 
 Import dividends and buys from `Interactive Brokers <https://www.interactivebrokers.com/>`__
 
-Create a file called ibkr.yaml in your import location (e.g. downloads folder).
+Create a file called (or ending with) ibkr.yaml in your import location (e.g. downloads folder).
 
 .. code-block:: yaml
 
@@ -260,7 +260,7 @@ Schedule
 
 Generate scheduled transactions.
 
-Define a file called schedule.yaml in your import location (e.g. downloads folder). That describes the schedule transactions. They will be added each month at the end of the month.
+Define a file called (or ending with) schedule.yaml in your import location (e.g. downloads folder). That describes the schedule transactions. They will be added each month at the end of the month.
 
 .. code-block:: yaml
 
@@ -299,7 +299,7 @@ Blockchain
 
 Import transactions from Blockchain
 
-Create a file called blockchain.yaml in your import location (e.g. downloads folder).
+Create a file called (or ending with) blockchain.yaml in your import location (e.g. downloads folder).
 
 
 .. code-block:: yaml
