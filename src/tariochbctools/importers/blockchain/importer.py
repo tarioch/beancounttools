@@ -13,7 +13,7 @@ class Importer(importer.ImporterProtocol):
     """An importer for Blockchain data."""
 
     def identify(self, file):
-        return "blockchain.yaml" == path.basename(file.name)
+        return path.basename(file.name).endswith("blockchain.yaml")
 
     def file_account(self, file):
         return ""

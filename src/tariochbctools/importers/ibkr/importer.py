@@ -17,7 +17,7 @@ class Importer(importer.ImporterProtocol):
     """An importer for Interactive Broker using the flex query service."""
 
     def identify(self, file):
-        return "ibkr.yaml" == path.basename(file.name)
+        return path.basename(file.name).endswith("ibkr.yaml")
 
     def file_account(self, file):
         return ""

@@ -16,7 +16,7 @@ class Importer(importer.ImporterProtocol):
     """An importer for Nordigen API (e.g. for Revolut)."""
 
     def identify(self, file):
-        return "nordigen.yaml" == path.basename(file.name)
+        return path.basename(file.name).endswith("nordigen.yaml")
 
     def file_account(self, file):
         return ""
