@@ -13,9 +13,10 @@ from dateutil.parser import parse
 class Importer(identifier.IdentifyMixin, importer.ImporterProtocol):
     """An importer for Revolut CSV files."""
 
-    def __init__(self, regexps, account, currency):
+    def __init__(self, regexps, account, fees_account currency):
         identifier.IdentifyMixin.__init__(self, matchers=[("filename", regexps)])
         self.account = account
+        self.fees_account = fees_account
         self.currency = currency
 
     def name(self):
@@ -51,6 +52,8 @@ class Importer(identifier.IdentifyMixin, importer.ImporterProtocol):
                     bal = D(row["Balance"].replace("'", "").strip())
                     amount_raw = D(row["Amount"].replace("'", "").strip())
                     amt = amount.Amount(amount_raw, row["Currency"])
+                    fee_raw = D(row["Fee"].replace("'", "").strip())
+                    fee = amount.Amount(-fee_raw, row["Currency"])
                     balance = amount.Amount(bal, self.currency)
                     book_date = parse(row["Completed Date"].strip()).date()
                 except Exception as e:
@@ -69,6 +72,11 @@ class Importer(identifier.IdentifyMixin, importer.ImporterProtocol):
                         data.Posting(self.account, amt, None, None, None, None),
                     ],
                 )
+                if fee_raw != 0:
+                    entry.postings.extend(
+                        [data.Posting(self.account, fee, None, None, None, None),
+                         data.Posting(self.fees_account, -fee, None, None, None, None)]
+                    )
                 entries.append(entry)
 
             # only add balance after the last (newest) transaction
