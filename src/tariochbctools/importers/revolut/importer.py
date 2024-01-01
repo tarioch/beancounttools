@@ -13,7 +13,7 @@ from dateutil.parser import parse
 class Importer(identifier.IdentifyMixin, importer.ImporterProtocol):
     """An importer for Revolut CSV files."""
 
-    def __init__(self, regexps, account, fees_account currency):
+    def __init__(self, regexps, account, fees_account, currency):
         identifier.IdentifyMixin.__init__(self, matchers=[("filename", regexps)])
         self.account = account
         self.fees_account = fees_account
