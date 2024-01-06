@@ -28,8 +28,8 @@ class Importer(importer.ImporterProtocol):
         trxPerShareGroups = p.search(trx.description)
         tPerShareGroups = p.search(t["description"])
 
-        trxPerShare = trxPerShareGroups.group("perShare") if trxPerShareGroups else ''
-        tPerShare = tPerShareGroups.group("perShare") if tPerShareGroups else ''
+        trxPerShare = trxPerShareGroups.group("perShare") if trxPerShareGroups else ""
+        tPerShare = tPerShareGroups.group("perShare") if tPerShareGroups else ""
 
         return (
             t["date"] == trx.dateTime
