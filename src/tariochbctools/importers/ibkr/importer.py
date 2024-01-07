@@ -24,8 +24,12 @@ class Importer(importer.ImporterProtocol):
 
     def matches(self, trx, t, account):
         p = re.compile(r".* (?P<perShare>\d+\.?\d+) PER SHARE")
-        trxPerShare = p.search(trx.description).group("perShare")
-        tPerShare = p.search(t["description"]).group("perShare")
+
+        trxPerShareGroups = p.search(trx.description)
+        tPerShareGroups = p.search(t["description"])
+
+        trxPerShare = trxPerShareGroups.group("perShare") if trxPerShareGroups else ""
+        tPerShare = tPerShareGroups.group("perShare") if tPerShareGroups else ""
 
         return (
             t["date"] == trx.dateTime
