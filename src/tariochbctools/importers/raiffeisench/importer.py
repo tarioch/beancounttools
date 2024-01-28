@@ -5,8 +5,8 @@ from tariochbctools.importers.general import mt940importer
 
 class RaiffeisenCHImporter(mt940importer.Importer):
     """An importer for MT940 from Raiffeisen CH"""
+
     """To get the correct file, choose SWIFT -> 'Période prédéfinie du relevé de compte' -> Sans détails"""
-    """Example RegEx for the file names : /Konto_CH\d+_\d+\.mt940"""
 
     def prepare_payee(self, trxdata):
         return ""
