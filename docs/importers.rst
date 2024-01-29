@@ -217,6 +217,20 @@ Import mt940 from `Zürcher Kantonalbank <https://www.zkb.ch/>`__
   CONFIG = [zkbimp.ZkbImporter("/\d+\.mt940", "Assets:ZKB")]
 
 
+Raiffeisen CH
+-------------
+
+Import mt940 from `Raiffeisen Schweiz <https://www.raiffeisen.ch//>`__
+
+.. code-block:: python
+
+  from tariochbctools.importers.raiffeisench import importer as raiffeisenimp
+
+  CONFIG = [
+      raiffeisenimp.RaiffeisenCHImporter("/Konto_CH\d+_\d+\.mt940", "Assets:Raiffeisen")
+  ]
+
+
 Interactivebrokers
 ------------------
 
