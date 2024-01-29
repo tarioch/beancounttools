@@ -218,7 +218,7 @@ Import mt940 from `Zürcher Kantonalbank <https://www.zkb.ch/>`__
 
 
 Raiffeisen CH
----
+-------------
 
 Import mt940 from `Raiffeisen Schweiz <https://www.raiffeisen.ch//>`__
 
