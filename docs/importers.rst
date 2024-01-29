@@ -226,7 +226,9 @@ Import mt940 from `Raiffeisen Schweiz <https://www.raiffeisen.ch//>`__
 
   from tariochbctools.importers.raiffeisench import importer as raiffeisenimp
 
-  CONFIG = [raiffeisenimp.RaiffeisenCHImporter("/Konto_CH\d+_\d+\.mt940", "Assets:Raiffeisen")]
+  CONFIG = [
+      raiffeisenimp.RaiffeisenCHImporter("/Konto_CH\d+_\d+\.mt940", "Assets:Raiffeisen")
+  ]
 
 
 Interactivebrokers
