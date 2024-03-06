@@ -17,7 +17,7 @@ def check_result(result):
 
 def get_token(secret_id, secret_key):
     r = requests.post(
-        "https://ob.nordigen.com/api/v2/token/new/",
+        "https://bankaccountdata.gocardless.com/api/v2/token/new/",
         data={
             "secret_id": secret_id,
             "secret_key": secret_key,
@@ -30,7 +30,7 @@ def get_token(secret_id, secret_key):
 
 def list_bank(token, country):
     r = requests.get(
-        "https://ob.nordigen.com/api/v2/institutions/",
+        "https://bankaccountdata.gocardless.com/api/v2/institutions/",
         params={"country": country},
         headers=build_header(token),
     )
@@ -48,7 +48,7 @@ def create_link(token, reference, bank):
         print(f"Link for for reference {reference} already exists.")  # noqa: T201
     else:
         r = requests.post(
-            "https://ob.nordigen.com/api/v2/requisitions/",
+            "https://bankaccountdata.gocardless.com/api/v2/requisitions/",
             data={
                 "redirect": "http://localhost",
                 "institution_id": bank,
@@ -63,7 +63,7 @@ def create_link(token, reference, bank):
 
 def list_accounts(token):
     headers = build_header(token)
-    r = requests.get("https://ob.nordigen.com/api/v2/requisitions/", headers=headers)
+    r = requests.get("https://bankaccountdata.gocardless.com/api/v2/requisitions/", headers=headers)
     print(r.json())  # noqa: T201
     check_result(r)
     for req in r.json()["results"]:
@@ -71,7 +71,7 @@ def list_accounts(token):
         print(f"Reference: {reference}")  # noqa: T201
         for account in req["accounts"]:
             ra = requests.get(
-                f"https://ob.nordigen.com/api/v2/accounts/{account}", headers=headers
+                f"https://bankaccountdata.gocardless.com/api/v2/accounts/{account}", headers=headers
             )
             check_result(ra)
             acc = ra.json()
@@ -79,7 +79,7 @@ def list_accounts(token):
             iban = acc["iban"]
 
             ra = requests.get(
-                f"https://ob.nordigen.com/api/v2/accounts/{account}/details",
+                f"https://bankaccountdata.gocardless.com/api/v2/accounts/{account}/details",
                 headers=headers,
             )
             check_result(ra)
@@ -94,7 +94,7 @@ def delete_link(token, reference):
     requisitionId = _find_requisition_id(token, reference)
     if requisitionId:
         r = requests.delete(
-            f"https://ob.nordigen.com/api/v2/requisitions/{requisitionId}",
+            f"https://bankaccountdata.gocardless.com/api/v2/requisitions/{requisitionId}",
             headers=build_header(token),
         )
         check_result(r)
@@ -102,7 +102,7 @@ def delete_link(token, reference):
 
 def _find_requisition_id(token, userId):
     headers = build_header(token)
-    r = requests.get("https://ob.nordigen.com/api/v2/requisitions/", headers=headers)
+    r = requests.get("https://bankaccountdata.gocardless.com/api/v2/requisitions/", headers=headers)
     check_result(r)
     for req in r.json()["results"]:
         if req["reference"] == userId:
