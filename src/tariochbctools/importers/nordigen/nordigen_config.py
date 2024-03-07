@@ -63,7 +63,9 @@ def create_link(token, reference, bank):
 
 def list_accounts(token):
     headers = build_header(token)
-    r = requests.get("https://bankaccountdata.gocardless.com/api/v2/requisitions/", headers=headers)
+    r = requests.get(
+        "https://bankaccountdata.gocardless.com/api/v2/requisitions/", headers=headers
+    )
     print(r.json())  # noqa: T201
     check_result(r)
     for req in r.json()["results"]:
@@ -71,7 +73,8 @@ def list_accounts(token):
         print(f"Reference: {reference}")  # noqa: T201
         for account in req["accounts"]:
             ra = requests.get(
-                f"https://bankaccountdata.gocardless.com/api/v2/accounts/{account}", headers=headers
+                f"https://bankaccountdata.gocardless.com/api/v2/accounts/{account}",
+                headers=headers,
             )
             check_result(ra)
             acc = ra.json()
@@ -102,7 +105,9 @@ def delete_link(token, reference):
 
 def _find_requisition_id(token, userId):
     headers = build_header(token)
-    r = requests.get("https://bankaccountdata.gocardless.com/api/v2/requisitions/", headers=headers)
+    r = requests.get(
+        "https://bankaccountdata.gocardless.com/api/v2/requisitions/", headers=headers
+    )
     check_result(r)
     for req in r.json()["results"]:
         if req["reference"] == userId:
