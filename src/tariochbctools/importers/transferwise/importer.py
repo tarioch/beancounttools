@@ -27,8 +27,10 @@ class Importer(importer.ImporterProtocol):
         return ""
 
     def __init__(self, *args, **kwargs):
+        if "profileId" in kwargs:
+            self.profileId = kwargs.pop("profileId")
         if "startDate" in kwargs:
-            self.startDate = kwargs["startDate"]
+            self.startDate = kwargs.pop("startDate")
         else:
             self.startDate = datetime.combine(
                 date.today() + relativedelta(months=-3),
@@ -36,7 +38,7 @@ class Importer(importer.ImporterProtocol):
                 timezone.utc,
             ).isoformat()
         if "endDate" in kwargs:
-            self.endDate = kwargs["endDate"]
+            self.endDate = kwargs.pop("endDate")
         else:
             self.endDate = datetime.combine(
                 date.today(), datetime.max.time(), timezone.utc
@@ -121,9 +123,12 @@ class Importer(importer.ImporterProtocol):
         self.private_key_path = config["privateKeyPath"]
 
         headers = {"Authorization": "Bearer " + self.api_token}
-        r = requests.get("https://api.transferwise.com/v1/profiles", headers=headers)
-        profiles = r.json()
-        self.profileId = profiles[0]["id"]
+        if not self.profileId:
+            r = requests.get(
+                "https://api.transferwise.com/v1/profiles", headers=headers
+            )
+            profiles = r.json()
+            self.profileId = profiles[0]["id"]
 
         r = requests.get(
             "https://api.transferwise.com/v1/borderless-accounts",
