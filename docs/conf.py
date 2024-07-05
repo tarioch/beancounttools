@@ -276,5 +276,4 @@ latex_documents = [
 python_version = ".".join(map(str, sys.version_info[0:2]))
 intersphinx_mapping = {
     "python": ("https://docs.python.org/" + python_version, None),
-    "pyscaffold": ("https://pyscaffold.org/en/stable", None),
 }
