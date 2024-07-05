@@ -33,8 +33,8 @@ class SwisscardImporter(identifier.IdentifyMixin, importer.ImporterProtocol):
                 book_date = parse(row["Transaction date"].strip(), dayfirst=True).date()
                 amt = amount.Amount(-D(row["Amount"]), row["Currency"])
                 metakv = {
-                    "Merchant": row["Merchant Category"],
-                    "Category": row["Registered Category"],
+                    "merchant": row["Merchant Category"],
+                    "category": row["Registered Category"],
                 }
                 meta = data.new_metadata(file.name, 0, metakv)
                 description = row["Description"].strip()
