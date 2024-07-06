@@ -402,10 +402,33 @@ Import mt940 from `BCGE <https://www.bcge.ch/>`__
 Swisscard cards
 ---------------
 
-Import Swisscard's `Cashback Cards <https://www.cashback-cards.ch/>` transactions from a CSV export.__
+Import Swisscard's `Cashback Cards <https://www.cashback-cards.ch/>` transactions from a CSV export.
 
 .. code-block:: python
 
   from tariochbctools.importers.swisscard import importer as swisscard
 
   CONFIG = [swisscard.SwisscardImporter("swisscard/.*\.csv", "Liabilities:Cashback")]
+
+Fidelity Netbenefits
+--------------------
+
+Import Fidelity Netbenefits `<https://netbenefits.fidelity.com/>` transactions from a CSV export of the activities.
+
+.. code-block:: python
+
+  from tariochbctools.importers.netbenefits import importer as netbenefits
+
+  CONFIG = [
+      netbenefits.Importer(
+          regexps="Transaction history\.csv",
+          cashAccount="Assets:Netbenefits:USD",
+          investmentAccount="Assets:Netbenefits:SYMBOL",
+          dividendAccount="Income:Interest",
+          taxAccount="Expenses:Tax",
+          capGainAccount="Income:Capitalgain",
+          symbol="SYMBOL",
+          ignoreTypes=["REINVESTMENT REINVEST @ $1.000"],
+          baseCcy="CHF",
+      )
+  ]
