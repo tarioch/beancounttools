@@ -4,7 +4,7 @@ from datetime import timedelta
 from io import StringIO
 
 from beancount.core import amount, data
-from beancount.core.number import D
+from beancount.core.number import ZERO, D
 from beancount.ingest import importer
 from beancount.ingest.importers.mixins import identifier
 from dateutil.parser import parse
@@ -103,5 +103,5 @@ class Importer(identifier.IdentifyMixin, importer.ImporterProtocol):
         return entries
 
     @staticmethod
-    def _is_non_zero(raw):
-        return abs(float(raw) - 0.00) > 1e-9
+    def is_non_zero(raw):
+        return raw != ZERO
