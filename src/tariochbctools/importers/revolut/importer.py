@@ -47,6 +47,7 @@ class Importer(identifier.IdentifyMixin, importer.ImporterProtocol):
                 skipinitialspace=True,
             )
             next(reader)
+            is_fee_mode = self._fee is not None
             for row in reader:
                 try:
                     bal = D(row["Balance"].replace("'", "").strip())
@@ -60,7 +61,6 @@ class Importer(identifier.IdentifyMixin, importer.ImporterProtocol):
                     logging.warning(e)
                     continue
 
-                is_fee_mode = self._fee is not None
                 if is_fee_mode and fee_amt_raw == ZERO:
                     continue
 
