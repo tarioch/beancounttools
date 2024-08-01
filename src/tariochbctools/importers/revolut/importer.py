@@ -60,48 +60,49 @@ class Importer(identifier.IdentifyMixin, importer.ImporterProtocol):
                     logging.warning(e)
                     continue
 
+                is_fee_mode = self._fee is not None
+                if is_fee_mode and fee_amt_raw == ZERO:
+                    continue
+
                 postings = [
                     data.Posting(self.account, amt, None, None, None, None),
                 ]
-                if self._fee is not None and self.is_non_zero(fee_amt_raw):
-                    postings.extend(
-                        [
-                            data.Posting(self.account, fee, None, None, None, None),
-                            data.Posting(
-                                self._fee["account"], -fee, None, None, None, None
-                            ),
-                        ]
-                    )
+                description = row["Description"].strip()
+                if is_fee_mode:
+                    postings = [data.Posting(self.account, fee, None, None, None, None),
+                                data.Posting(
+                                    self._fee["account"], -fee, None, None, None, None
+                                )]
+                    description = f"Fees for {description}"
+
+                assert isinstance(description, str), "Actual type of description is " + str(type(description))
 
                 entry = data.Transaction(
                     data.new_metadata(file.name, 0, {}),
                     book_date,
                     "*",
                     "",
-                    row["Description"].strip(),
+                    description,
                     data.EMPTY_SET,
                     data.EMPTY_SET,
                     postings,
                 )
                 entries.append(entry)
-
-            # only add balance after the last (newest) transaction
-            try:
-                book_date = book_date + timedelta(days=1)
-                entry = data.Balance(
-                    data.new_metadata(file.name, 0, {}),
-                    book_date,
-                    self.account,
-                    balance,
-                    None,
-                    None,
-                )
-                entries.append(entry)
-            except NameError:
-                pass
+            
+            if not is_fee_mode:
+                # only add balance after the last (newest) transaction
+                try:
+                    book_date = book_date + timedelta(days=1)
+                    entry = data.Balance(
+                        data.new_metadata(file.name, 0, {}),
+                        book_date,
+                        self.account,
+                        balance,
+                        None,
+                        None,
+                    )
+                    entries.append(entry)
+                except NameError:
+                    pass
 
         return entries
-
-    @staticmethod
-    def is_non_zero(raw):
-        return raw != ZERO
