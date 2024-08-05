@@ -69,13 +69,17 @@ class Importer(identifier.IdentifyMixin, importer.ImporterProtocol):
                 ]
                 description = row["Description"].strip()
                 if is_fee_mode:
-                    postings = [data.Posting(self.account, fee, None, None, None, None),
-                                data.Posting(
-                                    self._fee["account"], -fee, None, None, None, None
-                                )]
+                    postings = [
+                        data.Posting(self.account, fee, None, None, None, None),
+                        data.Posting(
+                            self._fee["account"], -fee, None, None, None, None
+                        ),
+                    ]
                     description = f"Fees for {description}"
 
-                assert isinstance(description, str), "Actual type of description is " + str(type(description))
+                assert isinstance(
+                    description, str
+                ), "Actual type of description is " + str(type(description))
 
                 entry = data.Transaction(
                     data.new_metadata(file.name, 0, {}),
@@ -88,7 +92,7 @@ class Importer(identifier.IdentifyMixin, importer.ImporterProtocol):
                     postings,
                 )
                 entries.append(entry)
-            
+
             if not is_fee_mode:
                 # only add balance after the last (newest) transaction
                 try:
