@@ -57,9 +57,13 @@ class Importer(importer.ImporterProtocol):
                 r.json()["transactions"]["booked"], key=lambda trx: trx["bookingDate"]
             )
             for trx in transactions:
-                metakv = {
-                    "nordref": trx["transactionId"],
-                }
+                if "transactionId" in trx:
+                    metakv = {
+                        "nordref": trx["transactionId"],
+                    }
+                else:
+                    metakv = {}
+
                 if "creditorName" in trx:
                     metakv["creditorName"] = trx["creditorName"]
                 if "debtorName" in trx:
