@@ -171,7 +171,7 @@ If it is present, transactions for *only these accounts* will be imported.
 
 
 GoCardless (formerly Nordigen)
---------
+------------------------------
 
 Import from `GoCardless <https://gocardless.com/bank-account-data/>`__ (formerly known as `Nordigen <https://gocardless.com/en-us/g/gc-nordigen/>`__) using their api services. Supports `2500+ banks <https://gocardless.com/bank-account-data/coverage/>`__ in Europe and the UK including e.g. Revolut.
 You need to create a free account and create a token. I've included a small cli to allow to hook up
