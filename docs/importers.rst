@@ -170,12 +170,12 @@ TrueLayer account IDs to beancount accounts. e.g.:
 If it is present, transactions for *only these accounts* will be imported.
 
 
-Nordigen
---------
+GoCardless (formerly Nordigen)
+------------------------------
 
-Import from `Nordigen <http://nordigen.com/>`__ using their api services. e.g. supports Revolut.
+Import from `GoCardless <https://gocardless.com/bank-account-data/>`__ (formerly known as `Nordigen <https://gocardless.com/en-us/g/gc-nordigen/>`__) using their api services. Supports `2500+ banks <https://gocardless.com/bank-account-data/coverage/>`__ in Europe and the UK including e.g. Revolut.
 You need to create a free account and create a token. I've included a small cli to allow to hook up
-to different banks with nordigen. If you're country is not supported you can play around with other countries
+to different banks with GoCardless. If you're country is not supported you can play around with other countries
 e.g. CH is not allowed but things like revolut still work. You can also create multiple links and they will
 all be listed in the end.
 
