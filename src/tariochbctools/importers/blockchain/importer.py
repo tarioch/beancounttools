@@ -1,28 +1,29 @@
 from os import path
 
+import beangulp
 import blockcypher
 import yaml
 from beancount.core import amount, data
 from beancount.core.number import D
-from beancount.ingest import importer
 
 from tariochbctools.importers.general.priceLookup import PriceLookup
 
 
-class Importer(importer.ImporterProtocol):
+class Importer(beangulp.Importer):
     """An importer for Blockchain data."""
 
-    def identify(self, file):
-        return path.basename(file.name).endswith("blockchain.yaml")
+    def identify(self, filepath: str) -> bool:
+        return path.basename(filepath).endswith("blockchain.yaml")
 
-    def file_account(self, file):
+    def account(self, filepath: str) -> data.Entries:
         return ""
 
-    def extract(self, file, existing_entries):
-        config = yaml.safe_load(file.contents())
+    def extract(self, filepath: str, existing: data.Entries) -> data.Entries:
+        with open(filepath) as file:
+            config = yaml.safe_load(file)
         self.config = config
         baseCcy = config["base_ccy"]
-        priceLookup = PriceLookup(existing_entries, baseCcy)
+        priceLookup = PriceLookup(existing, baseCcy)
 
         entries = []
         for address in self.config["addresses"]:

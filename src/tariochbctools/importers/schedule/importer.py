@@ -1,24 +1,25 @@
 import datetime
 from os import path
+from typing import Any
 
+import beangulp
 import yaml
 from beancount.core import amount, data
 from beancount.core.number import D
-from beancount.ingest import importer
 from dateutil.relativedelta import relativedelta
 
 
-class Importer(importer.ImporterProtocol):
+class Importer(beangulp.Importer):
     """An importer for Scheduled/Recurring Transactions."""
 
-    def identify(self, file):
-        return path.basename(file.name).endswith("schedule.yaml")
+    def identify(self, filepath: str) -> bool:
+        return path.basename(filepath).endswith("schedule.yaml")
 
-    def file_account(self, file):
+    def account(self, filepath: str) -> data.Account:
         return ""
 
-    def extract(self, file, existing_entries):
-        with open(file.name, "r") as f:
+    def extract(self, filepath: str, existing: data.Entries) -> data.Entries:
+        with open(filepath, "r") as f:
             config = yaml.safe_load(f)
         self.transactions = config["transactions"]
 
@@ -30,7 +31,9 @@ class Importer(importer.ImporterProtocol):
 
         return result
 
-    def createForDate(self, trx, date):
+    def createForDate(
+        self, trx: dict[str, Any], date: datetime.date
+    ) -> data.Transaction:
         postings = []
         for post in trx["postings"]:
             amt = None

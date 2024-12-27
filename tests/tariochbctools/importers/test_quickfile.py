@@ -4,7 +4,6 @@ from unittest.mock import MagicMock, call
 import pytest
 from beancount.core import data
 from beancount.core.number import D
-from beancount.ingest import cache
 
 from tariochbctools.importers.quickfile import importer as qfimp
 
@@ -83,7 +82,7 @@ TEST_BANK_SEARCH = b"""
 def tmp_config_fixture(tmp_path):
     config = tmp_path / "quickfile.yaml"
     config.write_bytes(TEST_CONFIG)
-    yield cache.get_file(config)  # a FileMemo, not a Path
+    yield config
 
 
 @pytest.fixture(name="importer")
@@ -103,7 +102,7 @@ def quickfile_importer_factory(tmp_path):
         config = tmp_path / "quickfile.yaml"
         config.write_bytes(custom_config)
         importer = qfimp.Importer()
-        importer._configure(cache.get_file(config), [])
+        importer._configure(config, [])
         return importer
 
     yield _importer_with_config

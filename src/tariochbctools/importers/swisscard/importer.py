@@ -1,29 +1,31 @@
 import csv
-from io import StringIO
+import re
 
 from beancount.core import amount, data
 from beancount.core.number import D
-from beancount.ingest import importer
-from beancount.ingest.importers.mixins import identifier
+from beangulp import Importer
 from dateutil.parser import parse
 
 
-class SwisscardImporter(identifier.IdentifyMixin, importer.ImporterProtocol):
+class SwisscardImporter(Importer):
     """An importer for Swisscard's cashback CSV files."""
 
-    def __init__(self, regexps, account):
-        identifier.IdentifyMixin.__init__(self, matchers=[("filename", regexps)])
-        self.account = account
+    def __init__(self, filepattern: str, account: data.Account):
+        self._filepattern = filepattern
+        self._account = account
 
-    def name(self):
-        return super().name() + self.account
+    def name(self) -> str:
+        return super().name() + self._account
 
-    def file_account(self, file):
-        return self.account
+    def identify(self, filepath: str) -> bool:
+        return re.search(self._filepattern, filepath) is not None
 
-    def extract(self, file, existing_entries):
+    def account(self, filepath: str) -> data.Account:
+        return self._account
+
+    def extract(self, filepath: str, existing: data.Entries) -> data.Entries:
         entries = []
-        with StringIO(file.contents()) as csvfile:
+        with open(filepath) as csvfile:
             reader = csv.DictReader(
                 csvfile,
                 delimiter=",",
@@ -36,7 +38,7 @@ class SwisscardImporter(identifier.IdentifyMixin, importer.ImporterProtocol):
                     "merchant": row["Merchant Category"],
                     "category": row["Registered Category"],
                 }
-                meta = data.new_metadata(file.name, 0, metakv)
+                meta = data.new_metadata(filepath, 0, metakv)
                 description = row["Description"].strip()
                 entry = data.Transaction(
                     meta,
@@ -47,7 +49,7 @@ class SwisscardImporter(identifier.IdentifyMixin, importer.ImporterProtocol):
                     data.EMPTY_SET,
                     data.EMPTY_SET,
                     [
-                        data.Posting(self.account, amt, None, None, None, None),
+                        data.Posting(self._account, amt, None, None, None, None),
                     ],
                 )
                 entries.append(entry)

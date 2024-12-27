@@ -1,24 +1,23 @@
 import csv
+import re
 from collections.abc import Iterable
 from datetime import date
-from io import StringIO
 
+import beangulp
 from beancount.core import amount, data
 from beancount.core.number import D
 from beancount.core.position import CostSpec
-from beancount.ingest import importer
-from beancount.ingest.importers.mixins import identifier
 from dateutil.parser import parse
 
 from tariochbctools.importers.general.priceLookup import PriceLookup
 
 
-class Importer(identifier.IdentifyMixin, importer.ImporterProtocol):
+class Importer(beangulp.Importer):
     """An importer for Fidelity Netbenefits Activity CSV files."""
 
     def __init__(
         self,
-        regexps: str | Iterable[str],
+        filepattern: str,
         cashAccount: str,
         investmentAccount: str,
         dividendAccount: str,
@@ -28,7 +27,7 @@ class Importer(identifier.IdentifyMixin, importer.ImporterProtocol):
         ignoreTypes: Iterable[str],
         baseCcy: str,
     ):
-        identifier.IdentifyMixin.__init__(self, matchers=[("filename", regexps)])
+        self.filepattern = filepattern
         self.cashAccount = cashAccount
         self.investmentAccount = investmentAccount
         self.dividendAccount = dividendAccount
@@ -38,18 +37,21 @@ class Importer(identifier.IdentifyMixin, importer.ImporterProtocol):
         self.ignoreTypes = ignoreTypes
         self.baseCcy = baseCcy
 
-    def name(self):
+    def name(self) -> str:
         return super().name() + self.cashAccount
 
-    def file_account(self, file):
+    def identify(self, filepath: str) -> bool:
+        return re.search(self.filepattern, filepath) is not None
+
+    def account(self, filepath: str) -> data.Account:
         return self.cashAccount
 
-    def extract(self, file, existing_entries):
+    def extract(self, filepath: str, existing: data.Entries) -> data.Entries:
         entries = []
 
-        self.priceLookup = PriceLookup(existing_entries, self.baseCcy)
+        self.priceLookup = PriceLookup(existing, self.baseCcy)
 
-        with StringIO(file.contents()) as csvfile:
+        with open(filepath) as csvfile:
             reader = csv.DictReader(
                 csvfile,
                 [
@@ -76,12 +78,12 @@ class Importer(identifier.IdentifyMixin, importer.ImporterProtocol):
                 if row["Shares"] != "-":
                     shares = amount.Amount(D(row["Shares"]), self.symbol)
 
-                metakv = {}
+                metakv: data.Meta = {}
 
                 if not amt and not shares:
                     continue
 
-                meta = data.new_metadata(file.name, 0, metakv)
+                meta = data.new_metadata(filepath, 0, metakv)
                 description = row["Transaction type"].strip()
 
                 if "TAX" in description:
@@ -120,7 +122,9 @@ class Importer(identifier.IdentifyMixin, importer.ImporterProtocol):
 
         return entries
 
-    def __createBuy(self, amt: amount, shares: amount, book_date: date):
+    def __createBuy(
+        self, amt: amount, shares: amount, book_date: date
+    ) -> list[data.Posting]:
         price = self.priceLookup.fetchPrice("USD", book_date)
         cost = CostSpec(
             number_per=None,
@@ -137,7 +141,9 @@ class Importer(identifier.IdentifyMixin, importer.ImporterProtocol):
 
         return postings
 
-    def __createSell(self, amt: amount, shares: amount, book_date: date):
+    def __createSell(
+        self, amt: amount, shares: amount, book_date: date
+    ) -> list[data.Posting]:
         price = self.priceLookup.fetchPrice("USD", book_date)
         cost = CostSpec(
             number_per=None,
@@ -155,7 +161,9 @@ class Importer(identifier.IdentifyMixin, importer.ImporterProtocol):
 
         return postings
 
-    def __createDividend(self, amt: amount, book_date: date, incomeAccount: str):
+    def __createDividend(
+        self, amt: amount, book_date: date, incomeAccount: str
+    ) -> list[data.Posting]:
         price = self.priceLookup.fetchPrice("USD", book_date)
         postings = [
             data.Posting(
