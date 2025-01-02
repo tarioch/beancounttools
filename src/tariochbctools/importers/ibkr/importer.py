@@ -2,27 +2,30 @@ import re
 from datetime import date
 from decimal import Decimal
 from os import path
+from typing import Any
 
+import beangulp
 import yaml
 from beancount.core import amount, data
 from beancount.core.number import D
-from beancount.ingest import importer
 from ibflex import Types, client, parser
 from ibflex.enums import CashAction
 
 from tariochbctools.importers.general.priceLookup import PriceLookup
 
 
-class Importer(importer.ImporterProtocol):
+class Importer(beangulp.Importer):
     """An importer for Interactive Broker using the flex query service."""
 
-    def identify(self, file):
-        return path.basename(file.name).endswith("ibkr.yaml")
+    def identify(self, filepath: str) -> bool:
+        return path.basename(filepath).endswith("ibkr.yaml")
 
-    def file_account(self, file):
+    def account(self, filepath: str) -> data.Account:
         return ""
 
-    def matches(self, trx, t, account):
+    def matches(
+        self, trx: Types.CashTransaction, t: Any, account: data.Account
+    ) -> bool:
         p = re.compile(r".* (?P<perShare>\d+\.?\d+) PER SHARE")
 
         trxPerShareGroups = p.search(trx.description)
@@ -38,13 +41,13 @@ class Importer(importer.ImporterProtocol):
             and t["account"] == account
         )
 
-    def extract(self, file, existing_entries):
-        with open(file.name, "r") as f:
+    def extract(self, filepath: str, existing: data.Entries) -> data.Entries:
+        with open(filepath, "r") as f:
             config = yaml.safe_load(f)
         token = config["token"]
         queryId = config["queryId"]
 
-        priceLookup = PriceLookup(existing_entries, config["baseCcy"])
+        priceLookup = PriceLookup(existing, config["baseCcy"])
 
         response = client.download(token, queryId)
         statement = parser.parse(response)
@@ -52,7 +55,7 @@ class Importer(importer.ImporterProtocol):
 
         result = []
         for stmt in statement.FlexStatements:
-            transactions = []
+            transactions: list = []
             account = stmt.accountId
             for trx in stmt.Trades:
                 result.append(
@@ -147,7 +150,7 @@ class Importer(importer.ImporterProtocol):
         priceLookup: PriceLookup,
         description: str,
         account: str,
-    ):
+    ) -> data.Transaction:
         narration = "Dividend: " + description
         liquidityAccount = self.getLiquidityAccount(account, currency)
         incomeAccount = self.getIncomeAccount(account)
@@ -190,7 +193,7 @@ class Importer(importer.ImporterProtocol):
     def createBuy(
         self,
         date: date,
-        account: str,
+        account: data.Account,
         asset: str,
         quantity: Decimal,
         currency: str,
@@ -199,7 +202,7 @@ class Importer(importer.ImporterProtocol):
         netCash: amount.Amount,
         baseCcy: str,
         fxRateToBase: Decimal,
-    ):
+    ) -> data.Transaction:
         narration = "Buy"
         feeAccount = self.getFeeAccount(account)
         liquidityAccount = self.getLiquidityAccount(account, currency)
@@ -238,17 +241,17 @@ class Importer(importer.ImporterProtocol):
             meta, date, "*", "", narration, data.EMPTY_SET, data.EMPTY_SET, postings
         )
 
-    def getAssetAccount(self, account: str, asset: str):
+    def getAssetAccount(self, account: str, asset: str) -> data.Account:
         return f"Assets:{account}:Investment:IB:{asset}"
 
-    def getLiquidityAccount(self, account: str, currency: str):
+    def getLiquidityAccount(self, account: str, currency: str) -> data.Account:
         return f"Assets:{account}:Liquidity:IB:{currency}"
 
-    def getReceivableAccount(self, account: str):
+    def getReceivableAccount(self, account: str) -> data.Account:
         return f"Assets:{account}:Receivable:Verrechnungssteuer"
 
-    def getIncomeAccount(self, account: str):
+    def getIncomeAccount(self, account: str) -> data.Account:
         return f"Income:{account}:Interest"
 
-    def getFeeAccount(self, account: str):
+    def getFeeAccount(self, account: str) -> data.Account:
         return f"Expenses:{account}:Fees"

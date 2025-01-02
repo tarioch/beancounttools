@@ -2,24 +2,26 @@ import tempfile
 from os import path
 
 import yaml
-from beancount.ingest import cache, importer
+from beancount.core import data
+from beangulp import Importer
 from imap_tools import MailBox
 
 
-class MailAdapterImporter(importer.ImporterProtocol):
+class MailAdapterImporter(Importer):
     """An importer adapter that fetches file from mails and then calls another importer."""
 
-    def __init__(self, importers):
+    def __init__(self, importers: list[Importer]):
         self.importers = importers
 
-    def identify(self, file):
-        return "mail.yaml" == path.basename(file.name)
+    def identify(self, filepath: str) -> bool:
+        return "mail.yaml" == path.basename(filepath)
 
-    def file_account(self, file):
+    def account(self, filepath: str) -> data.Account:
         return ""
 
-    def extract(self, file, existing_entries):
-        config = yaml.safe_load(file.contents())
+    def extract(self, filepath: str, existing: data.Entries) -> data.Entries:
+        with open(filepath) as file:
+            config = yaml.safe_load(file)
 
         with MailBox(config["host"]).login(
             config["user"], config["password"], initial_folder=config["folder"]
@@ -33,13 +35,10 @@ class MailAdapterImporter(importer.ImporterProtocol):
                         with open(attFileName, "wb") as attFile:
                             attFile.write(att.payload)
                             attFile.flush()
-                            fileMemo = cache.get_file(attFileName)
 
                             for delegate in self.importers:
-                                if delegate.identify(fileMemo):
-                                    newEntries = delegate.extract(
-                                        fileMemo, existing_entries
-                                    )
+                                if delegate.identify(attFileName):
+                                    newEntries = delegate.extract(attFileName, existing)
                                     result.extend(newEntries)
                                     processed = True
 

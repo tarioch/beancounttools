@@ -5,11 +5,11 @@ from hashlib import md5
 from os import path
 from typing import Dict, List, NamedTuple
 
+import beangulp
 import requests
 import yaml
 from beancount.core import amount, data
 from beancount.core.number import D
-from beancount.ingest import importer
 from undictify import type_checked_constructor
 
 
@@ -152,32 +152,32 @@ class QuickFile:
         return QuickFileBankSearch(**body)
 
 
-class Importer(importer.ImporterProtocol):
+class Importer(beangulp.Importer):
     """An importer for QuickFile"""
 
     def __init__(self):
         self.quickfile = None
         self.config = None
-        self.existing_entries = None
+        self.existing = None
 
-    def _configure(self, file, existing_entries):
-        with open(file.name, "r") as config_file:
+    def _configure(self, filepath, existing):
+        with open(filepath, "r") as config_file:
             self.config = yaml.safe_load(config_file)
             self.quickfile = QuickFile(
                 account_number=self.config["account_number"],
                 api_key=self.config["api_key"],
                 app_id=self.config["app_id"],
             )
-        self.existing_entries = existing_entries
+        self.existing = existing
 
-    def identify(self, file):
-        return path.basename(file.name) == "quickfile.yaml"
+    def identify(self, filepath):
+        return path.basename(filepath) == "quickfile.yaml"
 
-    def file_account(self, file):
+    def account(self, filepath):
         return ""
 
-    def extract(self, file, existing_entries=None):
-        self._configure(file, existing_entries)
+    def extract(self, filepath, existing=None):
+        self._configure(filepath, existing)
         entries = []
 
         for bank_account in self.config["accounts"].keys():

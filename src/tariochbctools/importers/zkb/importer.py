@@ -1,13 +1,14 @@
 import re
+from typing import Any
 
 from tariochbctools.importers.general import mt940importer
 
 
 class ZkbImporter(mt940importer.Importer):
-    def prepare_payee(self, trxdata):
+    def prepare_payee(self, trxdata: dict[str, Any]) -> str:
         return ""
 
-    def prepare_narration(self, trxdata):
+    def prepare_narration(self, trxdata: dict[str, Any]) -> str:
         extra = trxdata["extra_details"]
         details = trxdata["transaction_details"]
 

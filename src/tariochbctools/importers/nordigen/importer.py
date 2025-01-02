@@ -1,28 +1,28 @@
 from datetime import date
 from os import path
 
+import beangulp
 import requests
 import yaml
 from beancount.core import amount, data
 from beancount.core.number import D
-from beancount.ingest import importer
 
 
 class HttpServiceException(Exception):
     pass
 
 
-class Importer(importer.ImporterProtocol):
+class Importer(beangulp.Importer):
     """An importer for Nordigen API (e.g. for Revolut)."""
 
-    def identify(self, file):
-        return path.basename(file.name).endswith("nordigen.yaml")
+    def identify(self, filepath: str) -> bool:
+        return path.basename(filepath).endswith("nordigen.yaml")
 
-    def file_account(self, file):
+    def account(self, filepath: str) -> data.Entries:
         return ""
 
-    def extract(self, file, existing_entries):
-        with open(file.name, "r") as f:
+    def extract(self, filepath: str, existing: data.Entries) -> data.Entries:
+        with open(filepath, "r") as f:
             config = yaml.safe_load(f)
 
         r = requests.post(

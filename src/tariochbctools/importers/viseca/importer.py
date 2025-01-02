@@ -1,26 +1,32 @@
 import re
 from datetime import datetime
 
+import beangulp
 import camelot
 from beancount.core import amount, data
 from beancount.core.number import D
-from beancount.ingest import importer
-from beancount.ingest.importers.mixins import identifier
 
 
-class Importer(identifier.IdentifyMixin, importer.ImporterProtocol):
+class Importer(beangulp.Importer):
     """An importer for Viseca One Card Statement PDF files."""
 
-    def __init__(self, regexps, account):
-        identifier.IdentifyMixin.__init__(self, matchers=[("filename", regexps)])
-        self.account = account
+    def __init__(self, filepattern: str, account: data.Account):
+        self._filepattern = filepattern
+        self._account = account
         self.currency = "CHF"
 
-    def file_account(self, file):
-        return self.account
+    def identify(self, filepath: str) -> bool:
+        return re.search(self._filepattern, filepath) is not None
 
-    def createEntry(self, file, date, entryAmount, text):
+    def account(self, filepath: str) -> data.Account:
+        return self._account
+
+    def createEntry(
+        self, filepath: str, date: str, entryAmount: str | None, text: str
+    ) -> data.Transaction:
         amt = None
+        if not entryAmount:
+            entryAmount = ""
         entryAmount = entryAmount.replace("'", "")
         if "-" in entryAmount:
             amt = amount.Amount(D(entryAmount.strip(" -")), "CHF")
@@ -29,7 +35,7 @@ class Importer(identifier.IdentifyMixin, importer.ImporterProtocol):
 
         book_date = datetime.strptime(date, "%d.%m.%y").date()
 
-        meta = data.new_metadata(file.name, 0)
+        meta = data.new_metadata(filepath, 0)
         return data.Transaction(
             meta,
             book_date,
@@ -39,11 +45,11 @@ class Importer(identifier.IdentifyMixin, importer.ImporterProtocol):
             data.EMPTY_SET,
             data.EMPTY_SET,
             [
-                data.Posting(self.account, amt, None, None, None, None),
+                data.Posting(self._account, amt, None, None, None, None),
             ],
         )
 
-    def extract(self, file, existing_entries):
+    def extract(self, filepath: str, existing: data.Entries) -> data.Entries:
         entries = []
 
         p = re.compile(r"^\d\d\.\d\d\.\d\d$")
@@ -51,7 +57,7 @@ class Importer(identifier.IdentifyMixin, importer.ImporterProtocol):
         columns = ["100,132,400,472,523"]
 
         firstPageTables = camelot.read_pdf(
-            file.name,
+            filepath,
             flavor="stream",
             pages="1",
             table_regions=["65,450,585,50"],
@@ -59,7 +65,7 @@ class Importer(identifier.IdentifyMixin, importer.ImporterProtocol):
             split_text=True,
         )
         otherPageTables = camelot.read_pdf(
-            file.name,
+            filepath,
             flavor="stream",
             pages="2-end",
             table_regions=["65,650,585,50"],
@@ -91,7 +97,9 @@ class Importer(identifier.IdentifyMixin, importer.ImporterProtocol):
                 if amountChf:
                     if lastTrxDate:
                         entries.append(
-                            self.createEntry(file, lastTrxDate, lastAmount, lastDetails)
+                            self.createEntry(
+                                filepath, lastTrxDate, lastAmount, lastDetails
+                            )
                         )
 
                     lastTrxDate = trxDate
@@ -102,7 +110,7 @@ class Importer(identifier.IdentifyMixin, importer.ImporterProtocol):
 
             if lastTrxDate:
                 entries.append(
-                    self.createEntry(file, lastTrxDate, lastAmount, lastDetails)
+                    self.createEntry(filepath, lastTrxDate, lastAmount, lastDetails)
                 )
 
         return entries

@@ -1,15 +1,16 @@
 from datetime import datetime
 from os import environ
 from time import sleep
+from typing import Optional
 
 from beancount.core.number import D
-from beancount.prices import source
+from beanprice import source
 from dateutil import tz
 from ibflex import client, parser
 
 
 class Source(source.Source):
-    def get_latest_price(self, ticker: str):
+    def get_latest_price(self, ticker: str) -> source.SourcePrice | None:
         token: str = environ["IBKR_TOKEN"]
         queryId: str = environ["IBKR_QUERY_ID"]
 
@@ -36,5 +37,7 @@ class Source(source.Source):
 
         return None
 
-    def get_historical_price(self, ticker, time):
+    def get_historical_price(
+        self, ticker: str, time: datetime
+    ) -> Optional[source.SourcePrice]:
         return None

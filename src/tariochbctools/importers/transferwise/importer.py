@@ -2,8 +2,10 @@ import base64
 import json
 from datetime import date, datetime, timezone
 from os import path
+from typing import Any
 from urllib.parse import urlencode
 
+import beangulp
 import dateutil.parser
 import requests
 import rsa
@@ -11,22 +13,21 @@ import urllib3
 import yaml
 from beancount.core import amount, data
 from beancount.core.number import D
-from beancount.ingest import importer
 from dateutil.relativedelta import relativedelta
 
 http = urllib3.PoolManager()
 
 
-class Importer(importer.ImporterProtocol):
+class Importer(beangulp.Importer):
     """An importer for Transferwise using the API."""
 
-    def identify(self, file):
-        return path.basename(file.name).endswith("transferwise.yaml")
+    def identify(self, filepath: str) -> bool:
+        return path.basename(filepath).endswith("transferwise.yaml")
 
-    def file_account(self, file):
+    def account(self, filepath: str) -> data.Account:
         return ""
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: Any, **kwargs: Any):
         if "profileId" in kwargs:
             self.profileId = kwargs.pop("profileId")
         if "startDate" in kwargs:
@@ -49,10 +50,10 @@ class Importer(importer.ImporterProtocol):
     # MIT license
     def _get_statement(
         self,
-        currency,
-        base_url,
-        statement_type="FLAT",
-    ):
+        currency: str,
+        base_url: str,
+        statement_type: str = "FLAT",
+    ) -> Any:
         params = urlencode(
             {
                 "currency": currency,
@@ -78,8 +79,8 @@ class Importer(importer.ImporterProtocol):
             "Content-Type": "application/json",
         }
         if hasattr(self, "one_time_token"):
-            headers["x-2fa-approval"] = self.one_time_token
-            headers["X-Signature"] = self.signature
+            headers["x-2fa-approval"] = self.one_time_token  # type: ignore
+            headers["X-Signature"] = self.signature  # type: ignore
 
         r = http.request("GET", url, headers=headers, retries=False)
 
@@ -115,8 +116,8 @@ class Importer(importer.ImporterProtocol):
 
         return signature
 
-    def extract(self, file, existing_entries):
-        with open(file.name, "r") as f:
+    def extract(self, filepath, existing):
+        with open(filepath, "r") as f:
             config = yaml.safe_load(f)
         self.api_token = config["token"]
         baseAccount = config["baseAccount"]

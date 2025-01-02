@@ -1,36 +1,38 @@
 from datetime import date
 from os import path
+from typing import Any
 
+import beangulp
 import bitstamp.client
 import yaml
 from beancount.core import amount, data
 from beancount.core.number import MISSING, D
-from beancount.ingest import importer
 from dateutil.parser import parse
 from dateutil.relativedelta import relativedelta
 
 from tariochbctools.importers.general.priceLookup import PriceLookup
 
 
-class Importer(importer.ImporterProtocol):
+class Importer(beangulp.Importer):
     """An importer for Bitstamp."""
 
-    def identify(self, file):
-        return path.basename(file.name).endswith("bitstamp.yaml")
+    def identify(self, filepath: str) -> bool:
+        return path.basename(filepath).endswith("bitstamp.yaml")
 
-    def file_account(self, file):
+    def account(self, filepath: str) -> data.Account:
         return ""
 
-    def extract(self, file, existing_entries):
-        self.priceLookup = PriceLookup(existing_entries, "CHF")
+    def extract(self, filepath: str, existing: data.Entries) -> data.Entries:
+        self.priceLookup = PriceLookup(existing, "CHF")
 
-        config = yaml.safe_load(file.contents())
+        with open(filepath) as file:
+            config = yaml.safe_load(file)
         self.config = config
         self.client = bitstamp.client.Trading(
             username=config["username"], key=config["key"], secret=config["secret"]
         )
         self.currencies = config["currencies"]
-        self.account = config["account"]
+        self._account = config["account"]
         self.otherExpensesAccount = config["otherExpensesAccount"]
         self.capGainAccount = config["capGainAccount"]
 
@@ -46,7 +48,7 @@ class Importer(importer.ImporterProtocol):
 
         return result
 
-    def fetchSingle(self, trx):
+    def fetchSingle(self, trx: dict[str, Any]) -> data.Transaction:
         id = int(trx["id"])
         type = int(trx["type"])
         date = parse(trx["datetime"]).date()
@@ -67,12 +69,13 @@ class Importer(importer.ImporterProtocol):
 
         if type == 0:
             narration = "Deposit"
-            cost = data.Cost(
-                self.priceLookup.fetchPriceAmount(posCcy, date), "CHF", None, None
-            )
+            if posCcy:
+                cost = data.Cost(
+                    self.priceLookup.fetchPriceAmount(posCcy, date), "CHF", None, None
+                )
             postings = [
                 data.Posting(
-                    self.account + ":" + posCcy,
+                    self._account + ":" + posCcy,
                     amount.Amount(posAmt, posCcy),
                     cost,
                     None,
@@ -84,7 +87,7 @@ class Importer(importer.ImporterProtocol):
             narration = "Withdrawal"
             postings = [
                 data.Posting(
-                    self.account + ":" + negCcy,
+                    self._account + ":" + negCcy,
                     amount.Amount(negAmt, negCcy),
                     None,
                     None,
@@ -94,14 +97,15 @@ class Importer(importer.ImporterProtocol):
             ]
         elif type == 2:
             fee = D(trx["fee"])
-            if posCcy.lower() + "_" + negCcy.lower() in trx:
+            if posCcy and negCcy and posCcy.lower() + "_" + negCcy.lower() in trx:
                 feeCcy = negCcy
                 negAmt -= fee
             else:
                 feeCcy = posCcy
                 posAmt -= fee
 
-            rateFiatCcy = self.priceLookup.fetchPriceAmount(feeCcy, date)
+            if feeCcy:
+                rateFiatCcy = self.priceLookup.fetchPriceAmount(feeCcy, date)
             if feeCcy == posCcy:
                 posCcyCost = None
                 posCcyPrice = amount.Amount(rateFiatCcy, "CHF")
@@ -119,7 +123,7 @@ class Importer(importer.ImporterProtocol):
 
             postings = [
                 data.Posting(
-                    self.account + ":" + posCcy,
+                    self._account + ":" + posCcy,
                     amount.Amount(posAmt, posCcy),
                     posCcyCost,
                     posCcyPrice,
@@ -127,7 +131,7 @@ class Importer(importer.ImporterProtocol):
                     None,
                 ),
                 data.Posting(
-                    self.account + ":" + negCcy,
+                    self._account + ":" + negCcy,
                     amount.Amount(negAmt, negCcy),
                     negCcyCost,
                     negCcyPrice,

@@ -1,4 +1,5 @@
 import re
+from typing import Any
 
 from tariochbctools.importers.general import mt940importer
 
@@ -8,20 +9,15 @@ class RaiffeisenCHImporter(mt940importer.Importer):
 
     """To get the correct file, choose SWIFT -> 'Période prédéfinie du relevé de compte' -> Sans détails"""
 
-    def prepare_payee(self, trxdata):
+    def prepare_payee(self, trxdata: dict[str, Any]) -> str:
         return ""
 
-    def prepare_narration(self, trxdata):
+    def prepare_narration(self, trxdata: dict[str, Any]) -> str:
         extra = trxdata["extra_details"]
         details = trxdata["transaction_details"]
 
-        extraReplacements = {}
-
         detailsReplacements = {}
         detailsReplacements[r"\n"] = ", "
-
-        for pattern, replacement in extraReplacements.items():
-            extra = re.sub(pattern, replacement, extra)
 
         for pattern, replacement in detailsReplacements.items():
             details = re.sub(pattern, replacement, details)

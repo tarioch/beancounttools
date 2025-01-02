@@ -1,13 +1,14 @@
 import logging
 from datetime import timedelta
 from os import path
+from typing import Any
 
+import beangulp
 import dateutil.parser
 import requests
 import yaml
 from beancount.core import amount, data
 from beancount.core.number import D
-from beancount.ingest import importer
 
 # https://docs.truelayer.com/#retrieve-account-transactions
 
@@ -24,7 +25,7 @@ TX_OPTIONAL_META_ID_FIELDS = (
 )
 
 
-class Importer(importer.ImporterProtocol):
+class Importer(beangulp.Importer):
     """An importer for Truelayer API (e.g. for Revolut)."""
 
     def __init__(self):
@@ -33,17 +34,17 @@ class Importer(importer.ImporterProtocol):
         self.clientSecret = None
         self.refreshToken = None
         self.sandbox = None
-        self.existing_entries = None
+        self.existing = None
         self.domain = "truelayer.com"
 
-    def _configure(self, file, existing_entries):
-        with open(file.name, "r") as f:
+    def _configure(self, filepath: str, existing: data.Entries) -> None:
+        with open(filepath, "r") as f:
             self.config = yaml.safe_load(f)
         self.clientId = self.config["client_id"]
         self.clientSecret = self.config["client_secret"]
         self.refreshToken = self.config["refresh_token"]
         self.sandbox = self.clientId.startswith("sandbox")
-        self.existing_entries = existing_entries
+        self.existing = existing
 
         if self.sandbox:
             self.domain = "truelayer-sandbox.com"
@@ -51,14 +52,14 @@ class Importer(importer.ImporterProtocol):
         if "account" not in self.config and "accounts" not in self.config:
             raise KeyError("At least one of `account` or `accounts` must be specified")
 
-    def identify(self, file):
-        return path.basename(file.name).endswith("truelayer.yaml")
+    def identify(self, filepath: str) -> bool:
+        return path.basename(filepath).endswith("truelayer.yaml")
 
-    def file_account(self, file):
+    def account(self, filepath: str) -> data.Account:
         return ""
 
-    def extract(self, file, existing_entries=None):
-        self._configure(file, existing_entries)
+    def extract(self, filepath: str, existing: data.Entries = None) -> data.Entries:
+        self._configure(filepath, existing)
 
         r = requests.post(
             f"https://auth.{self.domain}/connect/token",
@@ -81,7 +82,7 @@ class Importer(importer.ImporterProtocol):
 
         return entries
 
-    def _get_account_for_account_id(self, account_id):
+    def _get_account_for_account_id(self, account_id: str) -> data.Account:
         """
         Find a matching account for the account ID.
         If the user hasn't specified any in the config, return
@@ -99,7 +100,9 @@ class Importer(importer.ImporterProtocol):
 
         return self.config["accounts"].get(account_id, None)
 
-    def _extract_endpoint_transactions(self, endpoint, headers, invert_sign=False):
+    def _extract_endpoint_transactions(
+        self, endpoint: str, headers: dict[str, str], invert_sign: bool = False
+    ) -> data.Entries:
         entries = []
         r = requests.get(
             f"https://api.{self.domain}/data/v1/{endpoint}", headers=headers
@@ -137,7 +140,13 @@ class Importer(importer.ImporterProtocol):
 
         return entries
 
-    def _extract_transaction(self, trx, local_account, transactions, invert_sign):
+    def _extract_transaction(
+        self,
+        trx: dict[str, Any],
+        local_account: data.Account,
+        transactions: list[Any],
+        invert_sign: bool,
+    ) -> data.Transaction:
         entries = []
         metakv = {}
 
@@ -187,8 +196,8 @@ class Importer(importer.ImporterProtocol):
         if trx["transaction_id"] == transactions[-1]["transaction_id"]:
             balDate = trxDate + timedelta(days=1)
             metakv = {}
-            if self.existing_entries is not None:
-                for exEntry in self.existing_entries:
+            if self.existing is not None:
+                for exEntry in self.existing:
                     if (
                         isinstance(exEntry, data.Balance)
                         and exEntry.date == balDate

@@ -1,29 +1,28 @@
+import re
+from typing import Any
+
+import beangulp
 import mt940
 from beancount.core import amount, data
 from beancount.core.number import D
-from beancount.ingest import importer
-from beancount.ingest.importers.mixins import identifier
 
 
-class Importer(identifier.IdentifyMixin, importer.ImporterProtocol):
+class Importer(beangulp.Importer):
     """An importer for MT940 files."""
 
-    def __init__(self, regexps, account):
-        identifier.IdentifyMixin.__init__(self, matchers=[("filename", regexps)])
-        self.account = account
+    def __init__(self, filepattern: str, account: data.Account):
+        self._filepattern = filepattern
+        self._account = account
 
-    def identify(self, file):
-        if file.mimetype() != "text/plain":
-            return False
+    def identify(self, filepath: str) -> bool:
+        return re.search(self._filepattern, filepath) is not None
 
-        return super().identify(file)
+    def account(self, filepath: str) -> data.Account:
+        return self._account
 
-    def file_account(self, file):
-        return self.account
-
-    def extract(self, file, existing_entries):
+    def extract(self, filepath: str, existing: data.Entries) -> data.Entries:
         entries = []
-        transactions = mt940.parse(file.contents())
+        transactions = mt940.parse(filepath)
         for trx in transactions:
             trxdata = trx.data
             ref = trxdata["bank_reference"]
@@ -31,7 +30,7 @@ class Importer(identifier.IdentifyMixin, importer.ImporterProtocol):
                 metakv = {"ref": ref}
             else:
                 metakv = None
-            meta = data.new_metadata(file.name, 0, metakv)
+            meta = data.new_metadata(filepath, 0, metakv)
             if "entry_date" in trxdata:
                 date = trxdata["entry_date"]
             else:
@@ -46,7 +45,7 @@ class Importer(identifier.IdentifyMixin, importer.ImporterProtocol):
                 data.EMPTY_SET,
                 [
                     data.Posting(
-                        self.account,
+                        self._account,
                         amount.Amount(
                             D(trxdata["amount"].amount), trxdata["amount"].currency
                         ),
@@ -61,8 +60,8 @@ class Importer(identifier.IdentifyMixin, importer.ImporterProtocol):
 
         return entries
 
-    def prepare_payee(self, trxdata):
+    def prepare_payee(self, trxdata: dict[str, Any]) -> str:
         return ""
 
-    def prepare_narration(self, trxdata):
+    def prepare_narration(self, trxdata: dict[str, Any]) -> str:
         return trxdata["transaction_details"] + " " + trxdata["extra_details"]

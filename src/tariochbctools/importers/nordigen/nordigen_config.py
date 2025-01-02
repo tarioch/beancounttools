@@ -1,21 +1,22 @@
 import argparse
 import sys
+from typing import Any
 
 import requests
 
 
-def build_header(token):
+def build_header(token: str) -> dict[str, str]:
     return {"Authorization": "Bearer " + token}
 
 
-def check_result(result):
+def check_result(result: requests.Response) -> None:
     try:
         result.raise_for_status()
     except requests.exceptions.HTTPError as e:
         raise Exception(e, e.response.text)
 
 
-def get_token(secret_id, secret_key):
+def get_token(secret_id: str, secret_key: str) -> str:
     r = requests.post(
         "https://bankaccountdata.gocardless.com/api/v2/token/new/",
         data={
@@ -28,7 +29,7 @@ def get_token(secret_id, secret_key):
     return r.json()["access"]
 
 
-def list_bank(token, country):
+def list_bank(token: str, country: str) -> None:
     r = requests.get(
         "https://bankaccountdata.gocardless.com/api/v2/institutions/",
         params={"country": country},
@@ -40,7 +41,7 @@ def list_bank(token, country):
         print(asp["name"] + ": " + asp["id"])  # noqa: T201
 
 
-def create_link(token, reference, bank):
+def create_link(token: str, reference: str, bank: str) -> None:
     if not bank:
         raise Exception("Please specify --bank it is required for create_link")
     requisitionId = _find_requisition_id(token, reference)
@@ -61,7 +62,7 @@ def create_link(token, reference, bank):
         print(f"Go to {link} for connecting to your bank.")  # noqa: T201
 
 
-def list_accounts(token):
+def list_accounts(token: str) -> None:
     headers = build_header(token)
     r = requests.get(
         "https://bankaccountdata.gocardless.com/api/v2/requisitions/", headers=headers
@@ -93,7 +94,7 @@ def list_accounts(token):
             print(f"{account}: {asp} {owner} {iban} {currency}")  # noqa: T201
 
 
-def delete_link(token, reference):
+def delete_link(token: str, reference: str) -> None:
     requisitionId = _find_requisition_id(token, reference)
     if requisitionId:
         r = requests.delete(
@@ -103,7 +104,7 @@ def delete_link(token, reference):
         check_result(r)
 
 
-def _find_requisition_id(token, userId):
+def _find_requisition_id(token: str, userId: str) -> str | None:
     headers = build_header(token)
     r = requests.get(
         "https://bankaccountdata.gocardless.com/api/v2/requisitions/", headers=headers
@@ -116,7 +117,7 @@ def _find_requisition_id(token, userId):
     return None
 
 
-def parse_args(args):
+def parse_args(args: Any) -> Any:
     parser = argparse.ArgumentParser(description="nordigen-config")
     parser.add_argument(
         "--secret_id",
@@ -154,7 +155,7 @@ def parse_args(args):
     return parser.parse_args(args)
 
 
-def main(args):
+def main(args: Any) -> None:
     args = parse_args(args)
 
     token = get_token(args.secret_id, args.secret_key)
@@ -169,6 +170,6 @@ def main(args):
         delete_link(token, args.reference)
 
 
-def run():
+def run() -> None:
     """Entry point for console_scripts"""
     main(sys.argv[1:])

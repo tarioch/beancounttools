@@ -52,4 +52,5 @@ repos:
   rev: v1.10.1
   hooks:
   -   id: mypy
-      args: [--install-types, --non-interactive, --ignore-missing-imports]
+      args: [--install-types, --non-interactive, --ignore-missing-imports, --disallow-incomplete-defs]
+#      args: [--install-types, --non-interactive, --ignore-missing-imports, --disallow-untyped-defs]
