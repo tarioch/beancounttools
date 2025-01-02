@@ -70,8 +70,13 @@ class Importer(beangulp.Importer):
         if type == 0:
             narration = "Deposit"
             if posCcy:
-                cost = data.Cost(
-                    self.priceLookup.fetchPriceAmount(posCcy, date), "CHF", None, None
+                cost = data.CostSpec(
+                    self.priceLookup.fetchPriceAmount(posCcy, date),
+                    None,
+                    "CHF",
+                    None,
+                    None,
+                    False,
                 )
             postings = [
                 data.Posting(
