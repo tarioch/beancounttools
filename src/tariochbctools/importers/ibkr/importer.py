@@ -220,7 +220,7 @@ class Importer(beangulp.Importer):
             data.Posting(
                 assetAccount,
                 amount.Amount(quantity, asset),
-                data.Cost(price, baseCcy, None, None),
+                data.CostSpec(price, None, baseCcy, None, None, False),
                 None,
                 None,
                 None,
