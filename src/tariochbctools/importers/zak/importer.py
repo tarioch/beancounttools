@@ -8,6 +8,8 @@ from beancount.core import amount, data
 from beancount.core.number import D
 from dateutil.parser import parse
 
+from tariochbctools.importers.general.deduplication import ReferenceDuplicatesComparator
+
 
 class Importer(beangulp.Importer):
     """An importer for Bank Cler ZAK PDF files files."""
@@ -127,3 +129,5 @@ class Importer(beangulp.Importer):
                 entries.append(self.createBalanceEntry(filepath, date, saldo))
 
         return entries
+
+    cmp = ReferenceDuplicatesComparator(["zakref"])

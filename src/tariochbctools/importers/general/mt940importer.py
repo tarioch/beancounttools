@@ -6,6 +6,8 @@ import mt940
 from beancount.core import amount, data
 from beancount.core.number import D
 
+from tariochbctools.importers.general.deduplication import ReferenceDuplicatesComparator
+
 
 class Importer(beangulp.Importer):
     """An importer for MT940 files."""
@@ -59,6 +61,8 @@ class Importer(beangulp.Importer):
             entries.append(entry)
 
         return entries
+
+    cmp = ReferenceDuplicatesComparator()
 
     def prepare_payee(self, trxdata: dict[str, Any]) -> str:
         return ""
