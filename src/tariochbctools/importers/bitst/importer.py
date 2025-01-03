@@ -10,6 +10,7 @@ from beancount.core.number import MISSING, D
 from dateutil.parser import parse
 from dateutil.relativedelta import relativedelta
 
+from tariochbctools.importers.general.deduplication import ReferenceDuplicatesComparator
 from tariochbctools.importers.general.priceLookup import PriceLookup
 
 
@@ -166,3 +167,5 @@ class Importer(beangulp.Importer):
         return data.Transaction(
             meta, date, "*", "", narration, data.EMPTY_SET, data.EMPTY_SET, postings
         )
+
+    cmp = ReferenceDuplicatesComparator()

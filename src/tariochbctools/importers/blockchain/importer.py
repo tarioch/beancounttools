@@ -6,6 +6,7 @@ import yaml
 from beancount.core import amount, data
 from beancount.core.number import D
 
+from tariochbctools.importers.general.deduplication import ReferenceDuplicatesComparator
 from tariochbctools.importers.general.priceLookup import PriceLookup
 
 
@@ -66,3 +67,5 @@ class Importer(beangulp.Importer):
                 entries.append(entry)
 
         return entries
+
+    cmp = ReferenceDuplicatesComparator()

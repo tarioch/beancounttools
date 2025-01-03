@@ -7,6 +7,8 @@ import yaml
 from beancount.core import amount, data
 from beancount.core.number import D
 
+from tariochbctools.importers.general.deduplication import ReferenceDuplicatesComparator
+
 
 class HttpServiceException(Exception):
     pass
@@ -105,3 +107,5 @@ class Importer(beangulp.Importer):
                 entries.append(entry)
 
         return entries
+
+    cmp = ReferenceDuplicatesComparator(["nordref"])

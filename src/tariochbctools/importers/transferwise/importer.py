@@ -15,6 +15,8 @@ from beancount.core import amount, data
 from beancount.core.number import D
 from dateutil.relativedelta import relativedelta
 
+from tariochbctools.importers.general.deduplication import ReferenceDuplicatesComparator
+
 http = urllib3.PoolManager()
 
 
@@ -183,3 +185,5 @@ class Importer(beangulp.Importer):
                 entries.append(entry)
 
         return entries
+
+    cmp = ReferenceDuplicatesComparator()
