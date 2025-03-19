@@ -6,7 +6,7 @@ from beancount import loader
 from beancount.parser import printer
 
 
-@pytest.mark.parametrize("testCase", ["normal", "missing_fx", "entry_already_exists"])
+@pytest.mark.parametrize("testCase", ["normal", "missing_fx", "entry_already_exists", "issue122"])
 def test_data(testCase):
     dataDir = os.path.join(
         os.path.dirname(__file__), "data", "generate_base_ccy_prices"
