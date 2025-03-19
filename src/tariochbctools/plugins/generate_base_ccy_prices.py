@@ -13,7 +13,11 @@ def generate(entries, options_map, baseCcy):
 
     additionalEntries = []
     for entry in entries:
-        if isinstance(entry, data.Price) and entry.amount.currency != baseCcy and entry.currency != baseCcy:
+        if (
+            isinstance(entry, data.Price)
+            and entry.amount.currency != baseCcy
+            and entry.currency != baseCcy
+        ):
             fxTuple = tuple([entry.amount.currency, baseCcy])
             fxRate = prices.get_price(priceMap, fxTuple, entry.date)
             if fxRate[1] and not _alreadyExistingPrice(
