@@ -1,2 +1,1 @@
-"""Beancount plugins.
-"""
+"""Beancount plugins."""
