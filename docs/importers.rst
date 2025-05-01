@@ -432,3 +432,14 @@ Import Fidelity Netbenefits `<https://netbenefits.fidelity.com/>` transactions f
           baseCcy="CHF",
       )
   ]
+
+radicant account statements
+---------------------------
+
+Import PDF from `radicant <https://radicant.com/>`__
+
+.. code-block:: python
+
+  from tariochbctools.importers.radicant import importer as radicant
+
+  CONFIG = [radicant.Importer("Account.*\.pdf", "Assets:Radicant")]
