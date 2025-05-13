@@ -40,7 +40,7 @@ class Importer(beangulp.Importer):
 
                 date = trx["confirmed"].date()
                 price = priceLookup.fetchPriceAmount(currency, date)
-                cost = data.CostSpec(price, None, baseCcy, None, None, None, False)
+                cost = data.CostSpec(price, None, baseCcy, None, None, False)
 
                 outputType = "ether" if currency.lower() == "eth" else "btc"
                 amt = blockcypher.from_base_unit(trx["value"], outputType)
