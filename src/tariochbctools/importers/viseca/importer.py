@@ -60,7 +60,7 @@ class Importer(beangulp.Importer):
             filepath,
             flavor="stream",
             pages="1",
-            table_regions=["65,450,585,50"],
+            table_areas=["65,435,585,100"],
             columns=columns,
             split_text=True,
         )
@@ -68,7 +68,7 @@ class Importer(beangulp.Importer):
             filepath,
             flavor="stream",
             pages="2-end",
-            table_regions=["65,650,585,50"],
+            table_areas=["65,670,585,100"],
             columns=columns,
             split_text=True,
         )
