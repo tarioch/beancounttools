@@ -73,7 +73,10 @@ class Importer(beangulp.Importer):
             flavor="stream",
             pages="all",
             table_regions=["40,470,580,32"],
-            columns=["80,300,370,440,500"],
+            columns=["110,300,370,440,500"],
+            strip_text="\n",
+            layout_kwargs={"word_margin": 0.50},
+            split_text=True,
         )
 
         for table in tables:
