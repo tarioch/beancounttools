@@ -27,7 +27,7 @@ def account_details(client, account_id):
 
 
 def get_link_url(client):
-    connection_url = client.get_get_link_url(
+    connection_url = client.get_connection_link(
         platform="desktop",
         access_level=AccessLevel.READ_ALL_EXCEPT_PASSWORDS,
         state=str(uuid.uuid4()),
@@ -63,6 +63,7 @@ def generate(client):
 
         config["users"][user_id] = {
             "name": user["userName"],
+            "all_history": False,
             "accounts": account_config,
         }
 

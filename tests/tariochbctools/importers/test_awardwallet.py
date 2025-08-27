@@ -3,7 +3,7 @@ import json
 import pytest
 from beancount.core.number import D
 
-from tariochbctools.importers.awardwallet import importer as awimp
+from tariochbctools.importers.awardwalletimp import importer as awimp
 
 # pylint: disable=protected-access
 
@@ -25,22 +25,22 @@ TEST_TRX = b"""
         {
           "name": "Transaction Date",
           "code": "PostingDate",
-          "value": "9/30/12"
+          "value": {"value": "9/30/12", "type": "string"}
         },
         {
           "name": "Description",
           "code": "Description",
-          "value": "Expired Points"
+          "value": {"value": "Expired Points", "type": "string"}
         },
         {
           "name": "Type",
           "code": "Info",
-          "value": "Adjustments"
+          "value": {"value": "Adjustments", "type": "string"}
         },
         {
           "name": "Points",
           "code": "Miles",
-          "value": "-1,042"
+          "value": {"value": "-1,042", "type": "miles"}
         }
       ]
     }
@@ -83,49 +83,49 @@ TEST_USER_DETAILS = b"""
           "properties": [
             {
               "name": "Next Elite Level",
-              "value": "Bronze",
+              "value": {"value": "Bronze", "type": "string"},
               "kind": 9
             },
             {
               "name": "Date of joining the club",
-              "value": "20 Jun 2013",
+              "value": {"value": "20 Jun 2013", "type": "string"},
               "kind": 5
             },
             {
               "name": "Lifetime Tier Points",
-              "value": "35,000"
+              "value": {"value": "35,000", "type": "string"}
             },
             {
               "name": "Executive Club Tier Points",
-              "value": "35,000"
+              "value": {"value": "35,000", "type": "string"}
             },
             {
               "name": "Card expiry date",
-              "value": "31 Mar 2017"
+              "value": {"value": "31 Mar 2017", "type": "string"}
             },
             {
               "name": "Membership year ends",
-              "value": "08 Feb 2016"
+              "value": {"value": "08 Feb 2016", "type": "string"}
             },
             {
               "name": "Last Activity",
-              "value": "10-Dec-15",
+              "value": {"value": "10-Dec-15", "type": "string"},
               "kind": 13
             },
             {
               "name": "Name",
-              "value": "Mr Smith",
+              "value": {"value": "Mr Smith", "type": "string"},
               "kind": 12
             },
             {
               "name": "Level",
-              "value": "Blue",
+              "value": {"value": "Blue", "type": "string"},
               "rank": 0,
               "kind": 3
             },
             {
               "name": "Membership no",
-              "value": "1122334455",
+              "value": {"value": "1122334455", "type": "string"},
               "kind": 1
             }
           ],
@@ -135,22 +135,22 @@ TEST_USER_DETAILS = b"""
                 {
                   "name": "Transaction Date",
                   "code": "PostingDate",
-                  "value": "3/31/14"
+                  "value": {"value": "3/31/14", "type": "string"}
                 },
                 {
                   "name": "Description",
                   "code": "Description",
-                  "value": "Expired Points"
+                  "value": {"value": "Expired Points", "type": "string"}
                 },
                 {
                   "name": "Type",
                   "code": "Info",
-                  "value": "Adjustments"
+                  "value": {"value": "Adjustments", "type": "string"}
                 },
                 {
                   "name": "Points",
                   "code": "Miles",
-                  "value": "-100"
+                  "value": {"value": "-100", "type": "miles"}
                 }
               ]
             },
@@ -159,22 +159,22 @@ TEST_USER_DETAILS = b"""
                 {
                   "name": "Transaction Date",
                   "code": "PostingDate",
-                  "value": "12/11/13"
+                  "value": {"value": "12/11/13", "type": "string"}
                 },
                 {
                   "name": "Description",
                   "code": "Description",
-                  "value": "Google Wallet"
+                  "value": {"value": "Google Wallet", "type": "string"}
                 },
                 {
                   "name": "Type",
                   "code": "Info",
-                  "value": "Other Earning"
+                  "value": {"value": "Other Earning", "type": "string"}
                 },
                 {
                   "name": "Points",
                   "code": "Miles",
-                  "value": "+100"
+                  "value": {"value": "+100", "type": "miles"}
                 }
               ]
             },
@@ -183,22 +183,22 @@ TEST_USER_DETAILS = b"""
                 {
                   "name": "Transaction Date",
                   "code": "PostingDate",
-                  "value": "9/30/12"
+                  "value": {"value": "9/30/12", "type": "string"}
                 },
                 {
                   "name": "Description",
                   "code": "Description",
-                  "value": "Expired Points"
+                  "value": {"value": "Expired Points", "type": "string"}
                 },
                 {
                   "name": "Type",
                   "code": "Info",
-                  "value": "Adjustments"
+                  "value": {"value": "Adjustments", "type": "string"}
                 },
                 {
                   "name": "Points",
                   "code": "Miles",
-                  "value": "-1,042"
+                  "value": {"value": "-1,042", "type": "miles"}
                 }
               ]
             }
@@ -246,7 +246,7 @@ def tmp_trx_fixture():
 
 @pytest.fixture(name="tmp_user_details")
 def tmp_user_details_fixture():
-    yield json.loads(TEST_USER_DETAILS)
+    yield json.loads(TEST_USER_DETAILS, strict=False)
 
 
 def test_identify(importer, tmp_config):
@@ -255,7 +255,9 @@ def test_identify(importer, tmp_config):
 
 def test_extract_transaction_simple(importer, tmp_trx):
     entries = importer._extract_transaction(tmp_trx, "Assets:Other", "POINTS")
-    assert entries[0].postings[0].units.number == D(tmp_trx["fields"][3]["value"])
+    assert entries[0].postings[0].units.number == D(
+        tmp_trx["fields"][3]["value"]["value"]
+    )
 
 
 def test_extract_account(importer, tmp_user_details):

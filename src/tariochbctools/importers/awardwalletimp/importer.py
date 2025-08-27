@@ -1,3 +1,4 @@
+import logging
 from os import path
 from typing import Any
 
@@ -44,6 +45,8 @@ class Importer(beangulp.Importer):
                     entries.extend(
                         self._extract_transaction(trx, local_account, currency)
                     )
+            else:
+                logging.warning("Ignoring account ID %s", account["accountId"])
         return entries
 
     def _extract_transaction(
@@ -59,11 +62,11 @@ class Importer(beangulp.Importer):
 
         for f in trx.get("fields", []):
             if f["code"] == "PostingDate":
-                trx_date = dateutil.parser.parse(f["value"]).date()
+                trx_date = dateutil.parser.parse(f["value"]["value"]).date()
             if f["code"] == "Description":
-                trx_description = f["value"]
+                trx_description = f["value"]["value"]
             if f["code"] == "Miles":
-                trx_amount = D(f["value"])
+                trx_amount = D(f["value"]["value"])
 
         entry = data.Transaction(
             {},
