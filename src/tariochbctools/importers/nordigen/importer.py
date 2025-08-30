@@ -28,7 +28,7 @@ class Importer(beangulp.Importer):
             config = yaml.safe_load(f)
 
         r = requests.post(
-            "https://ob.nordigen.com/api/v2/token/new/",
+            "https://bankaccountdata.gocardless.com/api/v2/token/new/",
             data={
                 "secret_id": config["secret_id"],
                 "secret_key": config["secret_key"],
@@ -47,7 +47,7 @@ class Importer(beangulp.Importer):
             accountId = account["id"]
             assetAccount = account["asset_account"]
             r = requests.get(
-                f"https://ob.nordigen.com/api/v2/accounts/{accountId}/transactions/",
+                f"https://bankaccountdata.gocardless.com/api/v2/accounts/{accountId}/transactions/",
                 headers=headers,
             )
             try:
