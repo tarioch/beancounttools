@@ -1,5 +1,6 @@
 import argparse
 import sys
+from json import JSONDecoder
 from typing import Any
 
 import requests
@@ -41,24 +42,45 @@ def list_bank(token: str, country: str) -> None:
         print(asp["name"] + ": " + asp["id"])  # noqa: T201
 
 
-def create_link(token: str, reference: str, bank: str) -> None:
+def create_link(
+    token: str,
+    reference: str,
+    bank: str,
+    max_historical_days: str,
+    access_valid_for_days: str,
+    access_scope: str,
+) -> None:
     if not bank:
         raise Exception("Please specify --bank it is required for create_link")
     requisitionId = _find_requisition_id(token, reference)
     if requisitionId:
         print(f"Link for for reference {reference} already exists.")  # noqa: T201
     else:
-        r = requests.post(
+        decoder = JSONDecoder()
+        r1 = requests.post(
+            "https://bankaccountdata.gocardless.com/api/v2/agreements/enduser/",
+            data={
+                "institution_id": bank,
+                "max_historical_days": max_historical_days,
+                "access_valid_for_days": access_valid_for_days,
+                "access_scope": decoder.decode(access_scope),
+            },
+            headers=build_header(token),
+        )
+        check_result(r1)
+        agreement_id = r1.json()["id"]
+        r2 = requests.post(
             "https://bankaccountdata.gocardless.com/api/v2/requisitions/",
             data={
                 "redirect": "http://localhost",
+                "agreement": agreement_id,
                 "institution_id": bank,
                 "reference": reference,
             },
             headers=build_header(token),
         )
-        check_result(r)
-        link = r.json()["link"]
+        check_result(r2)
+        link = r2.json()["link"]
         print(f"Go to {link} for connecting to your bank.")  # noqa: T201
 
 
@@ -137,11 +159,26 @@ def parse_args(args: Any) -> Any:
     parser.add_argument(
         "--reference",
         default="beancount",
-        help="reference for add_bank and delete_bank, needs to be unique",
+        help="reference for create_link and delete_link, needs to be unique",
     )
     parser.add_argument(
         "--bank",
         help="Bank to connect to, see list_banks",
+    )
+    parser.add_argument(
+        "--max_historical_days",
+        default="90",
+        help="the length of the transaction history to be retrieved",
+    )
+    parser.add_argument(
+        "--access_valid_for_days",
+        default="90",
+        help="the length of days while the access to account is valid, must be > 0 and <= 90",
+    )
+    parser.add_argument(
+        "--access_scope",
+        default='["balances", "details", "transactions"]',
+        help="the scope of information",
     )
     parser.add_argument(
         "mode",
@@ -163,7 +200,14 @@ def main(args: Any) -> None:
     if args.mode == "list_banks":
         list_bank(token, args.country)
     elif args.mode == "create_link":
-        create_link(token, args.reference, args.bank)
+        create_link(
+            token,
+            args.reference,
+            args.bank,
+            args.max_historical_days,
+            args.access_valid_for_days,
+            args.access_scope,
+        )
     elif args.mode == "list_accounts":
         list_accounts(token)
     elif args.mode == "delete_link":
