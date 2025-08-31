@@ -182,7 +182,7 @@ all be listed in the end.
 .. code-block:: console
 
   nordigen-conf list_banks --secret_id YOURSECRET_ID --secret_key YOURSECRET_KEY --country DE
-  nordigen-conf create_link --secret_id YOURSECRET_ID --secret_key YOURSECRET_KEY --bank REVOLUT_REVOGB21 --reference myref
+  nordigen-conf create_link --secret_id YOURSECRET_ID --secret_key YOURSECRET_KEY --bank REVOLUT_REVOGB21 --reference myref --max_historical_days 90 --access_valid_for_days 90 --access_scope "[\"balances\", \"details\", \"transactions\"]"
   nordigen-conf list_accounts --secret_id YOURSECRET_ID --secret_key YOURSECRET_KEY
   nordigen-conf delete_link --secret_id YOURSECRET_ID --secret_key YOURSECRET_KEY --reference myref
 
