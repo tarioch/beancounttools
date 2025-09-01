@@ -31,22 +31,66 @@ class Importer(beangulp.Importer):
 
         for user_id, user in self.config["users"].items():
             user_details = client.get_connected_user_details(user_id)
-            entries.extend(self._extract_account(user, user_details))
 
-    def _extract_account(self, user: dict, user_details: dict) -> data.Account:
+            if user.get("all_history", False):
+                entries.extend(self._extract_account_history(user, client))
+            else:
+                entries.extend(self._extract_user_history(user, user_details))
+
+        return entries
+
+    def _extract_user_history(
+        self, user: dict, user_details: dict
+    ) -> list[data.Transaction]:
+        """
+        User history is limited to the last 10 history elements per account
+        """
         entries = []
         for account in user_details["accounts"]:
-            if account["accountId"] in user["accounts"]:
-                account_config = user["accounts"][account["accountId"]]
-                for trx in account["history"]:
-                    local_account = account_config["account"]
-                    currency = account_config["currency"]
+            account_id = account["accountId"]
 
+            if account_id in user["accounts"]:
+                logging.info("Extracting account ID %s", account_id)
+                account_config = user["accounts"][account_id]
+                local_account = account_config["account"]
+                currency = account_config["currency"]
+
+                logging.debug(
+                    "Extracting %i transactions for account %s",
+                    len(account["history"]),
+                    account_id,
+                )
+                for trx in account["history"]:
                     entries.extend(
-                        self._extract_transaction(trx, local_account, currency)
+                        self._extract_transaction(
+                            trx, local_account, currency, account_id
+                        )
                     )
             else:
-                logging.warning("Ignoring account ID %s", account["accountId"])
+                logging.warning(
+                    "Ignoring account ID %s: %s", account_id, account["displayName"]
+                )
+        return entries
+
+    def _extract_account_history(
+        self, user: dict, client: AwardWalletAPI
+    ) -> list[data.Transaction]:
+        entries = []
+        for account_id, account_config in user["accounts"].items():
+            logging.info("Extracting account ID %s", account_id)
+            account = client.get_account_details(account_id)["account"]
+            local_account = account_config["account"]
+            currency = account_config["currency"]
+
+            logging.debug(
+                "Extracting %i transactions for account %s",
+                len(account["history"]),
+                account_id,
+            )
+            for trx in account["history"]:
+                entries.extend(
+                    self._extract_transaction(trx, local_account, currency, account_id)
+                )
         return entries
 
     def _extract_transaction(
@@ -54,8 +98,11 @@ class Importer(beangulp.Importer):
         trx: dict[str, Any],
         local_account: data.Account,
         currency: str,
-    ) -> data.Transaction:
+        account_id: str,
+    ) -> list[data.Transaction]:
         entries = []
+        metakv = {"account-id": str(account_id)}
+
         trx_date = None
         trx_description = None
         trx_amount = None
@@ -64,12 +111,20 @@ class Importer(beangulp.Importer):
             if f["code"] == "PostingDate":
                 trx_date = dateutil.parser.parse(f["value"]["value"]).date()
             if f["code"] == "Description":
-                trx_description = f["value"]["value"]
+                trx_description = f["value"]["value"].replace("\n", " ")
             if f["code"] == "Miles":
                 trx_amount = D(f["value"]["value"])
+            if f["code"] == "Info":
+                name = f["name"].lower().replace(" ", "-")
+                metakv[name] = f["value"]["value"].replace("\n", " ")
 
+        assert trx_date
+        assert trx_description
+        assert trx_amount is not None, f"No amount in trx: {trx}"
+
+        meta = data.new_metadata("", 0, metakv)
         entry = data.Transaction(
-            {},
+            meta,
             trx_date,
             "*",
             "",

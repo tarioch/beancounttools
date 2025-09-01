@@ -12,6 +12,7 @@ TEST_CONFIG = b"""
     users:
       12345:
         name: John Smith
+        all_history: false
         accounts:
           7654321:
             provider: "British Airways Club"
@@ -254,15 +255,15 @@ def test_identify(importer, tmp_config):
 
 
 def test_extract_transaction_simple(importer, tmp_trx):
-    entries = importer._extract_transaction(tmp_trx, "Assets:Other", "POINTS")
+    entries = importer._extract_transaction(tmp_trx, "Assets:Other", "POINTS", 7654321)
     assert entries[0].postings[0].units.number == D(
         tmp_trx["fields"][3]["value"]["value"]
     )
 
 
-def test_extract_account(importer, tmp_user_details):
-    entries = importer._extract_account(
+def test_extract_user_history(importer, tmp_user_details):
+    entries = importer._extract_user_history(
         importer.config["users"][12345],
         tmp_user_details,
     )
-    assert entries
+    assert len(entries) == 3
