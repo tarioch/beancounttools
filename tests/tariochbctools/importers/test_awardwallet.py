@@ -1,4 +1,5 @@
 import json
+from unittest.mock import MagicMock, patch
 
 import pytest
 from beancount.core.number import D
@@ -10,7 +11,7 @@ from tariochbctools.importers.awardwalletimp import importer as awimp
 TEST_CONFIG = b"""
     api_key: deadc0dedeadc0dedeadc0dedeadc0de
     users:
-      12345:
+      12:
         name: John Smith
         all_history: false
         accounts:
@@ -18,6 +19,14 @@ TEST_CONFIG = b"""
             provider: "British Airways Club"
             account: Assets:Current:Points
             currency: AVIOS
+          6543210:
+            provider: "Virgin Atlantic Club"
+            account: Assets:Current:Points
+            currency: VIRGINPTS
+      34:
+        name: User with dummy account
+        accounts:
+          0:
 """
 
 TEST_TRX = b"""
@@ -49,7 +58,7 @@ TEST_TRX = b"""
 
 TEST_USER_DETAILS = b"""
     {
-      "userId": 12345,
+      "userId": 12,
       "fullName": "John Smith",
       "status": "Free",
       "userName": "JSmith",
@@ -204,6 +213,26 @@ TEST_USER_DETAILS = b"""
               ]
             }
           ]
+        },
+        {
+          "accountId": 6543210,
+          "code": "virgin",
+          "displayName": "Virgin Atlantic (Flying Club)",
+          "kind": "Airlines",
+          "balance": "146,780",
+          "balanceRaw": 146780,
+          "owner": "John Smith",
+          "errorCode": 1,
+          "lastDetectedChange": "+750",
+          "properties": [
+            {
+              "name": "Next Elite Level",
+              "value": {"value": "Bronze", "type": "string"},
+              "kind": 9
+            }
+          ],
+          "history": [
+          ]
         }
       ]
     }
@@ -263,7 +292,24 @@ def test_extract_transaction_simple(importer, tmp_trx):
 
 def test_extract_user_history(importer, tmp_user_details):
     entries = importer._extract_user_history(
-        importer.config["users"][12345],
+        importer.config["users"][12],
         tmp_user_details,
     )
     assert len(entries) == 3
+
+
+@patch("tariochbctools.importers.awardwalletimp.importer.AwardWalletAPI")
+def test_extract_all_users(mock_api, importer, tmp_config, tmp_user_details):
+    importer._extract_user_history = MagicMock()
+
+    importer.extract(tmp_config)
+    assert importer._extract_user_history.call_count == 2
+
+
+@patch("tariochbctools.importers.awardwalletimp.importer.AwardWalletAPI")
+def test_extract_all_accounts(mock_api, importer, tmp_config, tmp_user_details):
+    importer._extract_transactions = MagicMock()
+    mock_api.return_value.get_connected_user_details.return_value = tmp_user_details
+
+    importer.extract(tmp_config)
+    assert importer._extract_transactions.call_count == 2

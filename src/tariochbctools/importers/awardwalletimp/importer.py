@@ -32,10 +32,16 @@ class Importer(beangulp.Importer):
         for user_id, user in self.config["users"].items():
             user_details = client.get_connected_user_details(user_id)
 
-            if user.get("all_history", False):
-                entries.extend(self._extract_account_history(user, client))
+            if user.get("accounts"):
+                if user.get("all_history", False):
+                    entries.extend(self._extract_account_history(user, client))
+                else:
+                    entries.extend(self._extract_user_history(user, user_details))
             else:
-                entries.extend(self._extract_user_history(user, user_details))
+                logging.warning(
+                    "Ignoring user ID %s: no accounts configured",
+                    user_id,
+                )
 
         return entries
 
@@ -52,20 +58,12 @@ class Importer(beangulp.Importer):
             if account_id in user["accounts"]:
                 logging.info("Extracting account ID %s", account_id)
                 account_config = user["accounts"][account_id]
-                local_account = account_config["account"]
-                currency = account_config["currency"]
 
-                logging.debug(
-                    "Extracting %i transactions for account %s",
-                    len(account["history"]),
-                    account_id,
-                )
-                for trx in account["history"]:
-                    entries.extend(
-                        self._extract_transaction(
-                            trx, local_account, currency, account_id
-                        )
+                entries.extend(
+                    self._extract_transactions(
+                        account["history"], account_config, account_id
                     )
+                )
             else:
                 logging.warning(
                     "Ignoring account ID %s: %s", account_id, account["displayName"]
@@ -79,18 +77,34 @@ class Importer(beangulp.Importer):
         for account_id, account_config in user["accounts"].items():
             logging.info("Extracting account ID %s", account_id)
             account = client.get_account_details(account_id)["account"]
-            local_account = account_config["account"]
-            currency = account_config["currency"]
 
-            logging.debug(
-                "Extracting %i transactions for account %s",
-                len(account["history"]),
-                account_id,
-            )
-            for trx in account["history"]:
-                entries.extend(
-                    self._extract_transaction(trx, local_account, currency, account_id)
+            entries.extend(
+                self._extract_transactions(
+                    account["history"], account_config, account_id
                 )
+            )
+        return entries
+
+    def _extract_transactions(
+        self,
+        history: list,
+        account_config: dict,
+        account_id: str,
+    ) -> list[data.Transaction]:
+        local_account = account_config["account"]
+        currency = account_config["currency"]
+
+        logging.debug(
+            "Extracting %i transactions for account %s",
+            len(history),
+            account_id,
+        )
+
+        entries = []
+        for trx in history:
+            entries.extend(
+                self._extract_transaction(trx, local_account, currency, account_id)
+            )
         return entries
 
     def _extract_transaction(
