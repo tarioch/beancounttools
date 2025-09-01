@@ -443,3 +443,52 @@ Import PDF from `radicant <https://radicant.com/>`__
   from tariochbctools.importers.radicant import importer as radicant
 
   CONFIG = [radicant.Importer("Account.*\.pdf", "Assets:Radicant")]
+
+AwardWallet
+------------------------------
+
+Import from `AwardWallet <https://awardwallet.com/>`__ using their `Account Access API <https://awardwallet.com/api/account>`__.
+
+As of 2025 AwardWallet integrates over 460 airline, hotel, shopping and other loyalty programmes.
+
+Follow the instructions in the `API documentation <https://awardwallet.com/api/account#introduction>`__ to register for a free Business account and create an API key.
+
+The API key is restricted to the **allowed IP addresses** you specify in the Business interface API Settings.
+
+Link and authorize personal accounts using the included ``awardwallet-conf`` CLI tool:
+
+.. code-block:: console
+
+  awardwallet-conf --api-key YOUR_API_KEY get_link_url
+
+
+Generate a config file for all linked users called (or ending with) ``awardwallet.yaml`` in your import location (e.g. download folder) and edit it to your needs.
+Note that not all providers support retrieval of transaction history.
+
+.. code-block:: console
+
+  awardwallet-conf --api-key YOUR_API_KEY generate
+
+Example configuration file:
+
+.. code-block:: yaml
+
+  api_key: YOUR_API_KEY
+  users:
+    12345:
+      name: John Smith
+      all_history: false
+      accounts:
+        7654321:
+          provider: "British Airways Club"
+          account: Assets:Current:Points
+          currency: AVIOS
+
+
+Finally, initialize the importer:
+
+.. code-block:: python
+
+  from tariochbctools.importers.awardwalletimp import importer as awimp
+
+  CONFIG = [awimp.Importer()]
