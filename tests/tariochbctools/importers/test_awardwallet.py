@@ -298,7 +298,7 @@ def test_extract_user_history(importer, tmp_user_details):
     assert len(entries) == 3
 
 
-@patch("tariochbctools.importers.awardwalletimp.importer.AwardWalletAPI")
+@patch("tariochbctools.importers.awardwalletimp.importer.AwardWalletClient")
 def test_extract_all_users(mock_api, importer, tmp_config, tmp_user_details):
     importer._extract_user_history = MagicMock()
 
@@ -306,7 +306,7 @@ def test_extract_all_users(mock_api, importer, tmp_config, tmp_user_details):
     assert importer._extract_user_history.call_count == 2
 
 
-@patch("tariochbctools.importers.awardwalletimp.importer.AwardWalletAPI")
+@patch("tariochbctools.importers.awardwalletimp.importer.AwardWalletClient")
 def test_extract_all_accounts(mock_api, importer, tmp_config, tmp_user_details):
     importer._extract_transactions = MagicMock()
     mock_api.return_value.get_connected_user_details.return_value = tmp_user_details

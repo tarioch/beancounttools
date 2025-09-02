@@ -5,7 +5,7 @@ from typing import Any
 import beangulp
 import dateutil.parser
 import yaml
-from awardwallet.api import AwardWalletAPI
+from awardwallet import AwardWalletClient
 from beancount.core import amount, data
 from beancount.core.number import D
 
@@ -26,7 +26,7 @@ class Importer(beangulp.Importer):
 
     def extract(self, filepath: str, existing: data.Entries = None) -> data.Entries:
         self._configure(filepath, existing)
-        client = AwardWalletAPI(self.api_key)
+        client = AwardWalletClient(self.api_key)
         entries = []
 
         for user_id, user in self.config["users"].items():
@@ -71,7 +71,7 @@ class Importer(beangulp.Importer):
         return entries
 
     def _extract_account_history(
-        self, user: dict, client: AwardWalletAPI
+        self, user: dict, client: AwardWalletClient
     ) -> list[data.Transaction]:
         entries = []
         for account_id, account_config in user["accounts"].items():

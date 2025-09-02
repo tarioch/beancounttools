@@ -1,29 +1,11 @@
 import argparse
-import json
 import sys
 import uuid
 from typing import Any
 
 import yaml
-from awardwallet.api import (
-    AccessLevel,
-    AwardWalletAPI,
-    ProviderKind,
-)
-
-
-def list_users(client):
-    connected_users = client.list_connected_users()
-    users = {}
-    for user in connected_users:
-        users[user["userId"]] = user["userName"]
-
-    yaml.dump(users, sys.stdout, sort_keys=False)
-
-
-def account_details(client, account_id):
-    account_details = client.get_account_details(account_id)
-    print(json.dumps(account_details, indent=2))  # noqa: T201
+from awardwallet import AwardWalletClient
+from awardwallet.api import AccessLevel
 
 
 def get_link_url(client):
@@ -33,7 +15,8 @@ def get_link_url(client):
         state=str(uuid.uuid4()),
     )
     print(  # noqa: T201
-        "Redirect your user to this URL to authorize the connection (expires in 10 minutes):"
+        "Redirect your user to this URL to authorize the connection."
+        "\nThis link expires in 10 minutes:"
     )
     print(connection_url)  # noqa: T201
 
@@ -70,60 +53,35 @@ def generate(client):
     yaml.dump(config, sys.stdout, sort_keys=False)
 
 
-def list_providers(client):
-    providers = client.list_providers()
-
-    providers_filtered = {
-        p["code"]: {
-            "displayName": p["displayName"],
-            "kind": ProviderKind(p["kind"]).name,
-        }
-        for p in sorted(providers, key=lambda d: d["displayName"])
-    }
-
-    yaml.dump(providers_filtered, sys.stdout, sort_keys=False, allow_unicode=True)
-
-
 def parse_args(args: Any) -> Any:
     parser = argparse.ArgumentParser(description="awardwallet-config")
+    sub_parsers = parser.add_subparsers(dest="mode", required=True)
+
     parser.add_argument(
         "--api-key",
         required=True,
         help="API key, can be generated on AwardWallet Business interface",
     )
-    parser.add_argument(
-        "--account-id",
-        required=False,
-        help="Account ID for account-specific operations",
+
+    sub_parsers.add_parser(
+        "get_link_url", help="Generate a connection link URL for user authorization"
     )
-    parser.add_argument(
-        "mode",
-        choices=[
-            "get_link_url",
-            "generate",
-            "list_providers",
-            "list_users",
-            "account_details",
-        ],
+    sub_parsers.add_parser(
+        "generate", help="Generate a configuration template for connected users"
     )
+
     return parser.parse_args(args)
 
 
 def main(args: Any) -> None:
     args = parse_args(args)
 
-    client = AwardWalletAPI(args.api_key)
+    client = AwardWalletClient(args.api_key)
 
     if args.mode == "get_link_url":
         get_link_url(client)
     elif args.mode == "generate":
         generate(client)
-    elif args.mode == "list_providers":
-        list_providers(client)
-    elif args.mode == "list_users":
-        list_users(client)
-    elif args.mode == "account_details":
-        account_details(client, args.account_id)
 
 
 def run() -> None:
