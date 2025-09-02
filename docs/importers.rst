@@ -467,7 +467,7 @@ Note that not all providers support retrieval of transaction history.
 
 .. code-block:: console
 
-  awardwallet-conf --api-key YOUR_API_KEY generate
+  awardwallet-conf --api-key YOUR_API_KEY generate > awardwallet.yaml
 
 Example configuration file:
 
