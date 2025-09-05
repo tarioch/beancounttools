@@ -2,6 +2,7 @@ import json
 from unittest.mock import MagicMock, patch
 
 import pytest
+from awardwallet import model
 from beancount.core.number import D
 
 from tariochbctools.importers.awardwalletimp import importer as awimp
@@ -93,49 +94,49 @@ TEST_USER_DETAILS = b"""
           "properties": [
             {
               "name": "Next Elite Level",
-              "value": {"value": "Bronze", "type": "string"},
+              "value": "Bronze",
               "kind": 9
             },
             {
               "name": "Date of joining the club",
-              "value": {"value": "20 Jun 2013", "type": "string"},
+              "value": "20 Jun 2013",
               "kind": 5
             },
             {
               "name": "Lifetime Tier Points",
-              "value": {"value": "35,000", "type": "string"}
+              "value": "35,000"
             },
             {
               "name": "Executive Club Tier Points",
-              "value": {"value": "35,000", "type": "string"}
+              "value": "35,000"
             },
             {
               "name": "Card expiry date",
-              "value": {"value": "31 Mar 2017", "type": "string"}
+              "value": "31 Mar 2017"
             },
             {
               "name": "Membership year ends",
-              "value": {"value": "08 Feb 2016", "type": "string"}
+              "value": "08 Feb 2016"
             },
             {
               "name": "Last Activity",
-              "value": {"value": "10-Dec-15", "type": "string"},
+              "value": "10-Dec-15",
               "kind": 13
             },
             {
               "name": "Name",
-              "value": {"value": "Mr Smith", "type": "string"},
+              "value": "Mr Smith",
               "kind": 12
             },
             {
               "name": "Level",
-              "value": {"value": "Blue", "type": "string"},
+              "value": "Blue",
               "rank": 0,
               "kind": 3
             },
             {
               "name": "Membership no",
-              "value": {"value": "1122334455", "type": "string"},
+              "value": "1122334455",
               "kind": 1
             }
           ],
@@ -219,6 +220,10 @@ TEST_USER_DETAILS = b"""
           "code": "virgin",
           "displayName": "Virgin Atlantic (Flying Club)",
           "kind": "Airlines",
+          "login": "johnsmith",
+          "autologinUrl": "https://business.awardwallet.com/account/redirect?ID=7654321",
+          "updateUrl": "https://business.awardwallet.com/account/edit/7654321?autosubmit=1",
+          "editUrl": "https://business.awardwallet.com/account/edit/7654321",
           "balance": "146,780",
           "balanceRaw": 146780,
           "owner": "John Smith",
@@ -227,7 +232,7 @@ TEST_USER_DETAILS = b"""
           "properties": [
             {
               "name": "Next Elite Level",
-              "value": {"value": "Bronze", "type": "string"},
+              "value": "Bronze",
               "kind": 9
             }
           ],
@@ -271,12 +276,14 @@ def awardwallet_importer_factory(tmp_path):
 
 @pytest.fixture(name="tmp_trx")
 def tmp_trx_fixture():
-    yield json.loads(TEST_TRX)
+    j = json.loads(TEST_TRX, strict=False)
+    yield model.HistoryItem(**j)
 
 
 @pytest.fixture(name="tmp_user_details")
 def tmp_user_details_fixture():
-    yield json.loads(TEST_USER_DETAILS, strict=False)
+    j = json.loads(TEST_USER_DETAILS, strict=False)
+    yield model.GetConnectedUserDetailsResponse(**j)
 
 
 def test_identify(importer, tmp_config):
@@ -285,9 +292,7 @@ def test_identify(importer, tmp_config):
 
 def test_extract_transaction_simple(importer, tmp_trx):
     entries = importer._extract_transaction(tmp_trx, "Assets:Other", "POINTS", 7654321)
-    assert entries[0].postings[0].units.number == D(
-        tmp_trx["fields"][3]["value"]["value"]
-    )
+    assert entries[0].postings[0].units.number == D(tmp_trx.fields[3].value.value)
 
 
 def test_extract_user_history(importer, tmp_user_details):
