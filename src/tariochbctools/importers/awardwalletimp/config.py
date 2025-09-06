@@ -5,7 +5,7 @@ from typing import Any
 
 import yaml
 from awardwallet import AwardWalletClient
-from awardwallet.api import AccessLevel
+from awardwallet.client import AccessLevel
 
 
 def get_link_url(client):
