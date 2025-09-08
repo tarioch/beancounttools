@@ -1,5 +1,7 @@
+import datetime
 import logging
 import re
+from operator import attrgetter
 from os import path
 
 import beangulp
@@ -62,6 +64,12 @@ class Importer(beangulp.Importer):
                         account.history, account_config, account.account_id
                     )
                 )
+
+                # we fudge the date by using the latest txn (across *all* accounts)
+                latest_txn = max(entries, key=attrgetter("date"), default=None)
+                entries.extend(
+                    self._extract_balance(account, account_config, latest_txn)
+                )
             else:
                 logging.warning(
                     "Ignoring account ID %s: %s",
@@ -81,6 +89,10 @@ class Importer(beangulp.Importer):
             entries.extend(
                 self._extract_transactions(account.history, account_config, account_id)
             )
+
+            # we fudge the date by using the latest txn (across *all* accounts)
+            latest_txn = max(entries, key=attrgetter("date"), default=None)
+            entries.extend(self._extract_balance(account, account_config, latest_txn))
         return entries
 
     def _extract_transactions(
@@ -159,3 +171,36 @@ class Importer(beangulp.Importer):
         )
         entries.append(entry)
         return entries
+
+    def _extract_balance(
+        self,
+        account: model.Account,
+        account_config: dict,
+        latest_txn: data.Transaction | None,
+    ) -> list[data.Transaction]:
+        local_account = account_config["account"]
+        currency = account_config["currency"]
+        balance = amount.Amount(D(account.balance_raw), currency)
+        metakv = {"account-id": str(account.account_id)}
+
+        optional_date = account.last_change_date or account.last_retrieve_date
+        if optional_date:
+            date = optional_date.date()
+        elif latest_txn:
+            date = latest_txn.date
+        else:
+            logging.warning(
+                "No date information available for balance of account %s, using today",
+                account.account_id,
+            )
+            date = datetime.date.today()
+
+        entry = data.Balance(
+            data.new_metadata("", 0, metakv),
+            date + datetime.timedelta(days=1),
+            local_account,
+            balance,
+            None,
+            None,
+        )
+        return [entry]

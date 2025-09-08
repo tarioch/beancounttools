@@ -3,6 +3,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 from awardwallet import model
+from beancount.core.data import Balance
 from beancount.core.number import D
 
 from tariochbctools.importers.awardwalletimp import importer as awimp
@@ -26,6 +27,7 @@ TEST_CONFIG = b"""
             currency: VIRGINPTS
       34:
         name: User with dummy account
+        all_history: true
         accounts:
           0:
 """
@@ -57,6 +59,7 @@ TEST_TRX = b"""
     }
 """
 
+# second account has no optional fields
 TEST_USER_DETAILS = b"""
     {
       "userId": 12,
@@ -83,8 +86,8 @@ TEST_USER_DETAILS = b"""
           "autologinUrl": "https://business.awardwallet.com/account/redirect?ID=7654321",
           "updateUrl": "https://business.awardwallet.com/account/edit/7654321?autosubmit=1",
           "editUrl": "https://business.awardwallet.com/account/edit/7654321",
-          "balance": "146,780",
-          "balanceRaw": 146780,
+          "balance": "123,456",
+          "balanceRaw": 123456,
           "owner": "John Smith",
           "errorCode": 1,
           "lastDetectedChange": "+750",
@@ -224,18 +227,10 @@ TEST_USER_DETAILS = b"""
           "autologinUrl": "https://business.awardwallet.com/account/redirect?ID=7654321",
           "updateUrl": "https://business.awardwallet.com/account/edit/7654321?autosubmit=1",
           "editUrl": "https://business.awardwallet.com/account/edit/7654321",
-          "balance": "146,780",
-          "balanceRaw": 146780,
+          "balance": "24,680",
+          "balanceRaw": 24680,
           "owner": "John Smith",
           "errorCode": 1,
-          "lastDetectedChange": "+750",
-          "properties": [
-            {
-              "name": "Next Elite Level",
-              "value": "Bronze",
-              "kind": 9
-            }
-          ],
           "history": [
           ]
         }
@@ -300,21 +295,34 @@ def test_extract_user_history(importer, tmp_user_details):
         importer.config["users"][12],
         tmp_user_details,
     )
-    assert len(entries) == 3
+
+    assert len(entries) == 5  # three txns, two balances
+
+    balances = [e for e in entries if isinstance(e, Balance)]
+    assert len(balances) == 2
+    assert balances[0].amount.number == D("123456")
+    assert balances[0].amount.currency == "AVIOS"
+    assert balances[1].amount.number == D("24680")
+    assert balances[1].amount.currency == "VIRGINPTS"
 
 
 @patch("tariochbctools.importers.awardwalletimp.importer.AwardWalletClient")
 def test_extract_all_users(mock_api, importer, tmp_config, tmp_user_details):
     importer._extract_user_history = MagicMock()
+    importer._extract_account_history = MagicMock()
 
     importer.extract(tmp_config)
-    assert importer._extract_user_history.call_count == 2
+    assert importer._extract_user_history.call_count == 1
+    assert importer._extract_account_history.call_count == 1
 
 
 @patch("tariochbctools.importers.awardwalletimp.importer.AwardWalletClient")
 def test_extract_all_accounts(mock_api, importer, tmp_config, tmp_user_details):
     importer._extract_transactions = MagicMock()
+    importer._extract_balance = MagicMock()
     mock_api.return_value.get_connected_user_details.return_value = tmp_user_details
+    # get_account_details mock (for user 34) returns zero txns
 
     importer.extract(tmp_config)
-    assert importer._extract_transactions.call_count == 2
+    assert importer._extract_transactions.call_count == 3
+    assert importer._extract_balance.call_count == 3
