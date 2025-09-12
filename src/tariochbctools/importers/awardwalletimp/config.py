@@ -5,7 +5,7 @@ from typing import Any
 
 import yaml
 from awardwallet import AwardWalletClient
-from awardwallet.api import AccessLevel
+from awardwallet.client import AccessLevel
 
 
 def get_link_url(client):
@@ -33,19 +33,18 @@ def generate(client):
     connected_users = client.list_connected_users()
 
     for user in connected_users:
-        user_id = user["userId"]
-        user_details = client.get_connected_user_details(user_id)
+        user_details = client.get_connected_user_details(user.user_id)
         account_config = {}
 
-        for account in user_details.get("accounts", []):
-            account_config[account["accountId"]] = {
-                "provider": account["displayName"],
+        for account in user_details.accounts:
+            account_config[account.account_id] = {
+                "provider": account.display_name,
                 "account": "Assets:Current:Points",  # Placeholder, user should adjust
                 "currency": "POINTS",
             }
 
-        config["users"][user_id] = {
-            "name": user["userName"],
+        config["users"][user.user_id] = {
+            "name": user.user_name,
             "all_history": False,
             "accounts": account_config,
         }

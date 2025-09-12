@@ -447,48 +447,65 @@ Import PDF from `radicant <https://radicant.com/>`__
 AwardWallet
 ------------------------------
 
-Import from `AwardWallet <https://awardwallet.com/>`__ using their `Account Access API <https://awardwallet.com/api/account>`__.
+Import from `AwardWallet <https://awardwallet.com/>`__ using their `Account
+Access API <https://awardwallet.com/api/account>`__.
 
-As of 2025 AwardWallet integrates over 460 airline, hotel, shopping and other loyalty programmes.
+As of 2025 AwardWallet integrates over 460 airline, hotel, shopping and other
+loyalty programmes. Many programmes do not support retrieval of transactions,
+only balances.
 
-Follow the instructions in the `API documentation <https://awardwallet.com/api/account#introduction>`__ to register for a free Business account and create an API key.
+1.  Update your personal AwardWallet account.
+    The importer can only retrieve data that has already been synced to your AwardWallet account.
 
-The API key is restricted to the **allowed IP addresses** you specify in the Business interface API Settings.
+2.  Follow the instructions in the `API documentation
+    <https://awardwallet.com/api/account#introduction>`__ to register for a
+    free Business account and create an API key.
 
-Link and authorize personal accounts using the included ``awardwallet-conf`` CLI tool:
+    The API key is restricted to the **allowed IP addresses** you specify in
+    the Business interface API Settings.
 
-.. code-block:: console
+3.  Link and authorize personal accounts using the included ``awardwallet-conf``
+    CLI tool:
 
-  awardwallet-conf --api-key YOUR_API_KEY get_link_url
+    .. code-block:: console
 
+      awardwallet-conf --api-key YOUR_API_KEY get_link_url
 
-Generate a config file for all linked users called (or ending with) ``awardwallet.yaml`` in your import location (e.g. download folder) and edit it to your needs.
-Note that not all providers support retrieval of transaction history.
+    Manage access to your personal account under `Manage Users
+    <https://awardwallet.com/user/connections>`__ in the personal web
+    interface.
 
-.. code-block:: console
+4.  Generate a config file for all linked users ending with
+    ``awardwallet.yaml`` in your import location (e.g. download folder) and
+    edit it to your needs.
 
-  awardwallet-conf --api-key YOUR_API_KEY generate > awardwallet.yaml
+    .. code-block:: console
 
-Example configuration file:
+      awardwallet-conf --api-key YOUR_API_KEY generate > awardwallet.yaml
 
-.. code-block:: yaml
+    If you have multiple accounts using the same points currency (e.g. ``AVIOS``
+    used by BA, Iberia, ...) create sub-accounts for each so that ``balance``
+    directives will work.
 
-  api_key: YOUR_API_KEY
-  users:
-    12345:
-      name: John Smith
-      all_history: false
-      accounts:
-        7654321:
-          provider: "British Airways Club"
-          account: Assets:Current:Points
-          currency: AVIOS
+    Example configuration file:
 
+    .. code-block:: yaml
 
-Finally, initialize the importer:
+      api_key: YOUR_API_KEY
+      users:
+        12345:
+          name: John Smith
+          all_history: false     # only the last 10 txns per account
+          accounts:
+            7654321:
+              provider: "British Airways Club"
+              account: Assets:Current:Points
+              currency: AVIOS
 
-.. code-block:: python
+5.  Finally, initialize the importer:
 
-  from tariochbctools.importers.awardwalletimp import importer as awimp
+    .. code-block:: python
 
-  CONFIG = [awimp.Importer()]
+      from tariochbctools.importers.awardwalletimp import importer as awimp
+
+      CONFIG = [awimp.Importer()]

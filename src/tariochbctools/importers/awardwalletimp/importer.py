@@ -1,11 +1,13 @@
+import datetime
 import logging
+import re
+from operator import attrgetter
 from os import path
-from typing import Any
 
 import beangulp
 import dateutil.parser
 import yaml
-from awardwallet import AwardWalletClient
+from awardwallet import AwardWalletClient, model
 from beancount.core import amount, data
 from beancount.core.number import D
 
@@ -46,27 +48,33 @@ class Importer(beangulp.Importer):
         return entries
 
     def _extract_user_history(
-        self, user: dict, user_details: dict
+        self, user: dict, user_details: model.GetConnectedUserDetailsResponse
     ) -> list[data.Transaction]:
         """
         User history is limited to the last 10 history elements per account
         """
         entries = []
-        for account in user_details["accounts"]:
-            account_id = account["accountId"]
-
-            if account_id in user["accounts"]:
-                logging.info("Extracting account ID %s", account_id)
-                account_config = user["accounts"][account_id]
+        for account in user_details.accounts:
+            if account.account_id in user["accounts"]:
+                logging.info("Extracting account ID %s", account.account_id)
+                account_config = user["accounts"][account.account_id]
 
                 entries.extend(
                     self._extract_transactions(
-                        account["history"], account_config, account_id
+                        account.history, account_config, account.account_id
                     )
+                )
+
+                # we fudge the date by using the latest txn (across *all* accounts)
+                latest_txn = max(entries, key=attrgetter("date"), default=None)
+                entries.extend(
+                    self._extract_balance(account, account_config, latest_txn)
                 )
             else:
                 logging.warning(
-                    "Ignoring account ID %s: %s", account_id, account["displayName"]
+                    "Ignoring account ID %s: %s",
+                    account.account_id,
+                    account.display_name,
                 )
         return entries
 
@@ -76,13 +84,15 @@ class Importer(beangulp.Importer):
         entries = []
         for account_id, account_config in user["accounts"].items():
             logging.info("Extracting account ID %s", account_id)
-            account = client.get_account_details(account_id)["account"]
+            account = client.get_account_details(account_id).account
 
             entries.extend(
-                self._extract_transactions(
-                    account["history"], account_config, account_id
-                )
+                self._extract_transactions(account.history, account_config, account_id)
             )
+
+            # we fudge the date by using the latest txn (across *all* accounts)
+            latest_txn = max(entries, key=attrgetter("date"), default=None)
+            entries.extend(self._extract_balance(account, account_config, latest_txn))
         return entries
 
     def _extract_transactions(
@@ -109,7 +119,7 @@ class Importer(beangulp.Importer):
 
     def _extract_transaction(
         self,
-        trx: dict[str, Any],
+        trx: model.HistoryItem,
         local_account: data.Account,
         currency: str,
         account_id: str,
@@ -121,20 +131,23 @@ class Importer(beangulp.Importer):
         trx_description = None
         trx_amount = None
 
-        for f in trx.get("fields", []):
-            if f["code"] == "PostingDate":
-                trx_date = dateutil.parser.parse(f["value"]["value"]).date()
-            if f["code"] == "Description":
-                trx_description = f["value"]["value"].replace("\n", " ")
-            if f["code"] == "Miles":
-                trx_amount = D(f["value"]["value"])
-            if f["code"] == "Info":
-                name = f["name"].lower().replace(" ", "-")
-                metakv[name] = f["value"]["value"].replace("\n", " ")
+        for f in trx.fields:
+            if f.code == "PostingDate":
+                trx_date = dateutil.parser.parse(f.value.value).date()
+            if f.code == "Description":
+                trx_description = f.value.value.replace("\n", " ")
+            if f.code == "Miles":
+                trx_amount = D(f.value.value)
+            if f.code == "Info":
+                name = re.sub(r"\W", "-", f.name).lower()
+                metakv[name] = f.value.value.replace("\n", " ")
 
         assert trx_date
         assert trx_description
-        assert trx_amount is not None, f"No amount in trx: {trx}"
+
+        if trx_amount is None:
+            logging.warning("Skipping transaction with no amount: %s", trx)
+            return []
 
         meta = data.new_metadata("", 0, metakv)
         entry = data.Transaction(
@@ -158,3 +171,36 @@ class Importer(beangulp.Importer):
         )
         entries.append(entry)
         return entries
+
+    def _extract_balance(
+        self,
+        account: model.Account,
+        account_config: dict,
+        latest_txn: data.Transaction | None,
+    ) -> list[data.Transaction]:
+        local_account = account_config["account"]
+        currency = account_config["currency"]
+        balance = amount.Amount(D(account.balance_raw), currency)
+        metakv = {"account-id": str(account.account_id)}
+
+        optional_date = account.last_change_date or account.last_retrieve_date
+        if optional_date:
+            date = optional_date.date()
+        elif latest_txn:
+            date = latest_txn.date
+        else:
+            logging.warning(
+                "No date information available for balance of account %s, using today",
+                account.account_id,
+            )
+            date = datetime.date.today()
+
+        entry = data.Balance(
+            data.new_metadata("", 0, metakv),
+            date + datetime.timedelta(days=1),
+            local_account,
+            balance,
+            None,
+            None,
+        )
+        return [entry]
