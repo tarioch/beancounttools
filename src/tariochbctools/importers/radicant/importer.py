@@ -1,5 +1,5 @@
 import re
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import beangulp
 import camelot
@@ -46,6 +46,11 @@ class Importer(beangulp.Importer):
         if conversionOriginal and conversionRate:
             kv = {"original": conversionOriginal, "rate": conversionRate}
             text = text.replace("Amount: " + conversionOriginal, "")
+            # handle decimal seperated original amounts
+            [originalCcy, originalAmt] = conversionOriginal.split(" ")
+            text = text.replace(
+                "Amount: " + f"{originalCcy} {float(originalAmt):,}", ""
+            )
         else:
             kv = None
 
@@ -63,17 +68,34 @@ class Importer(beangulp.Importer):
             ],
         )
 
+    def createBalance(
+        self,
+        filepath: str,
+        date: str,
+        amt: amount.Amount,
+    ) -> data.Balance:
+        meta = data.new_metadata(filepath, 0, None)
+        return data.Balance(
+            meta,
+            datetime.strptime(date, "%d.%m.%Y").date() + timedelta(days=1),
+            self._account,
+            amt,
+            None,
+            None,
+        )
+
     def extract(self, filepath: str, existing: data.Entries) -> data.Entries:
         entries = []
 
         conversionPattern = re.compile(r"(?P<original>.+) at the rate of (?P<rate>.+)")
+        balancePattern = re.compile(r"Balance as of (?P<date>\d\d\.\d\d\.\d\d\d\d)")
 
         tables = camelot.read_pdf(
             filepath,
             flavor="stream",
             pages="all",
-            table_regions=["40,470,580,32"],
-            columns=["110,300,370,440,500"],
+            table_regions=["40,600,580,32"],
+            columns=["110,305,370,440,500"],
             strip_text="\n",
             layout_kwargs={"word_margin": 0.50},
             split_text=True,
@@ -89,7 +111,7 @@ class Importer(beangulp.Importer):
             conversionOriginal = None
             conversionRate = None
             for _, row in df.iterrows():
-                date, text, _, debit, credit, _ = tuple(row)
+                date, text, _, debit, credit, bal = tuple(row)
 
                 # skip stuff before
                 if beforeStart and "Date" != date:
@@ -98,8 +120,16 @@ class Importer(beangulp.Importer):
                     beforeStart = False
                     continue
 
-                # skip stuff after
-                if "Balance as of" in text:
+                # create balance and skip stuff after
+                balanceMatch = balancePattern.match(text)
+                if balanceMatch:
+                    entries.append(
+                        self.createBalance(
+                            filepath,
+                            balanceMatch.group("date"),
+                            amount.Amount(D(bal.replace("'", "")), self.currency),
+                        )
+                    )
                     break
 
                 trxDate = date
