@@ -126,6 +126,17 @@ class Importer(beangulp.Importer):
                 continue
 
             r = requests.get(
+                f"https://api.{self.domain}/data/v1/{endpoint}/{accountId}/balance",
+                headers=headers,
+            )
+            balances = r.json()["results"]
+
+            for balance in balances:
+                entries.extend(
+                    self._extract_balance(balance, local_account, invert_sign)
+                )
+
+            r = requests.get(
                 f"https://api.{self.domain}/data/v1/{endpoint}/{accountId}/transactions",
                 headers=headers,
             )
@@ -225,5 +236,51 @@ class Importer(beangulp.Importer):
                         None,
                     )
                 )
+
+        return entries
+
+    def _extract_balance(
+        self,
+        result: dict[str, Any],
+        local_account: data.Account,
+        invert_sign: bool,
+    ) -> data.Transaction:
+        entries = []
+
+        metakv = {}
+        meta = data.new_metadata("", 0, metakv)
+
+        balance = D(str(result["current"]))
+        signed_balance = -1 * balance if invert_sign else balance
+        balance_date = dateutil.parser.parse(result["update_timestamp"]).date()
+
+        entries.append(
+            data.Balance(
+                meta,
+                balance_date,
+                local_account,
+                amount.Amount(signed_balance, result["currency"]),
+                None,
+                None,
+            )
+        )
+
+        if "last_statement_balance" in result:
+            statement_balance = D(str(result["last_statement_balance"]))
+            signed_statement_balance = (
+                -1 * statement_balance if invert_sign else statement_balance
+            )
+            statement_date = dateutil.parser.parse(result["last_statement_date"]).date()
+
+            entries.append(
+                data.Balance(
+                    meta,
+                    statement_date,
+                    local_account,
+                    amount.Amount(signed_statement_balance, result["currency"]),
+                    None,
+                    None,
+                )
+            )
 
         return entries
