@@ -258,7 +258,7 @@ class Importer(beangulp.Importer):
         entries.append(
             data.Balance(
                 meta,
-                balance_date,
+                balance_date + timedelta(days=1),
                 local_account,
                 amount.Amount(signed_balance, result["currency"]),
                 None,

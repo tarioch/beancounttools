@@ -1,4 +1,5 @@
 import json
+from datetime import timedelta
 
 import dateutil.parser
 import pytest
@@ -162,9 +163,9 @@ def test_extract_balance(importer, tmp_trx):
     assert len(entries) == 1
     assert entries[-1].amount.number == D(str(tmp_balance["current"]))
     assert (
-        entries[-1].date
+        entries[-1].date - timedelta(days=1)
         == dateutil.parser.parse(tmp_balance["update_timestamp"]).date()
-    )
+    ), "balance date should be one day after update_timestamp"
 
 
 def test_extract_statement_balance(importer, tmp_trx):
