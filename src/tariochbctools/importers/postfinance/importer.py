@@ -1,10 +1,11 @@
 import csv
 import logging
 import re
-from datetime import datetime, timedelta
+from datetime import timedelta
 from decimal import Decimal
 
 import beangulp
+import dateutil.parser
 from beancount.core import data
 
 
@@ -31,7 +32,7 @@ class Importer(beangulp.Importer):
         for row in reader:
             try:
                 book_date_str, text, credit, debit, val_date, balance_str = tuple(row)
-                book_date = datetime.strptime(book_date_str, "%Y-%m-%d").date()
+                book_date = dateutil.parser.parse(book_date_str).date()
                 if credit:
                     amount = data.Amount(Decimal(credit), self.currency)
                 elif debit:
