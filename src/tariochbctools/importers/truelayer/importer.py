@@ -10,6 +10,8 @@ import yaml
 from beancount.core import amount, data
 from beancount.core.number import D
 
+from tariochbctools.importers.general.deduplication import ReferenceDuplicatesComparator
+
 # https://docs.truelayer.com/#retrieve-account-transactions
 
 TX_MANDATORY_ID_FIELDS = ("transaction_id",)
@@ -283,3 +285,5 @@ class Importer(beangulp.Importer):
             )
 
         return entries
+
+    cmp = ReferenceDuplicatesComparator(TX_MANDATORY_ID_FIELDS)
