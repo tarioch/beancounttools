@@ -10,6 +10,8 @@ import yaml
 from beancount.core import amount, data
 from beancount.core.number import D
 
+from tariochbctools.importers.general.deduplication import ReferenceDuplicatesComparator
+
 # https://docs.truelayer.com/#retrieve-account-transactions
 
 TX_MANDATORY_ID_FIELDS = ("transaction_id",)
@@ -126,6 +128,17 @@ class Importer(beangulp.Importer):
                 continue
 
             r = requests.get(
+                f"https://api.{self.domain}/data/v1/{endpoint}/{accountId}/balance",
+                headers=headers,
+            )
+            balances = r.json()["results"]
+
+            for balance in balances:
+                entries.extend(
+                    self._extract_balance(balance, local_account, invert_sign)
+                )
+
+            r = requests.get(
                 f"https://api.{self.domain}/data/v1/{endpoint}/{accountId}/transactions",
                 headers=headers,
             )
@@ -148,7 +161,7 @@ class Importer(beangulp.Importer):
         invert_sign: bool,
     ) -> data.Transaction:
         entries = []
-        metakv = {}
+        metakv: dict[str, Any] = {}
 
         id_meta_kvs = {
             k: trx["meta"][k] for k in TX_OPTIONAL_META_ID_FIELDS if trx["meta"].get(k)
@@ -193,37 +206,52 @@ class Importer(beangulp.Importer):
         )
         entries.append(entry)
 
-        if trx["transaction_id"] == transactions[-1]["transaction_id"]:
-            balDate = trxDate + timedelta(days=1)
-            metakv = {}
-            if self.existing is not None:
-                for exEntry in self.existing:
-                    if (
-                        isinstance(exEntry, data.Balance)
-                        and exEntry.date == balDate
-                        and exEntry.account == local_account
-                    ):
-                        metakv["__duplicate__"] = True
+        return entries
 
-            meta = data.new_metadata("", 0, metakv)
+    def _extract_balance(
+        self,
+        result: dict[str, Any],
+        local_account: data.Account,
+        invert_sign: bool,
+    ) -> data.Transaction:
+        entries = []
 
-            # Only if the 'balance' permission is present
-            if "running_balance" in trx:
-                tx_balance = D(str(trx["running_balance"]["amount"]))
-                # avoid pylint invalid-unary-operand-type
-                signed_balance = -1 * tx_balance if invert_sign else tx_balance
+        meta = data.new_metadata("", 0)
 
-                entries.append(
-                    data.Balance(
-                        meta,
-                        balDate,
-                        local_account,
-                        amount.Amount(
-                            signed_balance, trx["running_balance"]["currency"]
-                        ),
-                        None,
-                        None,
-                    )
+        balance = D(str(result["current"]))
+        # avoid pylint invalid-unary-operand-type
+        signed_balance = -1 * balance if invert_sign else balance
+        balance_date = dateutil.parser.parse(result["update_timestamp"]).date()
+
+        entries.append(
+            data.Balance(
+                meta,
+                balance_date + timedelta(days=1),
+                local_account,
+                amount.Amount(signed_balance, result["currency"]),
+                None,
+                None,
+            )
+        )
+
+        if "last_statement_balance" in result:
+            statement_balance = D(str(result["last_statement_balance"]))
+            signed_statement_balance = (
+                -1 * statement_balance if invert_sign else statement_balance
+            )
+            statement_date = dateutil.parser.parse(result["last_statement_date"]).date()
+
+            entries.append(
+                data.Balance(
+                    meta,
+                    statement_date,
+                    local_account,
+                    amount.Amount(signed_statement_balance, result["currency"]),
+                    None,
+                    None,
                 )
+            )
 
         return entries
+
+    cmp = ReferenceDuplicatesComparator(TX_MANDATORY_ID_FIELDS)

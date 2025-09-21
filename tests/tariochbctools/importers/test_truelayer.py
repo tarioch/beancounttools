@@ -1,5 +1,7 @@
 import json
+from datetime import timedelta
 
+import dateutil.parser
 import pytest
 import yaml
 from beancount.core.amount import Decimal as D
@@ -67,6 +69,28 @@ TEST_TRX_WITHOUT_IDS = b"""
 }
 """
 
+TEST_BALANCE_SIMPLE = b"""
+{
+  "currency": "GBP",
+  "current": 20.0,
+  "update_timestamp": "2017-02-24T17:29:24.740Z"
+}
+"""
+
+TEST_BALANCE_OPTIONAL = b"""
+{
+  "available": 3279.0,
+  "currency": "GBP",
+  "current": 20.0,
+  "credit_limit": 3300,
+  "last_statement_balance": 226,
+  "last_statement_date": "2017-01-28",
+  "payment_due": 5.0,
+  "payment_due_date": "2017-02-24",
+  "update_timestamp": "2017-02-24T17:29:24.740Z"
+}
+"""
+
 
 @pytest.fixture(name="tmp_config")
 def tmp_config_fixture(tmp_path):
@@ -114,21 +138,38 @@ def test_extract_transaction_simple(importer, tmp_trx):
     assert entries[0].postings[0].units.number == D(str(tmp_trx["amount"]))
 
 
-def test_extract_transaction_with_balance(importer, tmp_trx):
-    entries = importer._extract_transaction(
-        tmp_trx, "Assets:Other", [tmp_trx], invert_sign=False
-    )
-    # one entry, one balance
-    assert len(entries) == 2
-    assert entries[1].amount.number == D(str(tmp_trx["running_balance"]["amount"]))
-
-
 def test_extract_transaction_invert_sign(importer, tmp_trx):
     """Show that sign inversion works"""
     entries = importer._extract_transaction(
         tmp_trx, "Assets:Other", [tmp_trx], invert_sign=True
     )
     assert entries[0].postings[0].units.number == -D(str(tmp_trx["amount"]))
+
+
+def test_extract_balance(importer, tmp_trx):
+    tmp_balance = json.loads(TEST_BALANCE_SIMPLE)
+
+    entries = importer._extract_balance(tmp_balance, "Assets:Other", invert_sign=False)
+
+    assert len(entries) == 1
+    assert entries[-1].amount.number == D(str(tmp_balance["current"]))
+    assert (
+        entries[-1].date - timedelta(days=1)
+        == dateutil.parser.parse(tmp_balance["update_timestamp"]).date()
+    ), "balance date should be one day after update_timestamp"
+
+
+def test_extract_statement_balance(importer, tmp_trx):
+    tmp_balance = json.loads(TEST_BALANCE_OPTIONAL)
+
+    entries = importer._extract_balance(tmp_balance, "Assets:Other", invert_sign=False)
+
+    assert len(entries) == 2
+    assert entries[-1].amount.number == D(str(tmp_balance["last_statement_balance"]))
+    assert (
+        entries[-1].date
+        == dateutil.parser.parse(tmp_balance["last_statement_date"]).date()
+    )
 
 
 @pytest.mark.parametrize("id_field", tlimp.TX_MANDATORY_ID_FIELDS)
