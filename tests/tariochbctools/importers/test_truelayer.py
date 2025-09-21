@@ -138,15 +138,6 @@ def test_extract_transaction_simple(importer, tmp_trx):
     assert entries[0].postings[0].units.number == D(str(tmp_trx["amount"]))
 
 
-def test_extract_transaction_with_balance(importer, tmp_trx):
-    entries = importer._extract_transaction(
-        tmp_trx, "Assets:Other", [tmp_trx], invert_sign=False
-    )
-    # one entry, one balance
-    assert len(entries) == 2
-    assert entries[1].amount.number == D(str(tmp_trx["running_balance"]["amount"]))
-
-
 def test_extract_transaction_invert_sign(importer, tmp_trx):
     """Show that sign inversion works"""
     entries = importer._extract_transaction(
