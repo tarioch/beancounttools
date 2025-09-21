@@ -159,7 +159,7 @@ class Importer(beangulp.Importer):
         invert_sign: bool,
     ) -> data.Transaction:
         entries = []
-        metakv = {}
+        metakv: dict[str, Any] = {}
 
         id_meta_kvs = {
             k: trx["meta"][k] for k in TX_OPTIONAL_META_ID_FIELDS if trx["meta"].get(k)
@@ -247,8 +247,7 @@ class Importer(beangulp.Importer):
     ) -> data.Transaction:
         entries = []
 
-        metakv = {}
-        meta = data.new_metadata("", 0, metakv)
+        meta = data.new_metadata("", 0)
 
         balance = D(str(result["current"]))
         signed_balance = -1 * balance if invert_sign else balance
