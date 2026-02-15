@@ -82,9 +82,9 @@ class Importer(beangulp.Importer):
                     ]
                     description = f"Fees for {description}"
 
-                assert isinstance(
-                    description, str
-                ), "Actual type of description is " + str(type(description))
+                assert isinstance(description, str), (
+                    "Actual type of description is " + str(type(description))
+                )
 
                 entry = data.Transaction(
                     data.new_metadata(filepath, 0, {}),
