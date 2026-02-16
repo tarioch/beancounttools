@@ -34,7 +34,7 @@ jobs:
         if: contains(github.ref, 'refs/heads/master')
         env:
           UV_PUBLISH_TOKEN: ${{ secrets.test_pypi_password }}
-        run: uv publish --index testpy
+        run: uv publish --index testpypi
       - name: Publish distribution 📦 to PyPI
         if: contains(github.ref, 'refs/tags/v')
         env:
