@@ -61,6 +61,18 @@ build-backend = "hatchling.build"
 [tool.hatch.version]
 source = "uv-dynamic-versioning"
 
+[tool.uv-dynamic-versioning]
+format-jinja = """
+    {%- if distance == 0 -%}
+        {{ serialize_pep440(base, stage, revision) }}
+    {%- elif revision is not none -%}
+        {{ serialize_pep440(base, stage, revision + 1, dev=distance) }}
+    {%- else -%}
+        {{ serialize_pep440(bump_version(base), stage, revision, dev=distance) }}
+    {%- endif -%}
+"""
+fallback-version = "0.0.0"
+
 [[tool.uv.index]]
 name = "testpypi"
 url = "https://test.pypi.org/simple/"
