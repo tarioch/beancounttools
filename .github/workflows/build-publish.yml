@@ -2,6 +2,7 @@ name: Publish Python 🐍 distributions 📦 to PyPI and TestPyPI
 on:
   push:
   pull_request:
+    types: [opened, reopened]
   release:
     types: [published]
 jobs:
@@ -12,34 +13,32 @@ jobs:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
+      - uses: astral-sh/setup-uv@v7
       - uses: actions/setup-python@v2
         with:
           python-version: 3.x
-      - name: Install tox
-        run: >-
-          pip install tox
+
+      - name: Install the project
+        run: uv sync --locked --dev
+
       - name: Pre Commit
-        run: >-
-          tox -e pre-commit
+        run: uv run pre-commit run --all-files
+
       - name: Test
-        run: >-
-          tox
+        run: uv run pytest
+
       - name: Build
-        run: >-
-          tox -e build
+        run: uv build
+
       - name: Publish distribution 📦 to Test PyPI
         if: contains(github.ref, 'refs/heads/master')
         env:
-          TWINE_USERNAME: __token__
-          TWINE_PASSWORD: ${{ secrets.test_pypi_password }}
-          TWINE_REPOSITORY_URL: https://test.pypi.org/legacy/
-        run: >-
-          tox -e publish
+          UV_PUBLISH_USERNAME: __token__
+          UV_PUBLISH_TOKEN: ${{ secrets.test_pypi_password }}
+        run: uv publish --index testpy
       - name: Publish distribution 📦 to PyPI
         if: contains(github.ref, 'refs/tags/v')
         env:
-          TWINE_USERNAME: __token__
-          TWINE_PASSWORD: ${{ secrets.pypi_password }}
-          TWINE_REPOSITORY_URL: https://upload.pypi.org/legacy/
-        run: >-
-          tox -e publish -- --repository pypi
+          UV_PUBLISH_USERNAME: __token__
+          UV_PUBLISH_TOKEN: ${{ secrets.pypi_password }}
+        run: uv publish
