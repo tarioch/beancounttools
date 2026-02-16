@@ -1,8 +1,68 @@
-[build-system]
-requires = ["setuptools>=46.1.0", "wheel", "setuptools_scm[toml]>=5"]
-build-backend = "setuptools.build_meta"
+[project]
+name = "tariochbctools"
+description = "Importers, plugins and price fetchers for Beancount"
+authors = [
+    {name = "Patrick Ruckstuhl", email = "patrick@ch.tario.org"}
+]
+readme = "README.rst"
+license = "MIT"
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Programming Language :: Python",
+    "Intended Audience :: Developers",
+    "Topic :: Office/Business :: Financial",
+    "Topic :: Office/Business :: Financial :: Accounting",
+    "Topic :: Office/Business :: Financial :: Investment"
+]
+dynamic = ["version"]
+requires-python = ">=3.11"
+dependencies = [
+    "awardwallet>=0.2",
+    "beancount>=3",
+    "beangulp",
+    "beanprice",
+    "bitstampclient",
+    "mt-940",
+    "pyyaml",
+    "ibflex",
+    "requests",
+    "camelot-py",
+    "opencv-python-headless",
+    "blockcypher",
+    "imap-tools",
+    "undictify",
+    "rsa"
+]
 
-[tool]
-[tool.setuptools_scm]
-version_scheme = "no-guess-dev"
-local_scheme = "no-local-version"
+[project.urls]
+Homepage = "https://github.com/tarioch/beancounttools"
+Documentation = "https://tariochbctools.rtfd.io"
+Repository = "https://github.com/tarioch/beancounttools/"
+Issues = "https://github.com/tarioch/beancounttools/issues"
+
+[project.scripts]
+nordigen-conf = "tariochbctools.importers.nordigen.nordigen_config:run"
+awardwallet-conf = "tariochbctools.importers.awardwalletimp.config:run"
+
+[dependency-groups]
+dev = [
+    "pytest",
+    "pre-commit"
+]
+docs = [
+    "sphinx>=7",
+    "sphinx_rtd_theme"
+]
+
+[build-system]
+requires = ["hatchling >= 1.26", "uv-dynamic-versioning"]
+build-backend = "hatchling.build"
+
+[tool.hatch.version]
+source = "uv-dynamic-versioning"
+
+[[tool.uv.index]]
+name = "testpypi"
+url = "https://test.pypi.org/simple/"
+publish-url = "https://test.pypi.org/legacy/"
+explicit = true
