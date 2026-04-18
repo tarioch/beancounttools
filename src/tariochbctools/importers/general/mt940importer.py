@@ -39,11 +39,11 @@ class Importer(beangulp.Importer):
                 date = trxdata["date"]
             payee = self.prepare_payee(trxdata)
             if payee:
-                payee = re.sub(r'\s+', ' ', payee.strip())
-            
+                payee = re.sub(r"\s+", " ", payee.strip())
+
             narration = self.prepare_narration(trxdata)
             if narration:
-                narration = re.sub(r'\s+', ' ', narration.strip())
+                narration = re.sub(r"\s+", " ", narration.strip())
 
             entry = data.Transaction(
                 meta,
