@@ -140,7 +140,7 @@ fail.
 TrueLayer
 ---------
 
-Import from `TrueLayer <https://www.truelayer.com/>`__ using their api services. e.g. supports Revolut.
+Import from `TrueLayer <https://www.truelayer.com/>`__ using their API services. e.g. supports Revolut.
 You need to create a dev account and see their documentation about how to get a refresh token.
 
 .. code-block:: python
@@ -154,9 +154,12 @@ Create a file called (or ending with) truelayer.yaml in your import location (e.
 .. code-block:: yaml
 
   account: <Assets:MyBank>
+  # Option 1: direct access using client_id and client_secret and refresh_token
   client_id: <CLIENT ID>
   client_secret: <CLIENT SECRET>
   refresh_token: <REFRESH TOKEN>
+  # Option 2: access token via external command (e.g. oama)
+  auth_command: "oama access <your-account>"
 
 Instead of a single ``account``, the configuration may include a *mapping* from
 TrueLayer account IDs to beancount accounts. e.g.:
@@ -168,6 +171,52 @@ TrueLayer account IDs to beancount accounts. e.g.:
     ec34db160c61d468dc1cedde8bedb1f1: Liabilities:Visa
 
 If it is present, transactions for *only these accounts* will be imported.
+
+Authentication
+~~~~~~~~~~~~~~
+
+There are **two mechanisms** for obtaining access tokens:
+
+**1. Direct refresh token - ``refresh_token``**
+   Provide a TrueLayer refresh token directly in the config. The importer will exchange it
+   for an access token on each run.
+
+   .. code-block:: yaml
+
+     client_id: <CLIENT ID>
+     client_secret: <CLIENT SECRET>
+     refresh_token: <REFRESH TOKEN>
+
+**2. External token manager (recommended) - ``auth_command``**
+   Use a tool like `oama <https://github.com/pdobsan/oama>`__ to handle OAuth automatically.
+   oama stores refresh tokens securely and refreshes access tokens in the background.
+
+   .. code-block:: yaml
+
+     auth_command: "oama access <your-account>"
+
+   When using ``auth_command``, you can omit ``refresh_token``, ``client_id`` and ``client_secret``
+   from the config (they are stored in oama's config instead).
+
+The importer obtains an access token in this order of preference:
+
+1. ``access_token`` from the config file (static, not recommended for production)
+2. Running ``auth_command`` (shell command, should output token to stdout)
+3. Using ``refresh_token`` to obtain a new access token from TrueLayer
+
+Example ``~/.config/oama/config.yaml`` for TrueLayer:
+
+.. code-block:: yaml
+
+  services:
+    truelayer:
+      client_id: <YOUR_CLIENT_ID>
+      client_secret: <YOUR_CLIENT_SECRET>
+      auth_endpoint: https://auth.truelayer.com/
+      auth_http_method: GET
+      token_endpoint: https://auth.truelayer.com/connect/token
+      auth_scope: "info accounts balance cards transactions direct_debits standing_orders offline_access"
+      redirect_uri: http://localhost:3000/callback
 
 
 GoCardless (formerly Nordigen)

@@ -1,4 +1,5 @@
 import logging
+import subprocess
 from datetime import timedelta
 from os import path
 from typing import Any
@@ -35,6 +36,7 @@ class Importer(beangulp.Importer):
         self.clientId = None
         self.clientSecret = None
         self.refreshToken = None
+        self.authCommand = None
         self.sandbox = None
         self.existing = None
         self.domain = "truelayer.com"
@@ -42,10 +44,26 @@ class Importer(beangulp.Importer):
     def _configure(self, filepath: str, existing: data.Entries) -> None:
         with open(filepath, "r") as f:
             self.config = yaml.safe_load(f)
-        self.clientId = self.config["client_id"]
-        self.clientSecret = self.config["client_secret"]
-        self.refreshToken = self.config["refresh_token"]
-        self.sandbox = self.clientId.startswith("sandbox")
+
+        self.authCommand = self.config.get("auth_command")
+        self.accessToken = self.config.get("access_token")
+
+        # client_id/secret and refresh_token only required if no auth_command
+        if not self.authCommand:
+            self.clientId = self.config["client_id"]
+            self.clientSecret = self.config["client_secret"]
+            # refresh_token required if no access_token either
+            if not self.accessToken:
+                self.refreshToken = self.config["refresh_token"]
+            else:
+                self.refreshToken = self.config.get("refresh_token")
+        else:
+            # Optional: allow client_id for sandbox detection
+            self.clientId = self.config.get("client_id")
+            self.clientSecret = self.config.get("client_secret")
+            self.refreshToken = self.config.get("refresh_token")
+
+        self.sandbox = self.clientId and self.clientId.startswith("sandbox")
         self.existing = existing
 
         if self.sandbox:
@@ -60,21 +78,59 @@ class Importer(beangulp.Importer):
     def account(self, filepath: str) -> data.Account:
         return ""
 
+    def _get_access_token(self) -> str:
+        """return access token from cache, config or auth_command"""
+        if self.accessToken:
+            return self.accessToken
+
+        if self.authCommand:
+            logging.info("Running auth_command: %s", self.authCommand)
+            result = subprocess.run(
+                self.authCommand,
+                shell=True,
+                capture_output=True,
+                text=True,
+            )
+            if result.returncode != 0:
+                stderr = result.stderr.strip()
+                stdout = result.stdout.strip()
+                error_parts = [
+                    f"auth_command failed with exit code {result.returncode}"
+                ]
+                if stderr:
+                    error_parts.append(f"stderr: {stderr}")
+                if stdout:
+                    error_parts.append(f"stdout: {stdout}")
+                if "oama" in self.authCommand:
+                    error_parts.append(
+                        "If using oama, you may need to re-authorize: "
+                        "oama authorize truelayer <your-account>"
+                    )
+                raise RuntimeError("; ".join(error_parts))
+            token = result.stdout.strip()
+            if not token:
+                raise RuntimeError("auth_command produced no output")
+            self.accessToken = token
+        else:
+            r = requests.post(
+                f"https://auth.{self.domain}/connect/token",
+                data={
+                    "grant_type": "refresh_token",
+                    "client_id": self.clientId,
+                    "client_secret": self.clientSecret,
+                    "refresh_token": self.refreshToken,
+                },
+            )
+            tokens = r.json()
+            self.accessToken = tokens["access_token"]
+
+        return self.accessToken
+
     def extract(self, filepath: str, existing: data.Entries = None) -> data.Entries:
         self._configure(filepath, existing)
 
-        r = requests.post(
-            f"https://auth.{self.domain}/connect/token",
-            data={
-                "grant_type": "refresh_token",
-                "client_id": self.clientId,
-                "client_secret": self.clientSecret,
-                "refresh_token": self.refreshToken,
-            },
-        )
-        tokens = r.json()
-        accessToken = tokens["access_token"]
-        headers = {"Authorization": "Bearer " + accessToken}
+        access_token = self._get_access_token()
+        headers = {"Authorization": "Bearer " + access_token}
 
         entries = []
         entries.extend(self._extract_endpoint_transactions("accounts", headers))

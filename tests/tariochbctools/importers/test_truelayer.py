@@ -1,5 +1,6 @@
 import json
 from datetime import timedelta
+from unittest.mock import MagicMock, patch
 
 import dateutil.parser
 import pytest
@@ -238,3 +239,139 @@ def test_accounts_config_is_optional(importer_factory):
 
     importer = importer_factory(TEST_CONFIG_WITHOUT_ACCOUNTS)
     assert importer._get_account_for_account_id("any-account-id-1") == "DefaultAccount"
+
+
+def test_get_access_token_from_config(importer):
+    """Test that access_token from config is used when available."""
+    assert (
+        importer._get_access_token()
+        == "eyJhbGciOiJSUzI1NiIsImtpZsomethingSomethingsomethingDarkSideOEJBNk"
+    )
+
+
+def test_get_access_token_from_auth_command(importer_factory):
+    """Test that auth_command is used to get access token when no access_token in config."""
+    TEST_CONFIG_WITH_AUTH_COMMAND = b"""
+        account: DefaultAccount
+        client_id: sandbox-random
+        client_secret: deadc0de-dead-c0de-dead-c0dedeadc0de
+        refresh_token: 98D124C0E677865CB2F7D9DE91DC394CEED31DA3469C681B41FB7831F2F9B089
+        auth_command: "oama access natwest"
+    """
+
+    importer = importer_factory(TEST_CONFIG_WITH_AUTH_COMMAND)
+
+    with patch("subprocess.run") as mock_run:
+        mock_result = MagicMock()
+        mock_result.returncode = 0
+        mock_result.stdout = "new-access-token-from-oama\n"
+        mock_result.stderr = ""
+        mock_run.return_value = mock_result
+
+        token = importer._get_access_token()
+
+        assert token == "new-access-token-from-oama"
+        mock_run.assert_called_once_with(
+            "oama access natwest",
+            shell=True,
+            capture_output=True,
+            text=True,
+        )
+
+
+def test_get_access_token_auth_command_failure(importer_factory):
+    """Test that auth_command failure raises RuntimeError."""
+    TEST_CONFIG_WITH_AUTH_COMMAND = b"""
+        account: DefaultAccount
+        client_id: sandbox-random
+        client_secret: deadc0de-dead-c0de-dead-c0dedeadc0de
+        refresh_token: 98D124C0E677865CB2F7D9DE91DC394CEED31DA3469C681B41FB7831F2F9B089
+        auth_command: "oama access natwest"
+    """
+
+    importer = importer_factory(TEST_CONFIG_WITH_AUTH_COMMAND)
+
+    with patch("subprocess.run") as mock_run:
+        mock_result = MagicMock()
+        mock_result.returncode = 1
+        mock_result.stdout = ""
+        mock_result.stderr = "authorization failed"
+        mock_run.return_value = mock_result
+
+        with pytest.raises(RuntimeError, match="auth_command failed with exit code 1"):
+            importer._get_access_token()
+
+
+def test_get_access_token_auth_command_empty_output(importer_factory):
+    """Test that auth_command with empty output raises RuntimeError."""
+    TEST_CONFIG_WITH_AUTH_COMMAND = b"""
+        account: DefaultAccount
+        client_id: sandbox-random
+        client_secret: deadc0de-dead-c0de-dead-c0dedeadc0de
+        refresh_token: 98D124C0E677865CB2F7D9DE91DC394CEED31DA3469C681B41FB7831F2F9B089
+        auth_command: "oama access natwest"
+    """
+
+    importer = importer_factory(TEST_CONFIG_WITH_AUTH_COMMAND)
+
+    with patch("subprocess.run") as mock_run:
+        mock_result = MagicMock()
+        mock_result.returncode = 0
+        mock_result.stdout = ""
+        mock_result.stderr = ""
+        mock_run.return_value = mock_result
+
+        with pytest.raises(RuntimeError, match="auth_command produced no output"):
+            importer._get_access_token()
+
+
+def test_refresh_token_optional_with_auth_command(importer_factory):
+    """Test that refresh_token is not required when auth_command is provided."""
+    TEST_CONFIG_WITHOUT_REFRESH = b"""
+        account: DefaultAccount
+        client_id: sandbox-random
+        client_secret: deadc0de-dead-c0de-dead-c0dedeadc0de
+        auth_command: "oama access natwest"
+    """
+
+    importer = importer_factory(TEST_CONFIG_WITHOUT_REFRESH)
+    assert importer.refreshToken is None
+    assert importer.authCommand == "oama access natwest"
+
+
+def test_refresh_token_required_without_auth_command(importer_factory):
+    """Test that refresh_token is required when neither auth_command nor access_token provided."""
+    TEST_CONFIG_WITHOUT_REFRESH = b"""
+        account: DefaultAccount
+        client_id: sandbox-random
+        client_secret: deadc0de-dead-c0de-dead-c0dedeadc0de
+    """
+
+    with pytest.raises(KeyError, match="refresh_token"):
+        importer_factory(TEST_CONFIG_WITHOUT_REFRESH)
+
+
+def test_client_id_secret_optional_with_auth_command(importer_factory):
+    """Test that client_id and client_secret are not required when auth_command is provided."""
+    TEST_CONFIG_WITHOUT_CLIENT = b"""
+        account: DefaultAccount
+        auth_command: "oama access natwest"
+    """
+
+    importer = importer_factory(TEST_CONFIG_WITHOUT_CLIENT)
+    assert importer.clientId is None
+    assert importer.clientSecret is None
+    assert importer.authCommand == "oama access natwest"
+
+
+def test_client_id_optional_with_auth_command_for_sandbox(importer_factory):
+    """Test that client_id can be provided with auth_command for sandbox detection."""
+    TEST_CONFIG_WITH_CLIENT = b"""
+        account: DefaultAccount
+        client_id: sandbox-test
+        auth_command: "oama access natwest"
+    """
+
+    importer = importer_factory(TEST_CONFIG_WITH_CLIENT)
+    assert importer.clientId == "sandbox-test"
+    assert importer.sandbox is True
