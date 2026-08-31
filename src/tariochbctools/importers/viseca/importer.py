@@ -96,12 +96,15 @@ class Importer(beangulp.Importer):
 
                 if amountChf:
                     if lastTrxDate:
-                        entries.append(
-                            self.createEntry(
-                                filepath, lastTrxDate, lastAmount, lastDetails
+                        try:
+                            entries.append(
+                                self.createEntry(
+                                    filepath, lastTrxDate, lastAmount, lastDetails
+                                )
                             )
-                        )
-
+                        except Exception as e:
+                            print("Could not parse entry: ", row, e)
+                    
                     lastTrxDate = trxDate
                     lastAmount = amountChf
                     lastDetails = ""
