@@ -50,7 +50,10 @@ awardwallet-conf = "tariochbctools.importers.awardwalletimp.config:run"
 dev = [
     "pytest",
     "pre-commit",
-    "deptry"
+    "deptry",
+    "mypy",
+    "types-python-dateutil",
+    "types-pyyaml"
 ]
 docs = [
     "sphinx>=7",

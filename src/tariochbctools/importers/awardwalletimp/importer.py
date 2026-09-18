@@ -15,7 +15,7 @@ from beancount.core.number import D
 class Importer(beangulp.Importer):
     """An importer for AwardWallet"""
 
-    def _configure(self, filepath: str, existing: data.Entries) -> None:
+    def _configure(self, filepath: str, existing: data.Entries | None) -> None:
         with open(filepath) as f:
             self.config = yaml.safe_load(f)
         self.api_key = self.config["api_key"]
@@ -26,10 +26,12 @@ class Importer(beangulp.Importer):
     def account(self, filepath: str) -> data.Account:
         return ""
 
-    def extract(self, filepath: str, existing: data.Entries = None) -> data.Entries:
+    def extract(
+        self, filepath: str, existing: data.Entries | None = None
+    ) -> data.Entries:
         self._configure(filepath, existing)
         client = AwardWalletClient(self.api_key)
-        entries = []
+        entries: data.Entries = []
 
         for user_id, user in self.config["users"].items():
             user_details = client.get_connected_user_details(user_id)
@@ -49,11 +51,11 @@ class Importer(beangulp.Importer):
 
     def _extract_user_history(
         self, user: dict, user_details: model.GetConnectedUserDetailsResponse
-    ) -> list[data.Transaction]:
+    ) -> data.Entries:
         """
         User history is limited to the last 10 history elements per account
         """
-        entries = []
+        entries: data.Entries = []
         for account in user_details.accounts:
             if account.account_id in user["accounts"]:
                 logging.info("Extracting account ID %s", account.account_id)
@@ -80,8 +82,8 @@ class Importer(beangulp.Importer):
 
     def _extract_account_history(
         self, user: dict, client: AwardWalletClient
-    ) -> list[data.Transaction]:
-        entries = []
+    ) -> data.Entries:
+        entries: data.Entries = []
         for account_id, account_config in user["accounts"].items():
             logging.info("Extracting account ID %s", account_id)
             account = client.get_account_details(account_id).account
@@ -176,8 +178,8 @@ class Importer(beangulp.Importer):
         self,
         account: model.Account,
         account_config: dict,
-        latest_txn: data.Transaction | None,
-    ) -> list[data.Transaction]:
+        latest_txn: data.Directive | None,
+    ) -> list[data.Balance]:
         local_account = account_config["account"]
         currency = account_config["currency"]
         balance = amount.Amount(D(account.balance_raw), currency)

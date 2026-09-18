@@ -29,14 +29,15 @@ repos:
   - id: rst-linter
     files: README.rst
 
-- repo: https://github.com/pre-commit/mirrors-mypy
-  rev: v2.3.1
+- repo: local
   hooks:
   - id: mypy
-    additional_dependencies:
-    - types-python-dateutil
-    - types-PyYAML
-    - types-requests
+    name: mypy
+    # runs in the project environment to see the types of the installed packages, mypy and its stubs are dev dependencies
+    entry: uv run --locked mypy src tests
+    language: system
+    types: [python]
+    pass_filenames: false
 
 - repo: https://github.com/astral-sh/uv-pre-commit
   rev: 0.12.16

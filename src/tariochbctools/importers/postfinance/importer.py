@@ -27,7 +27,7 @@ class Importer(beangulp.Importer):
         csvfile = open(file=filepath, encoding="windows_1252")
         reader = csv.reader(csvfile, delimiter=";")
         meta = data.new_metadata(filepath, 0)
-        entries = []
+        entries: data.Entries = []
 
         for row in reader:
             try:
@@ -62,10 +62,10 @@ class Importer(beangulp.Importer):
                 # only add balance on SOM
                 book_date = book_date + timedelta(days=1)
                 if balance and book_date.day == 1:
-                    entry = data.Balance(
+                    balanceEntry = data.Balance(
                         meta, book_date, self._account, balance, None, None
                     )
-                    entries.append(entry)
+                    entries.append(balanceEntry)
 
         csvfile.close()
         entries = data.sorted(entries)

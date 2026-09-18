@@ -26,7 +26,7 @@ def generate(
             fxTuple = tuple([entry.amount.currency, baseCcy])
             fxRate = prices.get_price(priceMap, fxTuple, entry.date)
             if fxRate[1] and not _alreadyExistingPrice(
-                priceMap, tuple([entry.currency, baseCcy]), entry.date
+                priceMap, (entry.currency, baseCcy), entry.date
             ):
                 priceInBaseCcy = amount.Amount(entry.amount.number * fxRate[1], baseCcy)
 

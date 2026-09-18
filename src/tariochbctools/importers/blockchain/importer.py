@@ -16,7 +16,7 @@ class Importer(beangulp.Importer):
     def identify(self, filepath: str) -> bool:
         return path.basename(filepath).endswith("blockchain.yaml")
 
-    def account(self, filepath: str) -> data.Entries:
+    def account(self, filepath: str) -> data.Account:
         return ""
 
     def extract(self, filepath: str, existing: data.Entries) -> data.Entries:
@@ -26,7 +26,7 @@ class Importer(beangulp.Importer):
         baseCcy = config["base_ccy"]
         priceLookup = PriceLookup(existing, baseCcy)
 
-        entries = []
+        entries: data.Entries = []
         for address in self.config["addresses"]:
             currency = address["currency"]
             addressDetails = blockcypher.get_address_details(

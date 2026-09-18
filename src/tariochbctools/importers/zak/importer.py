@@ -25,7 +25,7 @@ class Importer(beangulp.Importer):
         return re.search(self._filepattern, filepath) is not None
 
     def createEntry(
-        self, filepath: str, date: str, amt: str, text: str
+        self, filepath: str, date: str, amt: str | data.Decimal, text: str
     ) -> data.Transaction:
         bookingNrRgexp = re.compile(r"BC Buchungsnr. (?P<bookingRef>\d+)$")
         m = bookingNrRgexp.search(text)
@@ -49,7 +49,9 @@ class Importer(beangulp.Importer):
             ],
         )
 
-    def createBalanceEntry(self, filepath: str, date: str, amt: str) -> data.Balance:
+    def createBalanceEntry(
+        self, filepath: str, date: str, amt: str | data.Decimal
+    ) -> data.Balance:
         meta = data.new_metadata(filepath, 0)
         return data.Balance(
             meta,
@@ -67,7 +69,7 @@ class Importer(beangulp.Importer):
             return number
 
     def extract(self, filepath: str, existing: data.Entries) -> data.Entries:
-        entries = []
+        entries: data.Entries = []
 
         firstPageTables = camelot.read_pdf(
             filepath, flavor="stream", pages="1", table_regions=["60,450,600,170"]

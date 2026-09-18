@@ -24,7 +24,7 @@ class SwisscardImporter(Importer):
         return self._account
 
     def extract(self, filepath: str, existing: data.Entries) -> data.Entries:
-        entries = []
+        entries: data.Entries = []
         with open(filepath) as csvfile:
             reader = csv.DictReader(
                 csvfile,

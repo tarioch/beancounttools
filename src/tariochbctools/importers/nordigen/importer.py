@@ -20,7 +20,7 @@ class Importer(beangulp.Importer):
     def identify(self, filepath: str) -> bool:
         return path.basename(filepath).endswith("nordigen.yaml")
 
-    def account(self, filepath: str) -> data.Entries:
+    def account(self, filepath: str) -> data.Account:
         return ""
 
     def extract(self, filepath: str, existing: data.Entries) -> data.Entries:
@@ -37,12 +37,12 @@ class Importer(beangulp.Importer):
         try:
             r.raise_for_status()
         except requests.exceptions.HTTPError as e:
-            raise HttpServiceException(e, e.response.text) from e
+            raise HttpServiceException(e, r.text) from e
 
         token = r.json()["access"]
         headers = {"Authorization": "Bearer " + token}
 
-        entries = []
+        entries: data.Entries = []
         for account in config["accounts"]:
             accountId = account["id"]
             assetAccount = account["asset_account"]
@@ -53,7 +53,7 @@ class Importer(beangulp.Importer):
             try:
                 r.raise_for_status()
             except requests.exceptions.HTTPError as e:
-                raise HttpServiceException(e, e.response.text) from e
+                raise HttpServiceException(e, r.text) from e
 
             transactions = sorted(
                 r.json()["transactions"]["booked"], key=lambda trx: trx["bookingDate"]

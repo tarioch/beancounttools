@@ -142,7 +142,7 @@ class Importer(beangulp.Importer):
         accounts = r.json()
         self.accountId = accounts[0]["id"]
 
-        entries = []
+        entries: data.Entries = []
         base_url = "https://api.transferwise.com"
         for account in accounts[0]["balances"]:
             accountCcy = account["currency"]
