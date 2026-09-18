@@ -226,7 +226,7 @@ class Importer(beangulp.Importer):
         transactions: list[QuickFileTransaction],
         invert_sign: bool,
     ) -> data.Entries:
-        entries = []
+        entries: data.Entries = []
 
         entry = trx.to_beancount_transaction(
             local_account, metadata.Currency, invert_sign

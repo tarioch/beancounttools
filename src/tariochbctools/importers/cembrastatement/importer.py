@@ -23,7 +23,7 @@ class Importer(beangulp.Importer):
         return self._account
 
     def createEntry(
-        self, filepath: str, date: datetime.date, amt: data.Decimal, text: str
+        self, filepath: str, date: datetime.date, amt: data.Amount, text: str
     ) -> data.Transaction:
         meta = data.new_metadata(filepath, 0)
         return data.Transaction(
@@ -40,13 +40,13 @@ class Importer(beangulp.Importer):
         )
 
     def createBalanceEntry(
-        self, filepath: str, date: datetime.date, amt: data.Decimal
+        self, filepath: str, date: datetime.date, amt: data.Amount
     ) -> data.Balance:
         meta = data.new_metadata(filepath, 0)
         return data.Balance(meta, date, self._account, amt, None, None)
 
     def extract(self, filepath: str, existing: data.Entries) -> data.Entries:
-        entries = []
+        entries: data.Entries = []
 
         tables = camelot.read_pdf(
             filepath, pages="2-end", flavor="stream", table_areas=["50,700,560,50"]
@@ -112,7 +112,8 @@ class Importer(beangulp.Importer):
     def cleanDecimal(self, formattedNumber: str) -> data.Decimal:
         return D(formattedNumber.replace("'", ""))
 
-    def getAmount(self, debit: str, credit: str) -> data.Amount:
+    def getAmount(self, debit: str, credit: str) -> data.Amount | None:
         amt = -self.cleanDecimal(debit) if debit else self.cleanDecimal(credit)
         if amt:
             return amount.Amount(amt, self.currency)
+        return None

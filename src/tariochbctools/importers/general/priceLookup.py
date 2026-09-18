@@ -1,7 +1,7 @@
 from datetime import date
+from decimal import Decimal
 
 from beancount.core import amount, data, prices
-from beancount.core.number import D
 
 
 class PriceLookup:
@@ -12,17 +12,18 @@ class PriceLookup:
             self.priceMap = None
         self.baseCcy = baseCcy
 
-    def fetchPriceAmount(self, instrument: str, date: date) -> data.Amount:
+    def fetchPriceAmount(self, instrument: str, date: date) -> Decimal | None:
         if self.priceMap:
             price = prices.get_price(
                 self.priceMap, tuple([instrument, self.baseCcy]), date
             )
             return price[1]
         else:
-            return D(1)
+            return Decimal(1)
 
-    def fetchPrice(self, instrument: str, date: date) -> data.Amount:
+    def fetchPrice(self, instrument: str, date: date) -> amount.Amount | None:
         if instrument == self.baseCcy:
             return None
 
-        return amount.Amount(self.fetchPriceAmount(instrument, date), self.baseCcy)
+        # without a price the amount has no number
+        return amount.Amount(self.fetchPriceAmount(instrument, date), self.baseCcy)  # type: ignore[arg-type]

@@ -56,7 +56,7 @@ class Importer(beangulp.Importer):
         statement = parser.parse(response)
         assert isinstance(statement, Types.FlexQueryResponse)
 
-        result = []
+        result: data.Entries = []
         for stmt in statement.FlexStatements:
             transactions: list = []
             account = stmt.accountId

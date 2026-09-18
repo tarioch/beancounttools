@@ -47,7 +47,7 @@ class Importer(beangulp.Importer):
         return self.cashAccount
 
     def extract(self, filepath: str, existing: data.Entries) -> data.Entries:
-        entries = []
+        entries: data.Entries = []
 
         self.priceLookup = PriceLookup(existing, self.baseCcy)
 
@@ -123,9 +123,11 @@ class Importer(beangulp.Importer):
         return entries
 
     def __createBuy(
-        self, amt: amount, shares: amount, book_date: date
+        self, amt: amount.Amount, shares: amount.Amount | None, book_date: date
     ) -> list[data.Posting]:
         price = self.priceLookup.fetchPrice("USD", book_date)
+        assert price is not None  # only None if USD is the base currency
+        assert amt.number is not None and price.number is not None
         cost = CostSpec(
             number_per=None,
             number_total=round(-amt.number * price.number, 2),
@@ -142,7 +144,7 @@ class Importer(beangulp.Importer):
         return postings
 
     def __createSell(
-        self, amt: amount, shares: amount, book_date: date
+        self, amt: amount.Amount, shares: amount.Amount | None, book_date: date
     ) -> list[data.Posting]:
         price = self.priceLookup.fetchPrice("USD", book_date)
         cost = CostSpec(
@@ -162,13 +164,13 @@ class Importer(beangulp.Importer):
         return postings
 
     def __createDividend(
-        self, amt: amount, book_date: date, incomeAccount: str
+        self, amt: amount.Amount, book_date: date, incomeAccount: str
     ) -> list[data.Posting]:
         price = self.priceLookup.fetchPrice("USD", book_date)
         postings = [
             data.Posting(
                 self.investmentAccount,
-                amount.Amount(D(0), self.symbol),
+                amount.Amount(D("0"), self.symbol),
                 None,
                 None,
                 None,

@@ -50,7 +50,7 @@ class Importer(beangulp.Importer):
         )
 
     def extract(self, filepath: str, existing: data.Entries) -> data.Entries:
-        entries = []
+        entries: data.Entries = []
 
         p = re.compile(r"^\d\d\.\d\d\.\d\d$")
 

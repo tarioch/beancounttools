@@ -45,6 +45,6 @@ class MailAdapterImporter(Importer):
                                     processed = True
 
                 if processed and "targetFolder" in config:
-                    mailbox.move(msg.uid, config["targetFolder"])
+                    mailbox.move(msg.uid, config["targetFolder"])  # type: ignore[arg-type]  # fetched messages always have a uid
 
         return result

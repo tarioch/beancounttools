@@ -41,7 +41,7 @@ class Importer(beangulp.Importer):
         self.existing: data.Entries | None = None
         self.domain = "truelayer.com"
 
-    def _configure(self, filepath: str, existing: data.Entries) -> None:
+    def _configure(self, filepath: str, existing: data.Entries | None) -> None:
         with open(filepath) as f:
             self.config = yaml.safe_load(f)
 
@@ -126,7 +126,9 @@ class Importer(beangulp.Importer):
 
         return self.accessToken
 
-    def extract(self, filepath: str, existing: data.Entries = None) -> data.Entries:
+    def extract(
+        self, filepath: str, existing: data.Entries | None = None
+    ) -> data.Entries:
         self._configure(filepath, existing)
 
         access_token = self._get_access_token()
@@ -140,7 +142,7 @@ class Importer(beangulp.Importer):
 
         return entries
 
-    def _get_account_for_account_id(self, account_id: str) -> data.Account:
+    def _get_account_for_account_id(self, account_id: str) -> data.Account | None:
         """
         Find a matching account for the account ID.
         If the user hasn't specified any in the config, return
@@ -161,7 +163,7 @@ class Importer(beangulp.Importer):
     def _extract_endpoint_transactions(
         self, endpoint: str, headers: dict[str, str], invert_sign: bool = False
     ) -> data.Entries:
-        entries = []
+        entries: data.Entries = []
         r = requests.get(
             f"https://api.{self.domain}/data/v1/{endpoint}", headers=headers
         )
@@ -215,7 +217,7 @@ class Importer(beangulp.Importer):
         local_account: data.Account,
         transactions: list[Any],
         invert_sign: bool,
-    ) -> data.Transaction:
+    ) -> list[data.Transaction]:
         entries = []
         metakv: dict[str, Any] = {}
 
@@ -269,7 +271,7 @@ class Importer(beangulp.Importer):
         result: dict[str, Any],
         local_account: data.Account,
         invert_sign: bool,
-    ) -> data.Transaction:
+    ) -> list[data.Balance]:
         entries = []
 
         meta = data.new_metadata("", 0)

@@ -35,7 +35,7 @@ class Importer(beangulp.Importer):
         self,
         filepath: str,
         date: str,
-        amt: amount.Amount,
+        amt: amount.Amount | None,
         text: str,
         conversionOriginal: str | None,
         conversionRate: str | None,
@@ -85,7 +85,7 @@ class Importer(beangulp.Importer):
         )
 
     def extract(self, filepath: str, existing: data.Entries) -> data.Entries:
-        entries = []
+        entries: data.Entries = []
 
         conversionPattern = re.compile(r"(?P<original>.+) at the rate of (?P<rate>.+)")
         balancePattern = re.compile(r"Balance as of (?P<date>\d\d\.\d\d\.\d\d\d\d)")

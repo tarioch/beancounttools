@@ -31,7 +31,7 @@ class Importer(beangulp.Importer):
         return self._account
 
     def extract(self, filepath: str, existing: data.Entries) -> data.Entries:
-        entries = []
+        entries: data.Entries = []
 
         with open(filepath) as csvfile:
             reader = csv.DictReader(
@@ -102,7 +102,7 @@ class Importer(beangulp.Importer):
                 # only add balance after the last (newest) transaction
                 try:
                     book_date = book_date + timedelta(days=1)
-                    entry = data.Balance(
+                    balanceEntry = data.Balance(
                         data.new_metadata(filepath, 0, {}),
                         book_date,
                         self._account,
@@ -110,7 +110,7 @@ class Importer(beangulp.Importer):
                         None,
                         None,
                     )
-                    entries.append(entry)
+                    entries.append(balanceEntry)
                 except NameError:
                     pass
 

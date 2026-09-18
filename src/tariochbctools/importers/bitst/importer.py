@@ -41,7 +41,7 @@ class Importer(beangulp.Importer):
 
         trxs = self.client.user_transactions()
         trxs.reverse()
-        result = []
+        result: data.Entries = []
         for trx in trxs:
             entry = self.fetchSingle(trx)
             if entry.date > dateCutoff:

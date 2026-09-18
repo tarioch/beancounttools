@@ -42,7 +42,7 @@ class Importer(beangulp.Importer):
         return self._account
 
     def extract(self, filepath: str, existing: data.Entries) -> data.Entries:
-        entries = []
+        entries: data.Entries = []
         transactions = mt940.parse(filepath, encoding=detect_encoding(filepath))
         for trx in transactions:
             trxdata = trx.data
