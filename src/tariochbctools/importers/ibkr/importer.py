@@ -2,7 +2,7 @@ import re
 from datetime import date
 from decimal import Decimal
 from os import path
-from typing import Any
+from typing import Any, TypeVar
 
 import beangulp
 import yaml
@@ -13,6 +13,15 @@ from ibflex.enums import CashAction
 
 from tariochbctools.importers.general.priceLookup import PriceLookup
 from tariochbctools.importers.ibkr import flexclient
+
+T = TypeVar("T")
+
+
+def required(value: T | None, field: str) -> T:
+    """ibflex declares every field of a flex statement as optional, which ones are there depends on the flex query."""
+    if value is None:
+        raise ValueError(f"The flex query does not include the field {field}")
+    return value
 
 
 class Importer(beangulp.Importer):
@@ -29,7 +38,7 @@ class Importer(beangulp.Importer):
     ) -> bool:
         p = re.compile(r".* (?P<perShare>\d+\.?\d+) PER SHARE")
 
-        trxPerShareGroups = p.search(trx.description)
+        trxPerShareGroups = p.search(required(trx.description, "description"))
         tPerShareGroups = p.search(t["description"])
 
         trxPerShare = trxPerShareGroups.group("perShare") if trxPerShareGroups else ""
@@ -37,7 +46,7 @@ class Importer(beangulp.Importer):
 
         return (
             t["date"] == trx.dateTime
-            and t["symbol"] == self.cleanupSymbol(trx.symbol)
+            and t["symbol"] == self.cleanupSymbol(required(trx.symbol, "symbol"))
             and trxPerShare == tPerShare
             and t["account"] == account
         )
@@ -60,60 +69,70 @@ class Importer(beangulp.Importer):
         for stmt in statement.FlexStatements:
             transactions: list = []
             account = stmt.accountId
-            for trx in stmt.Trades:
+            for trade in stmt.Trades:
+                currency = required(trade.currency, "currency")
                 result.append(
                     self.createBuy(
-                        trx.tradeDate,
+                        required(trade.tradeDate, "tradeDate"),
                         account,
-                        self.cleanupSymbol(trx.symbol),
-                        trx.quantity,
-                        trx.currency,
-                        trx.tradePrice,
+                        self.cleanupSymbol(required(trade.symbol, "symbol")),
+                        required(trade.quantity, "quantity"),
+                        currency,
+                        required(trade.tradePrice, "tradePrice"),
                         amount.Amount(
-                            round(-trx.ibCommission, 2), trx.ibCommissionCurrency
+                            round(-required(trade.ibCommission, "ibCommission"), 2),
+                            required(
+                                trade.ibCommissionCurrency, "ibCommissionCurrency"
+                            ),
                         ),
-                        amount.Amount(round(trx.netCash, 2), trx.currency),
+                        amount.Amount(
+                            round(required(trade.netCash, "netCash"), 2), currency
+                        ),
                         config["baseCcy"],
-                        trx.fxRateToBase,
+                        trade.fxRateToBase,
                     )
                 )
 
-            for trx in stmt.CashTransactions:
+            for cash in stmt.CashTransactions:
                 existingEntry = None
-                if CashAction.DIVIDEND == trx.type or CashAction.WHTAX == trx.type:
+                if CashAction.DIVIDEND == cash.type or CashAction.WHTAX == cash.type:
                     existingEntry = next(
                         (
                             t
                             for t in transactions
-                            if self.matches(trx, t, stmt.accountId)
+                            if self.matches(cash, t, stmt.accountId)
                         ),
                         None,
                     )
 
                 if existingEntry:
-                    if CashAction.WHTAX == trx.type:
-                        existingEntry["whAmount"] += trx.amount
+                    if CashAction.WHTAX == cash.type:
+                        existingEntry["whAmount"] += cash.amount
                     else:
-                        existingEntry["amount"] += trx.amount
-                        existingEntry["description"] = trx.description
-                        existingEntry["type"] = trx.type
+                        existingEntry["amount"] += cash.amount
+                        existingEntry["description"] = cash.description
+                        existingEntry["type"] = cash.type
                 else:
-                    if CashAction.WHTAX == trx.type:
+                    amt: Decimal | int | None
+                    whAmount: Decimal | int | None
+                    if CashAction.WHTAX == cash.type:
                         amt = 0
-                        whAmount = trx.amount
+                        whAmount = cash.amount
                     else:
-                        amt = trx.amount
+                        amt = cash.amount
                         whAmount = 0
 
                     transactions.append(
                         {
-                            "date": trx.dateTime,
-                            "symbol": self.cleanupSymbol(trx.symbol),
-                            "currency": trx.currency,
+                            "date": cash.dateTime,
+                            "symbol": self.cleanupSymbol(
+                                required(cash.symbol, "symbol")
+                            ),
+                            "currency": cash.currency,
                             "amount": amt,
                             "whAmount": whAmount,
-                            "description": trx.description,
-                            "type": trx.type,
+                            "description": cash.description,
+                            "type": cash.type,
                             "account": account,
                         }
                     )
@@ -163,7 +182,7 @@ class Importer(beangulp.Importer):
 
         postings = [
             data.Posting(
-                assetAccount, amount.Amount(D(0), asset), None, None, None, None
+                assetAccount, amount.Amount(D("0"), asset), None, None, None, None
             ),
             data.Posting(
                 liquidityAccount,
@@ -204,7 +223,7 @@ class Importer(beangulp.Importer):
         commission: amount.Amount,
         netCash: amount.Amount,
         baseCcy: str,
-        fxRateToBase: Decimal,
+        fxRateToBase: Decimal | None,
     ) -> data.Transaction:
         narration = "Buy"
         feeAccount = self.getFeeAccount(account)
@@ -213,11 +232,14 @@ class Importer(beangulp.Importer):
 
         liquidityPrice = None
         if currency != baseCcy:
-            price = price * fxRateToBase
+            # only needed for other currencies than the base currency
+            fxRate = required(fxRateToBase, "fxRateToBase")
+            price = price * fxRate
             commission = amount.Amount(
-                round(commission.number * fxRateToBase, 2), baseCcy
+                round(required(commission.number, "ibCommission") * fxRate, 2),
+                baseCcy,
             )
-            liquidityPrice = amount.Amount(fxRateToBase, baseCcy)
+            liquidityPrice = amount.Amount(fxRate, baseCcy)
 
         postings = [
             data.Posting(

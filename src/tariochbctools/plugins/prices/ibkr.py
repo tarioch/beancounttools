@@ -17,10 +17,19 @@ class Source(source.Source):
         statement = parser.parse(response)
         for custStatement in statement.FlexStatements:
             for position in custStatement.OpenPositions:
+                if position.symbol is None:
+                    # cannot be the requested ticker
+                    continue
+
                 symbol = position.symbol
                 symbol = symbol.rstrip("z")
                 symbol, _, _ = symbol.partition(".")
                 if symbol == ticker:
+                    if position.reportDate is None:
+                        raise ValueError(
+                            "The flex query does not include the field reportDate"
+                        )
+
                     price = D(position.markPrice)
                     timezone = tz.gettz("Europe/Zurich")
                     time = datetime.combine(
