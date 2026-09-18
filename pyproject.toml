@@ -24,7 +24,7 @@ dependencies = [
     "bitstampclient",
     "mt-940",
     "pyyaml",
-    "ibflex @ git+https://github.com/csingley/ibflex",
+    "ibflex>=1.1",
     "requests",
     "camelot-py",
     "opencv-python-headless",
@@ -57,9 +57,6 @@ docs = [
 [build-system]
 requires = ["hatchling >= 1.26", "uv-dynamic-versioning"]
 build-backend = "hatchling.build"
-
-[tool.hatch.metadata]
-allow-direct-references = true
 
 [tool.hatch.version]
 source = "uv-dynamic-versioning"

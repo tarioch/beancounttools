@@ -500,7 +500,11 @@ wheels = [
 [[package]]
 name = "ibflex"
 version = "1.1"
-source = { git = "https://github.com/csingley/ibflex#f1b96e26f08a9c34fc3639aa63f6aadf90b2f6f6" }
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/4c/1a/86e095141d8a808f396c6f9303b785dd461e218f12149bf5a612f6e1d696/ibflex-1.1.tar.gz", hash = "sha256:3e5cac02cadcbd22ea46ae4ca306d67c274b7166f40119f5d7d7103a130d032a", size = 50257, upload-time = "2026-05-23T15:06:40.922Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/99/21/21d3ad7fce8a54c7468ea64729da019f2d93d631468e2412848373bd5d41/ibflex-1.1-py3-none-any.whl", hash = "sha256:c84e02dafcd17f70587777c2e2f00e3cc1e949e045790bf4fe562fb03dbef434", size = 30987, upload-time = "2026-05-23T15:06:39.352Z" },
+]
 
 [[package]]
 name = "identify"
@@ -1735,7 +1739,7 @@ requires-dist = [
     { name = "bitstampclient" },
     { name = "blockcypher" },
     { name = "camelot-py" },
-    { name = "ibflex", git = "https://github.com/csingley/ibflex" },
+    { name = "ibflex", specifier = ">=1.1" },
     { name = "imap-tools" },
     { name = "mt-940" },
     { name = "opencv-python-headless" },
