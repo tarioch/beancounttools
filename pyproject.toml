@@ -50,7 +50,10 @@ awardwallet-conf = "tariochbctools.importers.awardwalletimp.config:run"
 dev = [
     "pytest",
     "pre-commit",
-    "deptry"
+    "deptry",
+    "mypy",
+    "types-python-dateutil",
+    "types-pyyaml"
 ]
 docs = [
     "sphinx>=7",
@@ -96,3 +99,14 @@ disallow_untyped_defs = true
 [[tool.mypy.overrides]]
 module = "tests.*"
 disallow_untyped_defs = false
+
+# These modules do not pass with the types of the installed packages yet, the errors are ignored until they are fixed:
+# - ibkr: ibflex declares every field as optional, the code needs narrowing before it uses them
+# - bitst: mixes int, Decimal and Amount and has variables that may be unbound
+[[tool.mypy.overrides]]
+module = [
+    "tariochbctools.importers.ibkr.importer",
+    "tariochbctools.plugins.prices.ibkr",
+    "tariochbctools.importers.bitst.importer",
+]
+ignore_errors = true

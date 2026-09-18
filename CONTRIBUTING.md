@@ -49,8 +49,9 @@ Things that catch people out:
 
 - `pre-commit run --all-files` only looks at files tracked by git. `git add` new files before running it, otherwise
   they are not checked (and CI then fails on them).
-- mypy runs in an isolated pre-commit environment. Type stubs for third party packages have to be listed under
-  `additional_dependencies` of the mypy hook in `.pre-commit-config.yaml`.
+- mypy runs in the project environment (a local pre-commit hook calling `uv run mypy`), so it checks against the types of
+  the installed packages. Stub packages (`types-*`) belong into the `dev` dependency group.
+  A few legacy modules are excluded by `ignore_errors` overrides in `pyproject.toml`, take them out when you fix one.
 - deptry fails for an import that is only available transitively and for a declared dependency that is not used.
   Declare what you import in `pyproject.toml`, remove what you stop using.
 
