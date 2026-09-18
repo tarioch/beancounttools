@@ -40,9 +40,6 @@ jobs:
       - name: Build documentation
         run: uv run --locked --group docs sphinx-build -W --keep-going -b html docs "$RUNNER_TEMP/docs"
 
-      - name: Build
-        run: uv build
-
   test:
     name: Test (Python ${{ matrix.python-version }})
     runs-on: ubuntu-24.04
@@ -68,11 +65,8 @@ jobs:
       - name: Test
         run: uv run pytest
 
-  publish:
-    name: Build and publish
-    needs: [lint, test]
-    # pushes only happen for master and version tags
-    if: github.event_name == 'push'
+  build:
+    name: Build
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     permissions:
@@ -89,14 +83,51 @@ jobs:
       - name: Build
         run: uv build
 
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: dist
+          path: dist/
+          if-no-files-found: error
+
+  # the publish jobs only get an OIDC token (trusted publishing), no repository content and no stored secrets
+  publish-testpypi:
+    name: Publish 📦 to TestPyPI
+    needs: [lint, test, build]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    environment:
+      name: testpypi
+      url: https://test.pypi.org/p/tariochbctools
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: dist
+          path: dist/
+      - uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
+
       - name: Publish distribution 📦 to Test PyPI
-        if: github.ref == 'refs/heads/master'
-        env:
-          UV_PUBLISH_TOKEN: ${{ secrets.test_pypi_password }}
-        run: uv publish --index testpypi
+        run: uv publish --trusted-publishing always --publish-url https://test.pypi.org/legacy/
+
+  publish-pypi:
+    name: Publish 📦 to PyPI
+    needs: [lint, test, build]
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    environment:
+      name: pypi
+      url: https://pypi.org/p/tariochbctools
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: dist
+          path: dist/
+      - uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
 
       - name: Publish distribution 📦 to PyPI
-        if: startsWith(github.ref, 'refs/tags/v')
-        env:
-          UV_PUBLISH_TOKEN: ${{ secrets.pypi_password }}
-        run: uv publish
+        run: uv publish --trusted-publishing always
