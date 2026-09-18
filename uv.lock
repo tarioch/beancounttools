@@ -1667,10 +1667,13 @@ dependencies = [
     { name = "ibflex" },
     { name = "imap-tools" },
     { name = "mt-940" },
+    { name = "pandas" },
+    { name = "python-dateutil" },
     { name = "pyyaml" },
     { name = "requests" },
     { name = "rsa" },
     { name = "undictify" },
+    { name = "urllib3" },
 ]
 
 [package.dev-dependencies]
@@ -1696,10 +1699,13 @@ requires-dist = [
     { name = "ibflex", specifier = ">=1.1" },
     { name = "imap-tools" },
     { name = "mt-940" },
+    { name = "pandas" },
+    { name = "python-dateutil" },
     { name = "pyyaml" },
     { name = "requests" },
     { name = "rsa" },
     { name = "undictify" },
+    { name = "urllib3" },
 ]
 
 [package.metadata.requires-dev]

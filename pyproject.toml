@@ -31,6 +31,9 @@ dependencies = [
     "imap-tools",
     "undictify",
     "rsa",
+    "pandas",
+    "python-dateutil",
+    "urllib3",
 ]
 
 [project.urls]
