@@ -1,9 +1,9 @@
 from datetime import datetime
 from os import environ
+from zoneinfo import ZoneInfo
 
 from beancount.core.number import D
 from beanprice import source
-from dateutil import tz
 from ibflex import client, parser
 
 
@@ -31,10 +31,12 @@ class Source(source.Source):
                         )
 
                     price = D(position.markPrice)
-                    timezone = tz.gettz("Europe/Zurich")
+                    # midnight in Zurich, whatever the time zone of the machine is
                     time = datetime.combine(
-                        position.reportDate, datetime.min.time()
-                    ).astimezone(timezone)
+                        position.reportDate,
+                        datetime.min.time(),
+                        tzinfo=ZoneInfo("Europe/Zurich"),
+                    )
 
                     return source.SourcePrice(price, time, position.currency)
 
