@@ -8,7 +8,7 @@ from awardwallet import AwardWalletClient
 from awardwallet.client import AccessLevel
 
 
-def get_link_url(client):
+def get_link_url(client: AwardWalletClient) -> None:
     connection_url = client.get_connection_link(
         platform="desktop",
         access_level=AccessLevel.READ_ALL_EXCEPT_PASSWORDS,
@@ -21,7 +21,7 @@ def get_link_url(client):
     print(connection_url)  # noqa: T201
 
 
-def generate(client):
+def generate(client: AwardWalletClient) -> None:
     """
     Generate a config for a user including user_id and account_id list.
     Output in yaml format.

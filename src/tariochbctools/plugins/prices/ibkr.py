@@ -1,6 +1,5 @@
 from datetime import datetime
 from os import environ
-from typing import Optional
 
 from beancount.core.number import D
 from beanprice import source
@@ -34,5 +33,5 @@ class Source(source.Source):
 
     def get_historical_price(
         self, ticker: str, time: datetime
-    ) -> Optional[source.SourcePrice]:
+    ) -> source.SourcePrice | None:
         return None

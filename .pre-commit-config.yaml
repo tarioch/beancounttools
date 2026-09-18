@@ -2,7 +2,7 @@ exclude: '^docs/conf.py'
 
 repos:
 - repo: https://github.com/pre-commit/pre-commit-hooks
-  rev: v5.0.0
+  rev: v6.0.0
   hooks:
   - id: trailing-whitespace
   - id: check-added-large-files
@@ -18,7 +18,7 @@ repos:
     args: ['--fix=auto']  # replace 'auto' with 'lf' to enforce Linux/Mac line endings or 'crlf' for Windows
 
 - repo: https://github.com/astral-sh/ruff-pre-commit
-  rev: v0.15.1
+  rev: v0.16.8
   hooks:
     - id: ruff-check
     - id: ruff-format
@@ -30,13 +30,15 @@ repos:
     files: README.rst
 
 - repo: https://github.com/pre-commit/mirrors-mypy
-  rev: v1.15.0
+  rev: v2.3.1
   hooks:
-  -   id: mypy
-      args: [--install-types, --non-interactive, --ignore-missing-imports, --disallow-incomplete-defs]
-#      args: [--install-types, --non-interactive, --ignore-missing-imports, --disallow-untyped-defs]
+  - id: mypy
+    additional_dependencies:
+    - types-python-dateutil
+    - types-PyYAML
+    - types-requests
 
 - repo: https://github.com/astral-sh/uv-pre-commit
-  rev: 0.10.2
+  rev: 0.12.16
   hooks:
     - id: uv-lock

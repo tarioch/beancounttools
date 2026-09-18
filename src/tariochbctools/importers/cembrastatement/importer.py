@@ -58,7 +58,7 @@ class Importer(beangulp.Importer):
             if df.columns.size != 5:
                 continue
 
-            for index, row in df.iterrows():
+            for _index, row in df.iterrows():
                 trx_date, book_date, text, credit, debit = tuple(row)
                 trx_date, book_date, text, credit, debit = (
                     trx_date.strip(),

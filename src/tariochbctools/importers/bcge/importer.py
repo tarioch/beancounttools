@@ -24,7 +24,7 @@ class BCGEImporter(mt940importer.Importer):
         remittance = re.search(r"/REMI/([^/]+)", transaction_details)
         narration = []
         if beneficiary is not None:
-            narration.append("Beneficiary: %s" % beneficiary.group(1))
+            narration.append(f"Beneficiary: {beneficiary.group(1)}")
         if remittance is not None:
-            narration.append("Remittance: %s" % remittance.group(1))
-        return "%s - %s" % (extra_details, ",".join(narration))
+            narration.append(f"Remittance: {remittance.group(1)}")
+        return f"{extra_details} - {','.join(narration)}"

@@ -1,8 +1,14 @@
+from collections.abc import Sequence
+from typing import Any
+
+from beancount.core import data
+
+
 class ReferenceDuplicatesComparator:
-    def __init__(self, refs=["ref"]):
+    def __init__(self, refs: Sequence[str] = ("ref",)) -> None:
         self.refs = refs
 
-    def __call__(self, entry1, entry2):
+    def __call__(self, entry1: data.Directive, entry2: data.Directive) -> set[Any]:
         entry1Refs = set()
         entry2Refs = set()
         for ref in self.refs:

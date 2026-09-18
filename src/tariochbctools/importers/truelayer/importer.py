@@ -31,18 +31,18 @@ TX_OPTIONAL_META_ID_FIELDS = (
 class Importer(beangulp.Importer):
     """An importer for Truelayer API (e.g. for Revolut)."""
 
-    def __init__(self):
-        self.config = None
-        self.clientId = None
-        self.clientSecret = None
-        self.refreshToken = None
-        self.authCommand = None
-        self.sandbox = None
-        self.existing = None
+    def __init__(self) -> None:
+        self.config: Any = None
+        self.clientId: str | None = None
+        self.clientSecret: str | None = None
+        self.refreshToken: str | None = None
+        self.authCommand: str | None = None
+        self.sandbox: bool | None = None
+        self.existing: data.Entries | None = None
         self.domain = "truelayer.com"
 
     def _configure(self, filepath: str, existing: data.Entries) -> None:
-        with open(filepath, "r") as f:
+        with open(filepath) as f:
             self.config = yaml.safe_load(f)
 
         self.authCommand = self.config.get("auth_command")
@@ -63,7 +63,7 @@ class Importer(beangulp.Importer):
             self.clientSecret = self.config.get("client_secret")
             self.refreshToken = self.config.get("refresh_token")
 
-        self.sandbox = self.clientId and self.clientId.startswith("sandbox")
+        self.sandbox = bool(self.clientId and self.clientId.startswith("sandbox"))
         self.existing = existing
 
         if self.sandbox:

@@ -1,6 +1,6 @@
 import base64
 import json
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime
 from os import path
 from typing import Any
 from urllib.parse import urlencode
@@ -38,13 +38,13 @@ class Importer(beangulp.Importer):
             self.startDate = datetime.combine(
                 date.today() + relativedelta(months=-3),
                 datetime.min.time(),
-                timezone.utc,
+                UTC,
             ).isoformat()
         if "endDate" in kwargs:
             self.endDate = kwargs.pop("endDate")
         else:
             self.endDate = datetime.combine(
-                date.today(), datetime.max.time(), timezone.utc
+                date.today(), datetime.max.time(), UTC
             ).isoformat()
         super().__init__(*args, **kwargs)
 
@@ -99,7 +99,7 @@ class Importer(beangulp.Importer):
         else:
             raise Exception("Failed to get transactions.")
 
-    def _do_sca_challenge(self):
+    def _do_sca_challenge(self) -> str:
         # Read the private key file as bytes.
         with open(self.private_key_path, "rb") as f:
             private_key_data = f.read()
@@ -108,6 +108,7 @@ class Importer(beangulp.Importer):
 
         # Use the private key to sign the one-time-token that was returned
         # in the x-2fa-approval header of the HTTP 403.
+        assert self.one_time_token is not None
         signed_token = rsa.sign(
             self.one_time_token.encode("ascii"), private_key, "SHA-256"
         )
@@ -118,8 +119,8 @@ class Importer(beangulp.Importer):
 
         return signature
 
-    def extract(self, filepath, existing):
-        with open(filepath, "r") as f:
+    def extract(self, filepath: str, existing: data.Entries) -> data.Entries:
+        with open(filepath) as f:
             config = yaml.safe_load(f)
         self.api_token = config["token"]
         baseAccount = config["baseAccount"]

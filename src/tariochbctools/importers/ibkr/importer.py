@@ -43,7 +43,7 @@ class Importer(beangulp.Importer):
         )
 
     def extract(self, filepath: str, existing: data.Entries) -> data.Entries:
-        with open(filepath, "r") as f:
+        with open(filepath) as f:
             config = yaml.safe_load(f)
         token = config["token"]
         queryId = config["queryId"]
