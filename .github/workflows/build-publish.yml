@@ -1,22 +1,32 @@
 name: Publish Python 🐍 distributions 📦 to PyPI and TestPyPI
 on:
   push:
+    branches: [master]
+    tags: ["v*"]
   pull_request:
-    types: [opened, reopened]
-  release:
-    types: [published]
+
+# a newer push to a pull request replaces the running checks, publishing is never interrupted
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions: {}
+
 jobs:
-  build-and-publish:
-    name: Build and publish Python 🐍 distributions 📦 to PyPI and TestPyPI
-    runs-on: ubuntu-latest
+  lint:
+    name: Lint
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
-      - uses: astral-sh/setup-uv@v10.1.0
-      - uses: actions/setup-python@v7
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
         with:
-          python-version: 3.x
+          python-version: "3.14"
 
       - name: Install the project
         run: uv sync --locked --dev
@@ -27,19 +37,66 @@ jobs:
       - name: Check dependencies
         run: uv run deptry src
 
+      - name: Build documentation
+        run: uv run --locked --group docs sphinx-build -W --keep-going -b html docs "$RUNNER_TEMP/docs"
+
+      - name: Build
+        run: uv build
+
+  test:
+    name: Test (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12", "3.13", "3.14"]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install the project
+        run: uv sync --locked --dev
+
       - name: Test
         run: uv run pytest
+
+  publish:
+    name: Build and publish
+    needs: [lint, test]
+    # pushes only happen for master and version tags
+    if: github.event_name == 'push'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
+        with:
+          python-version: "3.14"
 
       - name: Build
         run: uv build
 
       - name: Publish distribution 📦 to Test PyPI
-        if: contains(github.ref, 'refs/heads/master')
+        if: github.ref == 'refs/heads/master'
         env:
           UV_PUBLISH_TOKEN: ${{ secrets.test_pypi_password }}
         run: uv publish --index testpypi
+
       - name: Publish distribution 📦 to PyPI
-        if: contains(github.ref, 'refs/tags/v')
+        if: startsWith(github.ref, 'refs/tags/v')
         env:
           UV_PUBLISH_TOKEN: ${{ secrets.pypi_password }}
         run: uv publish

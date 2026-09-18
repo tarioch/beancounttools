@@ -1,0 +1,5 @@
+rules:
+  use-trusted-publishing:
+    ignore:
+      # the token based upload stays until trusted publishing is configured on PyPI and TestPyPI
+      - build-publish.yml
