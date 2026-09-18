@@ -94,7 +94,7 @@ class Importer(beangulp.Importer):
         text = ""
         amount = None
         saldo = None
-        if df:
+        if df is not None:
             for row in df.itertuples():
                 if row.Saldo:
                     if date and amount:
