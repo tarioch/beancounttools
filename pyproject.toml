@@ -99,9 +99,3 @@ disallow_untyped_defs = true
 [[tool.mypy.overrides]]
 module = "tests.*"
 disallow_untyped_defs = false
-
-# This module does not pass with the types of the installed packages yet, the errors are ignored until they are fixed:
-# bitst mixes int, Decimal and Amount and has variables that may be unbound
-[[tool.mypy.overrides]]
-module = "tariochbctools.importers.bitst.importer"
-ignore_errors = true

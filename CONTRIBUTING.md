@@ -51,7 +51,6 @@ Things that catch people out:
   they are not checked (and CI then fails on them).
 - mypy runs in the project environment (a local pre-commit hook calling `uv run mypy`), so it checks against the types of
   the installed packages. Stub packages (`types-*`) belong into the `dev` dependency group.
-  A few legacy modules are excluded by `ignore_errors` overrides in `pyproject.toml`, take them out when you fix one.
 - deptry fails for an import that is only available transitively and for a declared dependency that is not used.
   Declare what you import in `pyproject.toml`, remove what you stop using.
 

@@ -54,10 +54,10 @@ class Importer(beangulp.Importer):
         type = int(trx["type"])
         date = parse(trx["datetime"]).date()
 
-        posAmt = 0
-        posCcy = None
-        negAmt = 0
-        negCcy = None
+        posAmt = D("0")
+        posCcy: str | None = None
+        negAmt = D("0")
+        negCcy: str | None = None
         for ccy in self.currencies:
             if ccy in trx:
                 amt = D(trx[ccy])
@@ -68,17 +68,18 @@ class Importer(beangulp.Importer):
                     negAmt = amt
                     negCcy = ccy.upper()
 
+        postings: list[data.Posting]
         if type == 0:
             narration = "Deposit"
-            if posCcy:
-                cost = data.CostSpec(
-                    self.priceLookup.fetchPriceAmount(posCcy, date),
-                    None,
-                    "CHF",
-                    None,
-                    None,
-                    False,
-                )
+            posCcy = self.requiredCurrency(posCcy, id, "positive")
+            cost = data.CostSpec(
+                self.priceLookup.fetchPriceAmount(posCcy, date),
+                None,
+                "CHF",
+                None,
+                None,
+                False,
+            )
             postings = [
                 data.Posting(
                     self._account + ":" + posCcy,
@@ -91,6 +92,7 @@ class Importer(beangulp.Importer):
             ]
         elif type == 1:
             narration = "Withdrawal"
+            negCcy = self.requiredCurrency(negCcy, id, "negative")
             postings = [
                 data.Posting(
                     self._account + ":" + negCcy,
@@ -102,20 +104,32 @@ class Importer(beangulp.Importer):
                 ),
             ]
         elif type == 2:
+            posCcy = self.requiredCurrency(posCcy, id, "positive")
+            negCcy = self.requiredCurrency(negCcy, id, "negative")
+
             fee = D(trx["fee"])
-            if posCcy and negCcy and posCcy.lower() + "_" + negCcy.lower() in trx:
+            if posCcy.lower() + "_" + negCcy.lower() in trx:
                 feeCcy = negCcy
                 negAmt -= fee
             else:
                 feeCcy = posCcy
                 posAmt -= fee
 
-            if feeCcy:
-                rateFiatCcy = self.priceLookup.fetchPriceAmount(feeCcy, date)
+            rateFiatCcy = self.priceLookup.fetchPriceAmount(feeCcy, date)
+            if rateFiatCcy is None:
+                raise ValueError(
+                    f"There is no price for {feeCcy} on {date} (transaction {id})"
+                )
+
+            posCcyCost: data.CostSpec | None
+            posCcyPrice: amount.Amount | None
+            negCcyCost: data.CostSpec | None
+            negCcyPrice: amount.Amount | None
             if feeCcy == posCcy:
                 posCcyCost = None
                 posCcyPrice = amount.Amount(rateFiatCcy, "CHF")
-                negCcyCost = data.CostSpec(MISSING, None, MISSING, None, None, False)
+                # MISSING marks what beancount has to infer, its type hints do not allow it here
+                negCcyCost = data.CostSpec(MISSING, None, MISSING, None, None, False)  # type: ignore[arg-type]
                 negCcyPrice = None
             else:
                 posCcyCost = data.CostSpec(
@@ -167,5 +181,12 @@ class Importer(beangulp.Importer):
         return data.Transaction(
             meta, date, "*", "", narration, data.EMPTY_SET, data.EMPTY_SET, postings
         )
+
+    def requiredCurrency(self, currency: str | None, id: int, sign: str) -> str:
+        if currency is None:
+            raise ValueError(
+                f"Transaction {id} has no {sign} amount in the currencies {self.currencies}"
+            )
+        return currency
 
     cmp = ReferenceDuplicatesComparator()
