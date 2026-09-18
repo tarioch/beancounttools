@@ -24,6 +24,9 @@ jobs:
       - name: Pre Commit
         run: uv run pre-commit run --all-files
 
+      - name: Check dependencies
+        run: uv run deptry src
+
       - name: Test
         run: uv run pytest
 
