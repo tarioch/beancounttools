@@ -2,13 +2,18 @@
 fx rate to a price.
 """
 
+import datetime
+from typing import Any
+
 from beancount.core import amount, data, prices
 
 __plugins__ = ["generate"]
 
 
-def generate(entries, options_map, baseCcy):
-    errors = []
+def generate(
+    entries: data.Entries, options_map: dict[str, Any], baseCcy: str
+) -> tuple[data.Entries, list[Any]]:
+    errors: list[Any] = []
     priceMap = prices.build_price_map(entries)
 
     additionalEntries = []
@@ -34,7 +39,9 @@ def generate(entries, options_map, baseCcy):
     return entries, errors
 
 
-def _alreadyExistingPrice(priceMap, fxTuple, date):
+def _alreadyExistingPrice(
+    priceMap: dict[Any, Any], fxTuple: tuple[str, str], date: datetime.date
+) -> bool:
     if fxTuple in priceMap:
         for alreadyExistingPriceDates in priceMap[fxTuple]:
             if date == alreadyExistingPriceDates[0]:

@@ -6,6 +6,7 @@ import collections
 from collections import defaultdict
 from decimal import Decimal
 from math import isclose
+from typing import Any
 
 from beancount.core import convert, data
 
@@ -19,28 +20,30 @@ DifferentWeightPerPortfolio = collections.namedtuple(
 )
 
 
-def check(entries, options_map):
-    errors = []
+def check(
+    entries: data.Entries, options_map: dict[str, Any]
+) -> tuple[data.Entries, list[Any]]:
+    errors: list[Any] = []
 
     for entry in data.filter_txns(entries):
-        positivePortfolioSums = defaultdict(Decimal)
-        negativePortfolioSums = defaultdict(Decimal)
+        positivePortfolioSums: defaultdict[str, Decimal] = defaultdict(Decimal)
+        negativePortfolioSums: defaultdict[str, Decimal] = defaultdict(Decimal)
         for posting in entry.postings:
             if posting.meta and "portfolio_check_weight" in posting.meta:
-                weight = Decimal(posting.meta["portfolio_check_weight"])
+                postingWeight = Decimal(posting.meta["portfolio_check_weight"])
             else:
-                weight = round(convert.get_weight(posting).number, 2)
+                postingWeight = round(convert.get_weight(posting).number, 2)
             account = posting.account
             portfolio = account.split(":")[1]
-            if weight > 0:
-                positivePortfolioSums[portfolio] += weight
+            if postingWeight > 0:
+                positivePortfolioSums[portfolio] += postingWeight
             else:
-                negativePortfolioSums[portfolio] += weight
+                negativePortfolioSums[portfolio] += postingWeight
 
         portfolios = set(
             list(positivePortfolioSums.keys()) + list(negativePortfolioSums.keys())
         )
-        weight = None
+        weight: Decimal | None = None
         for portfolio in portfolios:
             positiveWeight = positivePortfolioSums[portfolio]
             negativeWeight = -negativePortfolioSums[portfolio]

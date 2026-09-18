@@ -16,7 +16,7 @@ class Importer(beangulp.Importer):
     """An importer for AwardWallet"""
 
     def _configure(self, filepath: str, existing: data.Entries) -> None:
-        with open(filepath, "r") as f:
+        with open(filepath) as f:
             self.config = yaml.safe_load(f)
         self.api_key = self.config["api_key"]
 

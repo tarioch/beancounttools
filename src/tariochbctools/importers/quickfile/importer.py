@@ -1,9 +1,9 @@
 import logging
 import uuid
-from datetime import datetime
+from datetime import date, datetime
 from hashlib import md5
 from os import path
-from typing import Dict, List, NamedTuple
+from typing import Any, NamedTuple
 
 import beangulp
 import requests
@@ -23,7 +23,9 @@ class QuickFileTransaction(NamedTuple):
     TagStatus: str
     TransactionId: str
 
-    def to_beancount_transaction(self, local_account, currency, invert_sign=False):
+    def to_beancount_transaction(
+        self, local_account: str, currency: str, invert_sign: bool = False
+    ) -> data.Transaction:
         tx_amount = D(self.Amount)
         # avoid pylint invalid-unary-operand-type
         signed_amount = -1 * tx_amount if invert_sign else tx_amount
@@ -33,11 +35,11 @@ class QuickFileTransaction(NamedTuple):
         }
 
         meta = data.new_metadata("", 0, metakv)
-        date = datetime.fromisoformat(self.TransactionDate).date()
+        tx_date = datetime.fromisoformat(self.TransactionDate).date()
 
         entry = data.Transaction(
             meta,
-            date,
+            tx_date,
             "*",
             "",
             self.Reference,
@@ -72,7 +74,7 @@ class QuickFileResponseMetaData(NamedTuple):
 @type_checked_constructor(skip=True, convert=True)
 class QuickFileBankSearch(NamedTuple):
     MetaData: QuickFileResponseMetaData
-    Transactions: Dict[str, List[QuickFileTransaction]]
+    Transactions: dict[str, list[QuickFileTransaction]]
 
 
 class QuickFile:
@@ -81,19 +83,21 @@ class QuickFile:
     DOMAIN = "quickfile.co.uk"
     API_VERSION_SLUG = "1_2"
 
-    def __init__(self, account_number, api_key, app_id):
+    def __init__(self, account_number: str, api_key: str, app_id: str) -> None:
         self.account_number = account_number
         self.api_key = api_key
         self.app_id = app_id
         self._update_submission_number()
 
     @staticmethod
-    def auth_md5(account_number, api_key, submission_number):
+    def auth_md5(
+        account_number: str, api_key: str, submission_number: uuid.UUID
+    ) -> str:
         md5_str = (account_number + api_key + str(submission_number)).encode("utf-8")
 
         return md5(md5_str).hexdigest()
 
-    def request_header(self):
+    def request_header(self) -> dict[str, Any]:
         auth_md5 = self.auth_md5(
             self.account_number, self.api_key, self.submission_number
         )
@@ -109,10 +113,10 @@ class QuickFile:
         }
         return header
 
-    def _update_submission_number(self):
+    def _update_submission_number(self) -> None:
         self.submission_number = uuid.uuid4()
 
-    def _post(self, endpoint, endpoint_data):
+    def _post(self, endpoint: str, endpoint_data: dict[str, Any]) -> dict[str, Any]:
         header = self.request_header()
         post_data = {"payload": {"Header": header, "Body": endpoint_data}}
 
@@ -132,8 +136,12 @@ class QuickFile:
         return r.json()
 
     def bank_search(
-        self, account_number, transaction_count, from_date=None, to_date=None
-    ):
+        self,
+        account_number: str | int,
+        transaction_count: int,
+        from_date: date | str | None = None,
+        to_date: date | str | None = None,
+    ) -> QuickFileBankSearch:
         endpoint_data = {
             "SearchParameters": {
                 "ReturnCount": str(transaction_count),
@@ -155,13 +163,13 @@ class QuickFile:
 class Importer(beangulp.Importer):
     """An importer for QuickFile"""
 
-    def __init__(self):
-        self.quickfile = None
-        self.config = None
-        self.existing = None
+    def __init__(self) -> None:
+        self.quickfile: Any = None
+        self.config: Any = None
+        self.existing: data.Entries | None = None
 
-    def _configure(self, filepath, existing):
-        with open(filepath, "r") as config_file:
+    def _configure(self, filepath: str, existing: data.Entries | None) -> None:
+        with open(filepath) as config_file:
             self.config = yaml.safe_load(config_file)
             self.quickfile = QuickFile(
                 account_number=self.config["account_number"],
@@ -170,13 +178,15 @@ class Importer(beangulp.Importer):
             )
         self.existing = existing
 
-    def identify(self, filepath):
+    def identify(self, filepath: str) -> bool:
         return path.basename(filepath) == "quickfile.yaml"
 
-    def account(self, filepath):
+    def account(self, filepath: str) -> data.Account:
         return ""
 
-    def extract(self, filepath, existing=None):
+    def extract(
+        self, filepath: str, existing: data.Entries | None = None
+    ) -> data.Entries:
         self._configure(filepath, existing)
         entries = []
 
@@ -185,7 +195,9 @@ class Importer(beangulp.Importer):
 
         return entries
 
-    def _extract_bank_transactions(self, bank_account, invert_sign=False):
+    def _extract_bank_transactions(
+        self, bank_account: str | int, invert_sign: bool = False
+    ) -> data.Entries:
         entries = []
         transaction_count = self.config["transaction_count"]  # [0..200]
         from_date = self.config.get("from_date", None)
@@ -207,8 +219,13 @@ class Importer(beangulp.Importer):
         return entries
 
     def _extract_transaction(
-        self, trx, local_account, metadata, transactions, invert_sign
-    ):
+        self,
+        trx: QuickFileTransaction,
+        local_account: str,
+        metadata: QuickFileResponseMetaData,
+        transactions: list[QuickFileTransaction],
+        invert_sign: bool,
+    ) -> data.Entries:
         entries = []
 
         entry = trx.to_beancount_transaction(

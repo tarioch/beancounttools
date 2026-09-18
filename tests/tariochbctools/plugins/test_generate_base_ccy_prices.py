@@ -19,14 +19,14 @@ def test_data(testCase):
     entries, errors, _ = loader.load_file(inputPath)
     if errors:
         printer.print_errors(errors)
-        assert False
+        raise AssertionError("errors while loading the input file")
 
     actualStrIo = StringIO()
     printer.print_entries(entries, file=actualStrIo)
     actual = actualStrIo.getvalue()
 
     if os.path.isfile(expectedPath):
-        with open(expectedPath, "r") as expectedFile:
+        with open(expectedPath) as expectedFile:
             expected = expectedFile.read()
             assert actual == expected
     else:

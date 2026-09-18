@@ -19,7 +19,7 @@ class Importer(beangulp.Importer):
         return ""
 
     def extract(self, filepath: str, existing: data.Entries) -> data.Entries:
-        with open(filepath, "r") as f:
+        with open(filepath) as f:
             config = yaml.safe_load(f)
         self.transactions = config["transactions"]
 

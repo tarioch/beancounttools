@@ -14,7 +14,7 @@ def check_result(result: requests.Response) -> None:
     try:
         result.raise_for_status()
     except requests.exceptions.HTTPError as e:
-        raise Exception(e, e.response.text)
+        raise Exception(e, e.response.text) from e
 
 
 def get_token(secret_id: str, secret_key: str) -> str:
