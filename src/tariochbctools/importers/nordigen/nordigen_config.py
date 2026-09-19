@@ -5,6 +5,8 @@ from typing import Any
 
 import requests
 
+from tariochbctools.importers.general.network import REQUEST_TIMEOUT
+
 
 def build_header(token: str) -> dict[str, str]:
     return {"Authorization": "Bearer " + token}
@@ -24,6 +26,7 @@ def get_token(secret_id: str, secret_key: str) -> str:
             "secret_id": secret_id,
             "secret_key": secret_key,
         },
+        timeout=REQUEST_TIMEOUT,
     )
     check_result(r)
 
@@ -35,6 +38,7 @@ def list_bank(token: str, country: str) -> None:
         "https://bankaccountdata.gocardless.com/api/v2/institutions/",
         params={"country": country},
         headers=build_header(token),
+        timeout=REQUEST_TIMEOUT,
     )
     check_result(r)
 
@@ -66,6 +70,7 @@ def create_link(
                 "access_scope": decoder.decode(access_scope),
             },
             headers=build_header(token),
+            timeout=REQUEST_TIMEOUT,
         )
         check_result(r1)
         agreement_id = r1.json()["id"]
@@ -78,6 +83,7 @@ def create_link(
                 "reference": reference,
             },
             headers=build_header(token),
+            timeout=REQUEST_TIMEOUT,
         )
         check_result(r2)
         link = r2.json()["link"]
@@ -87,7 +93,9 @@ def create_link(
 def list_accounts(token: str) -> None:
     headers = build_header(token)
     r = requests.get(
-        "https://bankaccountdata.gocardless.com/api/v2/requisitions/", headers=headers
+        "https://bankaccountdata.gocardless.com/api/v2/requisitions/",
+        headers=headers,
+        timeout=REQUEST_TIMEOUT,
     )
     print(r.json())  # noqa: T201
     check_result(r)
@@ -98,6 +106,7 @@ def list_accounts(token: str) -> None:
             ra = requests.get(
                 f"https://bankaccountdata.gocardless.com/api/v2/accounts/{account}",
                 headers=headers,
+                timeout=REQUEST_TIMEOUT,
             )
             check_result(ra)
             acc = ra.json()
@@ -107,6 +116,7 @@ def list_accounts(token: str) -> None:
             ra = requests.get(
                 f"https://bankaccountdata.gocardless.com/api/v2/accounts/{account}/details",
                 headers=headers,
+                timeout=REQUEST_TIMEOUT,
             )
             check_result(ra)
             accDetails = ra.json()["account"]
@@ -122,6 +132,7 @@ def delete_link(token: str, reference: str) -> None:
         r = requests.delete(
             f"https://bankaccountdata.gocardless.com/api/v2/requisitions/{requisitionId}",
             headers=build_header(token),
+            timeout=REQUEST_TIMEOUT,
         )
         check_result(r)
 
@@ -129,7 +140,9 @@ def delete_link(token: str, reference: str) -> None:
 def _find_requisition_id(token: str, userId: str) -> str | None:
     headers = build_header(token)
     r = requests.get(
-        "https://bankaccountdata.gocardless.com/api/v2/requisitions/", headers=headers
+        "https://bankaccountdata.gocardless.com/api/v2/requisitions/",
+        headers=headers,
+        timeout=REQUEST_TIMEOUT,
     )
     check_result(r)
     for req in r.json()["results"]:

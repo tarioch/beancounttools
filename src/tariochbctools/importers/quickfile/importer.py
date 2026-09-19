@@ -12,6 +12,8 @@ from beancount.core import amount, data
 from beancount.core.number import D
 from undictify import type_checked_constructor
 
+from tariochbctools.importers.general.network import REQUEST_TIMEOUT
+
 
 @type_checked_constructor(skip=True, convert=True)
 class QuickFileTransaction(NamedTuple):
@@ -123,6 +125,7 @@ class QuickFile:
         r = requests.post(
             f"https://api.{self.DOMAIN}/{self.API_VERSION_SLUG}/{endpoint}",
             json=post_data,
+            timeout=REQUEST_TIMEOUT,
         )
 
         if not r:

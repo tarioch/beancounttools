@@ -8,6 +8,7 @@ from beancount.core import amount, data
 from beancount.core.number import D
 
 from tariochbctools.importers.general.deduplication import ReferenceDuplicatesComparator
+from tariochbctools.importers.general.network import REQUEST_TIMEOUT
 
 
 class HttpServiceException(Exception):
@@ -33,6 +34,7 @@ class Importer(beangulp.Importer):
                 "secret_id": config["secret_id"],
                 "secret_key": config["secret_key"],
             },
+            timeout=REQUEST_TIMEOUT,
         )
         try:
             r.raise_for_status()
@@ -49,6 +51,7 @@ class Importer(beangulp.Importer):
             r = requests.get(
                 f"https://bankaccountdata.gocardless.com/api/v2/accounts/{accountId}/transactions/",
                 headers=headers,
+                timeout=REQUEST_TIMEOUT,
             )
             try:
                 r.raise_for_status()

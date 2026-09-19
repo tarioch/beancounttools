@@ -6,6 +6,8 @@ from beancount.core import data
 from beangulp import Importer
 from imap_tools import MailBox
 
+from tariochbctools.importers.general.network import READ_TIMEOUT
+
 
 class MailAdapterImporter(Importer):
     """An importer adapter that fetches file from mails and then calls another importer."""
@@ -23,7 +25,7 @@ class MailAdapterImporter(Importer):
         with open(filepath) as file:
             config = yaml.safe_load(file)
 
-        with MailBox(config["host"]).login(
+        with MailBox(config["host"], timeout=READ_TIMEOUT).login(
             config["user"], config["password"], initial_folder=config["folder"]
         ) as mailbox:
             result = []

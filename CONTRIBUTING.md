@@ -57,8 +57,10 @@ Things that catch people out:
 ## Code
 
 - Type hints are required in `src` (mypy `disallow_untyped_defs`, tests are exempt).
-- ruff selects `E4, E7, E9, F, B, I, T20, UP` (see `pyproject.toml`), `ruff format` decides the formatting.
+- ruff selects `E4, E7, E9, F, B, I, S113, T20, UP` (see `pyproject.toml`), `ruff format` decides the formatting.
   `print` is only accepted in the small command line tools (`# noqa: T201`).
+- Network access needs a timeout, otherwise a stalled server blocks an import forever. Pass `timeout=REQUEST_TIMEOUT` to
+  `requests` (ruff `S113` checks it), the constants are in `importers/general/network.py`.
 - Tests use synthetic data only: no real statements, account numbers or credentials, not even anonymized ones.
   Mock the network and libraries that need real documents (e.g. camelot), see `tests/tariochbctools/importers/`.
 - `importers/ibkr/flexclient.py` adds the `period` option on top of ibflex 1.1. Once ibflex releases support for it,
