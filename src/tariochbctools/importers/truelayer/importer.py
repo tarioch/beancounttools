@@ -12,6 +12,7 @@ from beancount.core import amount, data
 from beancount.core.number import D
 
 from tariochbctools.importers.general.deduplication import ReferenceDuplicatesComparator
+from tariochbctools.importers.general.network import REQUEST_TIMEOUT
 
 # https://docs.truelayer.com/#retrieve-account-transactions
 
@@ -120,6 +121,7 @@ class Importer(beangulp.Importer):
                     "client_secret": self.clientSecret,
                     "refresh_token": self.refreshToken,
                 },
+                timeout=REQUEST_TIMEOUT,
             )
             tokens = r.json()
             self.accessToken = tokens["access_token"]
@@ -165,7 +167,9 @@ class Importer(beangulp.Importer):
     ) -> data.Entries:
         entries: data.Entries = []
         r = requests.get(
-            f"https://api.{self.domain}/data/v1/{endpoint}", headers=headers
+            f"https://api.{self.domain}/data/v1/{endpoint}",
+            headers=headers,
+            timeout=REQUEST_TIMEOUT,
         )
 
         if not r:
@@ -188,6 +192,7 @@ class Importer(beangulp.Importer):
             r = requests.get(
                 f"https://api.{self.domain}/data/v1/{endpoint}/{accountId}/balance",
                 headers=headers,
+                timeout=REQUEST_TIMEOUT,
             )
             balances = r.json()["results"]
 
@@ -199,6 +204,7 @@ class Importer(beangulp.Importer):
             r = requests.get(
                 f"https://api.{self.domain}/data/v1/{endpoint}/{accountId}/transactions",
                 headers=headers,
+                timeout=REQUEST_TIMEOUT,
             )
             transactions = sorted(r.json()["results"], key=lambda trx: trx["timestamp"])
 

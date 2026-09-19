@@ -16,8 +16,15 @@ from beancount.core.number import D
 from dateutil.relativedelta import relativedelta
 
 from tariochbctools.importers.general.deduplication import ReferenceDuplicatesComparator
+from tariochbctools.importers.general.network import (
+    CONNECT_TIMEOUT,
+    READ_TIMEOUT,
+    REQUEST_TIMEOUT,
+)
 
-http = urllib3.PoolManager()
+http = urllib3.PoolManager(
+    timeout=urllib3.Timeout(connect=CONNECT_TIMEOUT, read=READ_TIMEOUT)
+)
 
 
 class Importer(beangulp.Importer):
@@ -129,7 +136,9 @@ class Importer(beangulp.Importer):
         headers = {"Authorization": "Bearer " + self.api_token}
         if not self.profileId:
             r = requests.get(
-                "https://api.transferwise.com/v1/profiles", headers=headers
+                "https://api.transferwise.com/v1/profiles",
+                headers=headers,
+                timeout=REQUEST_TIMEOUT,
             )
             profiles = r.json()
             self.profileId = profiles[0]["id"]
@@ -138,6 +147,7 @@ class Importer(beangulp.Importer):
             "https://api.transferwise.com/v1/borderless-accounts",
             params={"profileId": self.profileId},
             headers=headers,
+            timeout=REQUEST_TIMEOUT,
         )
         accounts = r.json()
         self.accountId = accounts[0]["id"]
