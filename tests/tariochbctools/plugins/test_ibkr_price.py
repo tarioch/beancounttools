@@ -1,5 +1,7 @@
+from datetime import datetime
 from decimal import Decimal
 from unittest.mock import patch
+from zoneinfo import ZoneInfo
 
 import pytest
 
@@ -66,3 +68,19 @@ def test_matching_position_without_report_date_is_reported(source):
 
     with pytest.raises(ValueError, match="reportDate"):
         source.get_latest_price("VWRL")
+
+
+@pytest.mark.parametrize(
+    "reportDate, utcOffset", [("20260131", "+01:00"), ("20260731", "+02:00")]
+)
+def test_latest_price_time_is_midnight_in_zurich(source, reportDate, utcOffset):
+    source, download = source
+    download.return_value = POSITIONS.replace(b"20260131", reportDate.encode())
+
+    result = source.get_latest_price("VWRL")
+
+    year, month, day = int(reportDate[:4]), int(reportDate[4:6]), int(reportDate[6:])
+    assert result.time == datetime(year, month, day, tzinfo=ZoneInfo("Europe/Zurich"))
+    assert (
+        result.time.isoformat() == f"{year}-{month:02d}-{day:02d}T00:00:00{utcOffset}"
+    )
