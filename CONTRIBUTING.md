@@ -72,22 +72,24 @@ Things that catch people out:
   `.pre-commit-config.yaml`), a different uv version rewrites unrelated parts of the file:
   `uvx --from uv==<rev> uv lock`.
 - Dependabot (`.github/dependabot.yml`) opens grouped PRs for minor and patch updates of Python packages weekly and for
-  GitHub Actions monthly. Major updates come as separate PRs. New releases wait 7 days (cooldown), security updates do not.
+  GitHub Actions and pre-commit hooks monthly. Major updates come as separate PRs. New releases wait 7 days (cooldown),
+  security updates do not.
 
 ## Git and pull requests
 
 - Branch off `master`, named `feature/…`, `bugfix/…` or `chore/…` (snake_case after the prefix). The prefix labels the PR
-  (`.github/pr-labeler.yml`), and the label decides the category in the release notes (the shared
-  `release-drafter.yml` of [tarioch/.github](https://github.com/tarioch/.github)).
+  (`.github/pr-labeler.yml`, its `Label check` fails without one of these labels), and the label decides the category
+  in the release notes (the shared `release-drafter.yml` of [tarioch/.github](https://github.com/tarioch/.github)).
 - Commit subjects are imperative and start with a capital letter ("Fix zak importer crash on statements with tables"),
   the body explains why.
 - Changes go through pull requests into `master` and are merged with a merge commit (the only allowed merge method).
-  Required checks: `Build`, `Lint` and `Test (Python 3.11)` to `Test (Python 3.14)`.
+  Required checks: `CI ok` and `Label check`.
 
 ## CI and releases
 
-`.github/workflows/build-publish.yml` runs `lint`, `test` (matrix), `build`, and on pushes to `master` and version tags
-the publish jobs. Workflows use the least permissions they need, and every action is pinned to a commit SHA
+`.github/workflows/build-publish.yml` runs `lint`, `test` (matrix), `build`, `ci-ok` (fails unless all of them
+succeeded, the check the `master` ruleset requires), and on pushes to `master` and version tags the publish jobs.
+Workflows use the least permissions they need, and every action is pinned to a commit SHA
 (Dependabot keeps the pins current, zizmor fails for unpinned actions or broad permissions).
 
 - Every push to `master` publishes a development version to TestPyPI.

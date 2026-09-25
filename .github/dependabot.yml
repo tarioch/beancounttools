@@ -29,3 +29,18 @@ updates:
       github-actions:
         patterns:
           - "*"
+
+  # hook revs in .pre-commit-config.yaml
+  - package-ecosystem: pre-commit
+    directory: /
+    schedule:
+      interval: monthly
+    cooldown:
+      default-days: 7
+    labels:
+      - dependencies
+      - chore
+    groups:
+      pre-commit-hooks:
+        patterns:
+          - "*"

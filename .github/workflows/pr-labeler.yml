@@ -1,12 +1,13 @@
 name: PR Labeler
 on:
   pull_request:
-    types: [opened]
+    types: [opened, reopened, synchronize, labeled, unlabeled]
 
 permissions: {}
 
 jobs:
   pr-labeler:
+    name: Label check
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     permissions:
@@ -16,3 +17,19 @@ jobs:
       - uses: TimonVS/pr-labeler-action@f9c084306ce8b3f488a8f3ee1ccedc6da131d1af # v5.0.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # the label decides the release notes category, a PR from a branch without a known prefix needs one set by hand
+      # (read from the API, the event payload does not contain the label the step above just added)
+      - name: Require a release notes category label
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          labels=$(gh api "repos/$GITHUB_REPOSITORY/issues/$PR_NUMBER/labels" --jq '.[].name')
+          for label in feature bugfix chore; do
+            if printf '%s\n' "$labels" | grep -qx "$label"; then
+              exit 0
+            fi
+          done
+          echo "::error::add one of the labels feature, bugfix or chore (or use a feature/, bugfix/ or chore/ branch)"
+          exit 1
