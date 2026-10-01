@@ -14,3 +14,5 @@
   only contains what you intended.
 - Keep pull request descriptions factual: the problem, the change, how it was verified (including what could not be
   verified before merging).
+- Dependabot PRs with a minor or patch update merge themselves once the required checks pass
+  (`.github/workflows/dependabot-automerge.yml`), major updates stay manual.
