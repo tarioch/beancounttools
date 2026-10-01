@@ -10,7 +10,6 @@ concurrency:
 
 jobs:
   automerge:
-    # only for PRs opened by Dependabot itself
     if: github.event.pull_request.user.login == 'dependabot[bot]'
     runs-on: ubuntu-24.04
     timeout-minutes: 5
@@ -23,8 +22,6 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
-      # update-type is the highest semver change of the PR, a major update (or anything unknown) is merged by hand.
-      # The merge only happens once the required checks of the branch protection have passed.
       - if: >-
           steps.metadata.outputs.update-type == 'version-update:semver-minor' ||
           steps.metadata.outputs.update-type == 'version-update:semver-patch'
