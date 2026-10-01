@@ -100,15 +100,15 @@ wheels = [
 
 [[package]]
 name = "awardwallet"
-version = "0.3.0"
+version = "0.4.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "pydantic" },
     { name = "requests" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/da/07/2e6a89e6c6b4173767ff8c94c2e89636d59bb8c788544fa647acc62d28d2/awardwallet-0.3.0.tar.gz", hash = "sha256:077c762ea77898575e1ee046fbfde3f666f3c09e6fa79b767691781ed2d8507c", size = 31580, upload-time = "2026-03-26T16:57:47.774Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/16/6a/5149333a8e0bbc2c62d8fc89dc333a0bf00c6a30339c4257b8e80fe30d0c/awardwallet-0.4.0.tar.gz", hash = "sha256:2b29efb95117a42c2203c6fa065ee4a6fc2e3b80b61f6a82d500ac682f11c010", size = 33065, upload-time = "2026-09-23T22:08:08.967Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/55/f9/cd9db8c7bf0faa19df4440093e146b7338ee83992c86f0b47897b885f517/awardwallet-0.3.0-py3-none-any.whl", hash = "sha256:5c994656907286dcea3f017fa8f14bf9aad7f4b933bcbc1d78447cd1a8cb7614", size = 17963, upload-time = "2026-03-26T16:57:46.868Z" },
+    { url = "https://files.pythonhosted.org/packages/d8/96/056620c5f44430561203120d37339892478fc4e5ca4918aeaded3c83486a/awardwallet-0.4.0-py3-none-any.whl", hash = "sha256:7430ca1b675918fe02e204bc27a918be77d3a085e1c393064d71f4915375ac23", size = 18592, upload-time = "2026-09-23T22:08:07.889Z" },
 ]
 
 [[package]]
