@@ -74,8 +74,6 @@ Things that catch people out:
 - Dependabot (`.github/dependabot.yml`) opens grouped PRs for minor and patch updates of Python packages weekly and for
   GitHub Actions and pre-commit hooks monthly. Major updates come as separate PRs. New releases wait 7 days (cooldown),
   security updates do not.
-- `.github/workflows/dependabot-automerge.yml` enables auto-merge for Dependabot PRs whose highest update is minor or
-  patch. They merge once the required checks pass, major updates stay manual.
 
 ## Git and pull requests
 
