@@ -40,7 +40,7 @@ repos:
     pass_filenames: false
 
 - repo: https://github.com/astral-sh/uv-pre-commit
-  rev: 0.12.16
+  rev: 0.12.18
   hooks:
     - id: uv-lock
 
