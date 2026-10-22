@@ -1,5 +1,5 @@
 version = 1
-revision = 3
+revision = 5
 requires-python = ">=3.11"
 resolution-markers = [
     "python_full_version >= '3.15' and sys_platform == 'win32'",
@@ -585,11 +585,11 @@ wheels = [
 
 [[package]]
 name = "imap-tools"
-version = "1.15.1"
+version = "1.16.0"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/99/3c/676a0bbbe26e534329265d702dc1d9b9a7996a06f1f6c0e5355d2def8e79/imap_tools-1.15.1.tar.gz", hash = "sha256:5930cc4e37ce0b5685e941d71b9de042ccf7a1bdf5ae568c395a82dd928c0157", size = 48986, upload-time = "2026-10-06T11:08:31.335Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/47/ff/013a8cc97cc3d7a74a5cc0d05c5eb637d47a5114efe10312ba7b72b11609/imap_tools-1.16.0.tar.gz", hash = "sha256:70cc760915965f9efd3ce2b43cbdafeca40849aedbea3623019536dc1def95b6", size = 49867, upload-time = "2026-10-14T10:17:57.817Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/98/55/67e11499f4bb8d65a0ded25bfa61c512a239a9615fbbf72ad905defa25d5/imap_tools-1.15.1-py3-none-any.whl", hash = "sha256:6bee6c9399fdf3e92326ffc729bb3faaa5bcfffbe59a6e6c97060528151a9f57", size = 36581, upload-time = "2026-10-06T11:08:28.645Z" },
+    { url = "https://files.pythonhosted.org/packages/92/d8/b9797cfdbfb885c0ebce581234e5e09ec1805f5d8b42247f8d9cde23ca92/imap_tools-1.16.0-py3-none-any.whl", hash = "sha256:8ae0860d626d44ad21c3b917309d135eb4d112159d4ce78b90a03b9bb9ba0de9", size = 36716, upload-time = "2026-10-14T10:17:54.494Z" },
 ]
 
 [[package]]
@@ -1331,7 +1331,7 @@ wheels = [
 
 [[package]]
 name = "pre-commit"
-version = "4.6.2"
+version = "4.7.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "cfgv" },
@@ -1340,9 +1340,9 @@ dependencies = [
     { name = "pyyaml" },
     { name = "virtualenv" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/74/89/1f3e8e1fc3e97de0fa963495832f581f025f29471602a309e48808244292/pre_commit-4.6.2.tar.gz", hash = "sha256:8f5d7bfb021ecdbcd9d49d89847082dd24172ccde534390081a679ad046e2441", size = 198670, upload-time = "2026-08-10T22:07:18.421Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/3a/c3/6965c2690ddce885ec75121572d065a5b94c5a5d8d3e657927ecda9fd715/pre_commit-4.7.0.tar.gz", hash = "sha256:1f3deee12b914c8fa184bd2b5953391c2e4f36763e403d4a23dc9983fa7c6e86", size = 198120, upload-time = "2026-10-12T20:45:40.32Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/45/e2/bbb7129c9e7999a6b8ee9cca3b66486c25c423ab5a75f34071798b74ce94/pre_commit-4.6.2-py2.py3-none-any.whl", hash = "sha256:e2dde9a75d3bce11bd3831c26d134df00a2803c1d818be6a0383c3dcda25dc4e", size = 226202, upload-time = "2026-08-10T22:07:16.942Z" },
+    { url = "https://files.pythonhosted.org/packages/eb/83/ce0a196e4f7b20b11ce3aa1fc72fb973f64b7628d51c1b8aebad37fb7f81/pre_commit-4.7.0-py2.py3-none-any.whl", hash = "sha256:2e229038ad3656081b70c27913157e4b636ef306f643f024a8a8e3f0f7b2f877", size = 226261, upload-time = "2026-10-12T20:45:38.858Z" },
 ]
 
 [[package]]
