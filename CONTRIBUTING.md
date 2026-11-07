@@ -63,8 +63,6 @@ Things that catch people out:
   `requests` (ruff `S113` checks it), the constants are in `importers/general/network.py`.
 - Tests use synthetic data only: no real statements, account numbers or credentials, not even anonymized ones.
   Mock the network and libraries that need real documents (e.g. camelot), see `tests/tariochbctools/importers/`.
-- `importers/ibkr/flexclient.py` adds the `period` option on top of ibflex 1.1. Once ibflex releases support for it,
-  delete the module and call `client.download(..., period=period)` directly.
 
 ## Dependencies
 

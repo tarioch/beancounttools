@@ -24,7 +24,7 @@ dependencies = [
     "bitstampclient",
     "mt-940",
     "pyyaml",
-    "ibflex>=1.1",
+    "ibflex>=1.2",
     "requests",
     "camelot-py",
     "blockcypher",

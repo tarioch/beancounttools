@@ -549,11 +549,11 @@ wheels = [
 
 [[package]]
 name = "ibflex"
-version = "1.1"
+version = "1.2"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/4c/1a/86e095141d8a808f396c6f9303b785dd461e218f12149bf5a612f6e1d696/ibflex-1.1.tar.gz", hash = "sha256:3e5cac02cadcbd22ea46ae4ca306d67c274b7166f40119f5d7d7103a130d032a", size = 50257, upload-time = "2026-05-23T15:06:40.922Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/a0/03/101e3cbfd5fe25ce9c011dc8ac9d70f80417489e73c84c70d2eee7adb7ea/ibflex-1.2.tar.gz", hash = "sha256:c5117b0dd6e6793209a333dfccc440b51ae412379965a6897bfe6de8b7490f3e", size = 52908, upload-time = "2026-11-07T18:32:42.825Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/99/21/21d3ad7fce8a54c7468ea64729da019f2d93d631468e2412848373bd5d41/ibflex-1.1-py3-none-any.whl", hash = "sha256:c84e02dafcd17f70587777c2e2f00e3cc1e949e045790bf4fe562fb03dbef434", size = 30987, upload-time = "2026-05-23T15:06:39.352Z" },
+    { url = "https://files.pythonhosted.org/packages/3a/72/4623523aeb53258674ef8c3666dfb09ab18ea31f4eb2fac5f8731680b566/ibflex-1.2-py3-none-any.whl", hash = "sha256:ea81f2a8e4f7a67aa9c760ddc90e82ecbe120003d89016ef0c9279572e8322a3", size = 32544, upload-time = "2026-11-07T18:32:41.213Z" },
 ]
 
 [[package]]
@@ -2011,7 +2011,7 @@ requires-dist = [
     { name = "bitstampclient" },
     { name = "blockcypher" },
     { name = "camelot-py" },
-    { name = "ibflex", specifier = ">=1.1" },
+    { name = "ibflex", specifier = ">=1.2" },
     { name = "imap-tools" },
     { name = "mt-940" },
     { name = "pandas" },
