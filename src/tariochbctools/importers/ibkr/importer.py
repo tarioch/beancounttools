@@ -8,11 +8,10 @@ import beangulp
 import yaml
 from beancount.core import amount, data
 from beancount.core.number import D
-from ibflex import Types, parser
+from ibflex import Types, client, parser
 from ibflex.enums import CashAction
 
 from tariochbctools.importers.general.priceLookup import PriceLookup
-from tariochbctools.importers.ibkr import flexclient
 
 T = TypeVar("T")
 
@@ -60,7 +59,7 @@ class Importer(beangulp.Importer):
 
         priceLookup = PriceLookup(existing, config["baseCcy"])
 
-        response = flexclient.download(token, queryId, period=period)
+        response = client.download(token, queryId, period=period)
 
         statement = parser.parse(response)
         assert isinstance(statement, Types.FlexQueryResponse)

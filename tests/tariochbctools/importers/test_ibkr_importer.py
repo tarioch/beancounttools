@@ -1,11 +1,13 @@
 import datetime
 from decimal import Decimal
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
+from urllib.parse import parse_qsl, urlsplit
 
 import pytest
+import requests
 from beancount.core import data
+from ibflex import client
 
-from tariochbctools.importers.ibkr import flexclient
 from tariochbctools.importers.ibkr import importer as ibkrimp
 
 # a synthetic flex statement: a buy in a foreign currency, a buy in the base currency (without a fxRateToBase),
@@ -33,7 +35,7 @@ def extract(tmp_path, statement=STATEMENT, config="", existing=None):
     configFile.write_text(
         f"token: tok\nqueryId: '123'\nbaseCcy: CHF\n{config}", encoding="utf-8"
     )
-    with patch.object(flexclient, "download", return_value=statement) as download:
+    with patch.object(client, "download", return_value=statement) as download:
         entries = ibkrimp.Importer().extract(str(configFile), existing or [])
     return entries, download
 
@@ -125,6 +127,54 @@ def test_extract_without_period(tmp_path):
     _, download = extract(tmp_path)
 
     download.assert_called_once_with("tok", "123", period=None)
+
+
+REQUEST_OK = b"""<FlexStatementResponse timestamp="28 August, 2026 09:33 PM EDT">
+<Status>Success</Status>
+<ReferenceCode>REF123</ReferenceCode>
+<Url>https://example.com/GetStatement</Url>
+</FlexStatementResponse>"""
+
+
+def sentQuery(call):
+    """The endpoint and query as requests would really send them."""
+    prepared = requests.Request(
+        "GET", call.args[0], params=call.kwargs["params"]
+    ).prepare()
+    url = urlsplit(str(prepared.url))
+    return url.path.rsplit("/", 1)[-1], dict(parse_qsl(url.query))
+
+
+@pytest.mark.parametrize(
+    "config, sendRequest",
+    [
+        ("period: 90\n", {"v": "3", "t": "tok", "q": "123", "p": "90"}),
+        ("", {"v": "3", "t": "tok", "q": "123"}),
+    ],
+)
+def test_extract_sends_the_period_only_with_the_statement_request(
+    tmp_path, monkeypatch, config, sendRequest
+):
+    """Through ibflex down to the http requests, only the network is mocked."""
+    configFile = tmp_path / "ibkr.yaml"
+    configFile.write_text(
+        f"token: tok\nqueryId: '123'\nbaseCcy: CHF\n{config}", encoding="utf-8"
+    )
+    responses = []
+    for content in (REQUEST_OK, STATEMENT):
+        response = requests.Response()
+        response._content = content
+        response.status_code = 200
+        responses.append(response)
+    get = MagicMock(side_effect=responses)
+    monkeypatch.setattr(requests, "get", get)
+
+    entries = ibkrimp.Importer().extract(str(configFile), [])
+
+    assert len(entries) == 4
+    request, poll = get.call_args_list
+    assert sentQuery(request) == ("SendRequest", sendRequest)
+    assert sentQuery(poll) == ("GetStatement", {"v": "3", "t": "tok", "q": "REF123"})
 
 
 @pytest.mark.parametrize(
