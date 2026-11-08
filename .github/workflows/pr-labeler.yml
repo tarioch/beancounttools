@@ -19,6 +19,24 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      # the pull requests of the sync action (repo-sync) come from branches without a prefix (workflow-files-sync...),
+      # but all their titles start with "chore:", so a chore title gives the label if the branch did not
+      - name: Label chore titles as chore
+        if: >-
+          github.event.pull_request.head.repo.full_name == github.repository &&
+          startsWith(github.event.pull_request.title, 'chore:')
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          labels=$(gh api "repos/$GITHUB_REPOSITORY/issues/$PR_NUMBER/labels" --jq '.[].name')
+          for label in feature bugfix chore; do
+            if printf '%s\n' "$labels" | grep -qx "$label"; then
+              exit 0
+            fi
+          done
+          gh api "repos/$GITHUB_REPOSITORY/issues/$PR_NUMBER/labels" -f 'labels[]=chore' --silent
+
       # the label decides the release notes category, a PR from a branch without a known prefix needs one set by hand
       # (read from the API, the event payload does not contain the label the step above just added)
       - name: Require a release notes category label
