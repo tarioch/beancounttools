@@ -1,7 +1,7 @@
 name: Publish Python 🐍 distributions 📦 to PyPI and TestPyPI
 on:
   push:
-    branches: [master]
+    branches: [main, master]
     tags: ["v*"]
   pull_request:
 
@@ -89,7 +89,7 @@ jobs:
           path: dist/
           if-no-files-found: error
 
-  # the one check the master ruleset requires, so changing the jobs or the Python matrix needs no settings change
+  # the one check the branch ruleset requires, so changing the jobs or the Python matrix needs no settings change
   ci-ok:
     name: CI ok
     needs: [lint, test, build]
@@ -113,7 +113,7 @@ jobs:
   publish-testpypi:
     name: Publish 📦 to TestPyPI
     needs: [lint, test, build]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    if: github.event_name == 'push' && github.ref_name == github.event.repository.default_branch
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     environment:
