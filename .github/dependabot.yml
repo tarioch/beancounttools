@@ -1,3 +1,5 @@
+# Synced from https://github.com/tarioch/repo-sync/blob/main/config/dependabot/python.yml
+# Do not edit here, the next sync overwrites it. Change it in repo-sync.
 version: 2
 updates:
   - package-ecosystem: uv
