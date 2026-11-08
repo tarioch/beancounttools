@@ -1,3 +1,5 @@
+# Synced from https://github.com/tarioch/repo-sync/blob/main/config/workflows/dependabot-automerge.yml
+# Do not edit here, the next sync overwrites it. Change it in repo-sync.
 name: Dependabot auto-merge
 on:
   pull_request:
