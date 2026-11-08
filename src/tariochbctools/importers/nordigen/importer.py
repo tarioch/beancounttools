@@ -25,7 +25,7 @@ class Importer(beangulp.Importer):
         return ""
 
     def extract(self, filepath: str, existing: data.Entries) -> data.Entries:
-        with open(filepath) as f:
+        with open(filepath, encoding="utf-8") as f:
             config = yaml.safe_load(f)
 
         r = requests.post(
