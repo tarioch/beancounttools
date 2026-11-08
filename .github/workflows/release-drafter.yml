@@ -1,3 +1,5 @@
+# Synced from https://github.com/tarioch/repo-sync/blob/main/config/workflows/release-drafter.yml
+# Do not edit here, the next sync overwrites it. Change it in repo-sync.
 name: Release Drafter
 
 on:

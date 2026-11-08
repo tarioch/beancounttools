@@ -1,3 +1,5 @@
+# Synced from https://github.com/tarioch/repo-sync/blob/main/config/workflows/pr-labeler.yml
+# Do not edit here, the next sync overwrites it. Change it in repo-sync.
 name: PR Labeler
 on:
   pull_request:
