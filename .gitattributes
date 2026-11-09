@@ -1,1 +1,3 @@
+# Synced from https://github.com/tarioch/repo-sync/blob/main/config/files/gitattributes
+# Do not edit here, the next sync overwrites it. Change it in repo-sync.
 * text=auto eol=lf
