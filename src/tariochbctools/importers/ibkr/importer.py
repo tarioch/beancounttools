@@ -2,7 +2,7 @@ import re
 from datetime import date
 from decimal import Decimal
 from os import path
-from typing import Any, TypeVar
+from typing import Any
 
 import beangulp
 import yaml
@@ -13,10 +13,8 @@ from ibflex.enums import CashAction
 
 from tariochbctools.importers.general.priceLookup import PriceLookup
 
-T = TypeVar("T")
 
-
-def required(value: T | None, field: str) -> T:
+def required[T](value: T | None, field: str) -> T:
     """ibflex declares every field of a flex statement as optional, which ones are there depends on the flex query."""
     if value is None:
         raise ValueError(f"The flex query does not include the field {field}")

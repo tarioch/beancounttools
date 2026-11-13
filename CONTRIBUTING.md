@@ -30,7 +30,7 @@ metadata of a transaction. Every importer is documented in `docs/importers.rst` 
 uv sync --locked --dev
 ```
 
-Python 3.11 to 3.14 are supported and tested. If a dependency has no wheel for the newest Python on your platform and
+Python 3.12 to 3.14 are supported and tested. If a dependency has no wheel for the newest Python on your platform and
 the build fails, use an older one: `uv sync --locked --dev --python 3.13`.
 
 ## Checks
