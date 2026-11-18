@@ -47,7 +47,7 @@ class Importer(beangulp.Importer):
         for trx in transactions:
             trxdata = trx.data
             ref = trxdata["bank_reference"]
-            if ref:
+            if ref and ref != "NONREF":
                 metakv = {"ref": ref}
             else:
                 metakv = None
