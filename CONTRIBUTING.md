@@ -92,6 +92,9 @@ Workflows use the least permissions they need, and every action is pinned to a c
 
 - Every push to `main` publishes a development version to TestPyPI.
 - Release notes are drafted by release-drafter. Publishing the draft creates the tag `vX.Y.Z`, which publishes to PyPI.
+- Publishing a release also triggers the tariochbctools bump in [docker-fava](https://github.com/tarioch/docker-fava)
+  (`.github/workflows/bump-docker-fava.yml`, a `repository_dispatch` with the version, sent with the secret
+  `DOCKER_FAVA_TOKEN`), docker-fava then opens the pull request without waiting for the Dependabot cooldown.
 - Publishing uses PyPI trusted publishing (OIDC) from the GitHub environments `testpypi` and `pypi`, there are no
   stored tokens.
 - The version is derived from the git tags (uv-dynamic-versioning), so CI checks out the full history (`fetch-depth: 0`).

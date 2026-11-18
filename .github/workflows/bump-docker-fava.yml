@@ -1,0 +1,23 @@
+name: Bump docker-fava
+
+on:
+  release:
+    types: [published]
+
+permissions: {}
+
+jobs:
+  dispatch:
+    name: Trigger the tariochbctools bump in docker-fava
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions: {}
+    steps:
+      - name: Send the release to docker-fava
+        env:
+          GH_TOKEN: ${{ secrets.DOCKER_FAVA_TOKEN }}
+          VERSION: ${{ github.event.release.tag_name }}
+        run: |
+          gh api --method POST repos/tarioch/docker-fava/dispatches \
+            -f event_type=tariochbctools-released \
+            -f "client_payload[version]=${VERSION#v}"
