@@ -2,7 +2,7 @@
    :target: https://pypi.python.org/pypi/tariochbctools
 .. image:: https://img.shields.io/pypi/v/tariochbctools.svg
    :target: https://pypi.python.org/pypi/tariochbctools
-.. image:: https://readthedocs.org/projects/tariochbctools/badge
+.. image:: https://app.readthedocs.org/projects/tariochbctools/badge/?version=latest
    :target: https://tariochbctools.rtfd.io
 
 tariochbctools
