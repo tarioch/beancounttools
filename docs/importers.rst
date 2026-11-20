@@ -319,6 +319,25 @@ mt940
 Import Swift mt940 files.
 
 
+camt.053
+--------
+
+Import ISO 20022 camt.053 bank statements (XML, version ``camt.053.001.04`` and later), e.g. from Swiss or SEPA
+banks. Every booked entry becomes a transaction, a batch booking with individual amounts becomes one transaction
+per detail. The payee is the counterparty, the narration the payment's note (``InstrId``) and
+remittance information joined with " - ", or the bank's booking text when there is neither. The closing booked balance
+becomes a balance assertion on the following day. The bank's reference is stored as ``ref`` and used for
+deduplication.
+
+.. code-block:: python
+
+  from tariochbctools.importers.general import camt053importer
+
+  CONFIG = [camt053importer.Importer(r".*\.xml", "Assets:Bank:CHF")]
+
+Subclasses can override ``prepare_payee``, ``prepare_narration`` and ``prepare_metadata``, which get the parsed transaction.
+
+
 Schedule
 --------
 
