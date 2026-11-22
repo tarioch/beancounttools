@@ -113,7 +113,8 @@ jobs:
             fi
           done
 
-  # the publish jobs only get an OIDC token (trusted publishing), no repository content and no stored secrets
+  # the publish jobs only get an OIDC token (trusted publishing), no repository content and no stored secrets, the
+  # distributions are published with PEP 740 attestations (provenance)
   publish-testpypi:
     name: Publish 📦 to TestPyPI
     needs: [lint, test, build]
@@ -130,10 +131,12 @@ jobs:
         with:
           name: dist
           path: dist/
-      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
 
       - name: Publish distribution 📦 to Test PyPI
-        run: uv publish --trusted-publishing always --publish-url https://test.pypi.org/legacy/
+        uses: pypa/gh-action-pypi-publish@7245906fb61fa33a13554f9d5fb856fe61758086 # v1.14.3
+        with:
+          repository-url: https://test.pypi.org/legacy/
+          attestations: true
 
   publish-pypi:
     name: Publish 📦 to PyPI
@@ -151,7 +154,8 @@ jobs:
         with:
           name: dist
           path: dist/
-      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
 
       - name: Publish distribution 📦 to PyPI
-        run: uv publish --trusted-publishing always
+        uses: pypa/gh-action-pypi-publish@7245906fb61fa33a13554f9d5fb856fe61758086 # v1.14.3
+        with:
+          attestations: true
