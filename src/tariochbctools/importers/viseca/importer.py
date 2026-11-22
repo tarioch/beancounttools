@@ -6,6 +6,8 @@ import camelot
 from beancount.core import amount, data
 from beancount.core.number import D
 
+from tariochbctools.importers.general.pdf import readFollowingPages
+
 
 class Importer(beangulp.Importer):
     """An importer for Viseca One Card Statement PDF files."""
@@ -64,10 +66,9 @@ class Importer(beangulp.Importer):
             columns=columns,
             split_text=True,
         )
-        otherPageTables = camelot.read_pdf(
+        otherPageTables = readFollowingPages(
             filepath,
             flavor="stream",
-            pages="2-end",
             table_areas=["65,670,585,100"],
             columns=columns,
             split_text=True,

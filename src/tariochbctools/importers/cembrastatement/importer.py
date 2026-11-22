@@ -3,9 +3,10 @@ import re
 from datetime import timedelta
 
 import beangulp
-import camelot
 from beancount.core import amount, data
 from beancount.core.number import D
+
+from tariochbctools.importers.general.pdf import readFollowingPages
 
 
 class Importer(beangulp.Importer):
@@ -48,8 +49,8 @@ class Importer(beangulp.Importer):
     def extract(self, filepath: str, existing: data.Entries) -> data.Entries:
         entries: data.Entries = []
 
-        tables = camelot.read_pdf(
-            filepath, pages="2-end", flavor="stream", table_areas=["50,700,560,50"]
+        tables = readFollowingPages(
+            filepath, flavor="stream", table_areas=["50,700,560,50"]
         )
         for table in tables:
             df = table.df

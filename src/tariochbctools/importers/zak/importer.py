@@ -9,6 +9,7 @@ from beancount.core.number import D
 from dateutil.parser import parse
 
 from tariochbctools.importers.general.deduplication import ReferenceDuplicatesComparator
+from tariochbctools.importers.general.pdf import readFollowingPages
 
 
 class Importer(beangulp.Importer):
@@ -74,8 +75,8 @@ class Importer(beangulp.Importer):
         firstPageTables = camelot.read_pdf(
             filepath, flavor="stream", pages="1", table_regions=["60,450,600,170"]
         )
-        otherPageTables = camelot.read_pdf(
-            filepath, flavor="stream", pages="2-end", table_regions=["60,630,600,170"]
+        otherPageTables = readFollowingPages(
+            filepath, flavor="stream", table_regions=["60,630,600,170"]
         )
 
         tables = [*firstPageTables, *otherPageTables]
