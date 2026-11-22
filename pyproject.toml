@@ -32,6 +32,7 @@ dependencies = [
     "undictify",
     "rsa",
     "pandas",
+    "pypdf",
     "python-dateutil",
     "urllib3",
 ]

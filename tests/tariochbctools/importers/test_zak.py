@@ -19,12 +19,16 @@ def table(*rows: list[str]) -> MagicMock:
 
 def extract(firstPage: list[MagicMock], otherPages: list[MagicMock]) -> data.Entries:
     importer = zakimp.Importer(r".*\.pdf", "Assets:Zak")
-    with patch.object(
-        zakimp.camelot, "read_pdf", side_effect=[firstPage, otherPages]
-    ) as readPdf:
+    with (
+        patch.object(zakimp.camelot, "read_pdf", return_value=firstPage) as readPdf,
+        patch.object(
+            zakimp, "readFollowingPages", return_value=otherPages
+        ) as readFollowingPages,
+    ):
         entries = importer.extract("statement.pdf", [])
 
-    assert readPdf.call_count == 2
+    readPdf.assert_called_once()
+    readFollowingPages.assert_called_once()
     return entries
 
 
